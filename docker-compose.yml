@@ -1,0 +1,46 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leetmatcher_app
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    depends_on:
+      - db
+    networks:
+      - leetmatcher
+
+  nginx:
+    image: nginx:alpine
+    container_name: leetmatcher_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - leetmatcher
+
+  db:
+    image: postgres:15
+    container_name: leetmatcher_db
+    environment:
+      POSTGRES_DB: leetmatcher
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - leetmatcher
+
+networks:
+  leetmatcher:
+
+volumes:
+  pgdata:
+    
