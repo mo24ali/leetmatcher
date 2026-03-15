@@ -1,12 +1,13 @@
 <template>
-    <div class="container mx-auto py-8">
-        <h1 class="text-4xl font-bold mb-4">About</h1>
-        <p class="text-lg text-gray-600 mb-6">
-            This is the about page. You can customize it with your project information.
+    <div class="container py-8 font-base">
+        <h1 class="cta-title mb-4">About LeetMatcher</h1>
+        <p class="description mb-6">
+            LeetMatcher is the premier platform where computer science students connect with top tech companies through competitive matching.
         </p>
         <router-link 
             to="/" 
-            class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+            class="btn btn-outline"
+            style="display: inline-block; width: auto;"
         >
             Back to Home
         </router-link>
@@ -17,4 +18,8 @@
 </script>
 
 <style scoped>
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.py-8 { padding-top: 2rem; padding-bottom: 2rem; }
 </style>
+

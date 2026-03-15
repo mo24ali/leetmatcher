@@ -1,0 +1,1202 @@
+/* =============================================================================
+   LEETMATCHER — GLOBAL STYLESHEET
+   Consolidated from: App.vue, Header.vue, Home.vue, Register.vue,
+                       Register-recruiter.vue, Welcome.vue
+   Generated: 2026-03-15
+   ============================================================================= */
+
+
+/* =============================================================================
+   1. FONTS / GOOGLE IMPORTS
+   ============================================================================= */
+
+/* Inter + Roboto — used across all pages */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
+
+
+/* =============================================================================
+   2. DESIGN TOKENS / CSS VARIABLES
+   ============================================================================= */
+
+/*
+  Two colour palettes coexist in this project:
+
+  A) "Monochrome" palette — used by Header, Home, Register, Register-recruiter
+  B) "Blue/LinkedIn" palette — used exclusively by Welcome.vue
+
+  Both are declared at :root level so every component can consume either set.
+  Variables from both palettes are merged here to avoid duplication.
+*/
+
+:root {
+    /* --- Monochrome palette (A) --- */
+    --black:    #000000;
+    --white:    #ffffff;
+    --gray-50:  #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #e5e5e5;
+    --gray-300: #d4d4d4;
+    --gray-400: #a3a3a3;
+    --gray-500: #737373;
+    --gray-600: #525252;
+    --gray-700: #404040;
+    --gray-800: #262626;
+    --gray-900: #171717;
+
+    /* --- Blue/LinkedIn palette (B) — Welcome.vue --- */
+    --blue:          #0a66c2;
+    --blue-light:    #e8f0fe;
+    --blue-dark:     #004182;
+    --gray-light:    #f3f6f8;    /* Welcome's background gray */
+    --gray:          #6c757d;
+    --gray-border:   #e0e0e0;
+    --success:       #057642;
+    --warning:       #e68a2e;
+    --text-primary:  #1e293b;
+    --text-secondary:#64748b;
+
+    /* --- Shadows --- */
+    --shadow-sm:  0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.08);
+
+    /* --- Base font stack --- */
+    --font-base: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+
+/* =============================================================================
+   3. BASE / RESET
+   ============================================================================= */
+
+/* From App.vue (unscoped) — body-level reset */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Universal box-sizing (matches Welcome's splash-container * rule) */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+
+/* =============================================================================
+   4. LAYOUT UTILITIES
+   ============================================================================= */
+
+/* Consistent max-width container — from Header.vue */
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+@media (max-width: 640px) {
+    .container {
+        padding: 0 1.5rem;
+    }
+}
+
+/* Full-viewport page wrappers */
+.page-full {
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Centred auth/card pages (Register, Register-recruiter) */
+.page-centered {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-color: var(--gray-50);
+    font-family: var(--font-base);
+}
+
+@media (max-width: 640px) {
+    .page-centered {
+        padding: 1rem;
+    }
+}
+
+/* Split 50/50 layout — Home.vue */
+.split-layout {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .split-layout {
+        flex-direction: column;
+    }
+}
+
+/* Sidebar + main layout — Welcome.vue */
+.splash-layout {
+    display: flex;
+    margin-top: 64px; /* topbar height */
+    min-height: calc(100vh - 64px);
+}
+
+/* ── Splash Containers ── */
+.leet-splash {
+    min-height: 100vh;
+    width: 100%;
+    background-color: var(--white);
+    color: var(--gray-900);
+    font-family: var(--font-base);
+    position: relative;
+    --logo-size-primary: 4rem;
+    --logo-size-secondary: 2.5rem;
+}
+
+.splash-container {
+    min-height: 100vh;
+    background-color: var(--gray-light);
+    color: var(--text-primary);
+}
+
+/* ── Home Page Split Layout ── */
+.brand-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background-color: var(--white);
+    border-right: 1px solid var(--gray-200);
+}
+
+.brand-content {
+    max-width: 480px;
+    padding: 2rem;
+}
+
+.cta-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background-color: var(--gray-100);
+}
+
+.cta-content {
+    max-width: 360px;
+    width: 100%;
+    padding: 2rem;
+}
+
+.cta-title {
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.cta-subtitle {
+    font-size: 1rem;
+    color: var(--gray-500);
+    margin-bottom: 3rem;
+    font-weight: 400;
+}
+
+.description {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--gray-600);
+    font-weight: 400;
+    max-width: 360px;
+}
+
+@media (max-width: 768px) {
+    .leet-splash {
+        --logo-size-primary: 3rem;
+        --logo-size-secondary: 2rem;
+    }
+
+    .brand-side {
+        border-right: none;
+        border-bottom: 1px solid var(--gray-200);
+        padding: 3rem 1.5rem;
+        min-height: auto;
+    }
+
+    .brand-content {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .cta-side {
+        padding: 3rem 1.5rem;
+    }
+
+    .cta-content {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .leet-splash {
+        --logo-size-primary: 2.5rem;
+        --logo-size-secondary: 1.5rem;
+    }
+}
+
+
+/* =============================================================================
+   5. TYPOGRAPHY
+   ============================================================================= */
+
+/* Default font on component roots */
+.font-base {
+    font-family: var(--font-base);
+    color: var(--gray-900);
+}
+
+/* Shared tagline / descriptor text — Home.vue */
+.tagline {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--gray-500);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+@media (max-width: 480px) {
+    .tagline {
+        font-size: 1rem;
+    }
+}
+
+/* Generic link style — Welcome.vue */
+.link {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+
+/* =============================================================================
+   6. LOGO
+   ============================================================================= */
+
+.logo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    user-select: none;
+}
+
+/* ── Monochrome Variant (Home, Header) ── */
+.logo-leet {
+    font-size: var(--logo-size-primary, 1.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--gray-900);
+    line-height: 1.2;
+}
+
+.logo-matcher {
+    font-size: var(--logo-size-secondary, 1.25rem);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--gray-500);
+    line-height: 1.2;
+}
+
+/* ── Blue Variant (Welcome) ── */
+.logo-match {
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.logo-leet-blue {
+    color: var(--blue);
+    font-size: 1.8rem;
+}
+
+/* Header Specific Small Logo Overrides */
+.minimal-header .logo-leet {
+    --logo-size-primary: 1.5rem;
+}
+
+.minimal-header .logo-matcher {
+    --logo-size-secondary: 1.25rem;
+}
+
+
+/* =============================================================================
+   7. HEADER / TOPBAR / NAVIGATION
+   ============================================================================= */
+
+/* ── Sticky site header (Header.vue) ── */
+.minimal-header {
+    background-color: rgba(255, 255, 255, 0.98);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+}
+
+.minimal-header.scrolled {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Nav row */
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Nav link list */
+.nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Individual nav link */
+.nav-link {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--gray-600);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.2s ease;
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.nav-link:hover {
+    color: var(--gray-900);
+}
+
+.nav-link.active {
+    color: var(--gray-900);
+    font-weight: 500;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--gray-900);
+    border-radius: 1px;
+}
+
+/* Responsive nav */
+@media (max-width: 640px) {
+    .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .nav-links {
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-links {
+        gap: 1rem;
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+    }
+}
+
+/* ── Fixed topbar (Welcome.vue) ── */
+.topbar {
+    background-color: var(--white);
+    padding: 0.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--gray-border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+}
+
+.topbar-right {
+    display: flex;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .topbar {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* ── Sidebar navigation (Welcome.vue) ── */
+.sidebar {
+    width: 260px;
+    background-color: var(--white);
+    border-right: 1px solid var(--gray-border);
+    padding: 2rem 1rem;
+    position: fixed;
+    top: 64px;
+    bottom: 0;
+    overflow-y: auto;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-footer {
+    margin-top: 2rem;
+    padding: 1rem;
+    border-top: 1px solid var(--gray-border);
+}
+
+/* Sidebar nav items */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.nav-item .icon {
+    width: 20px;
+    height: 20px;
+}
+
+.nav-item:hover {
+    background-color: var(--gray-light);
+    color: var(--blue);
+}
+
+.nav-item.active {
+    background-color: var(--blue-light);
+    color: var(--blue);
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+}
+
+/* Main content area (Welcome.vue) */
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 2rem;
+    background-color: var(--gray-light);
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+}
+
+
+/* =============================================================================
+   8. COMPONENTS — BUTTONS
+   ============================================================================= */
+
+/*
+  NOTE: Two button systems overlap in this project:
+    • Home.vue: .btn, .btn-outline, .btn-primary  (full-width block, monochrome)
+    • Welcome.vue: .btn-primary, .btn-outline-sm, .btn-primary-sm, .btn-social
+      — .btn-primary in Welcome uses blue (#0a66c2), border-radius: 24px
+      — .btn-primary in Home    uses gray-900,     border-radius: 6px
+
+  The Welcome-specific overrides are scoped differently (pillar context class
+  .splash-container) but since these were scoped, they did not conflict at runtime.
+  In the global file, the two .btn-primary definitions are KEPT SEPARATE by their
+  descriptor classes below. Home's variant is the default; Welcome's is explicit.
+*/
+
+/* ── Base button (Home.vue) ── */
+.btn {
+    display: block;
+    width: 100%;
+    padding: 1rem 2rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    font-family: var(--font-base);
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Outlined (monochrome) */
+.btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--gray-900);
+    color: var(--gray-900);
+}
+
+.btn-outline:hover {
+    background: var(--gray-900);
+    color: var(--white);
+}
+
+/* Primary (monochrome) — Home.vue */
+.btn-primary {
+    background: var(--gray-900);
+    border: 1.5px solid var(--gray-900);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: var(--gray-800);
+    border-color: var(--gray-800);
+}
+
+/* ── Small pill buttons (Welcome.vue topbar) ── */
+.btn-outline-sm {
+    padding: 0.5rem 1.2rem;
+    border: 1px solid var(--gray-border);
+    background: var(--white);
+    border-radius: 24px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-outline-sm:hover {
+    background-color: var(--gray-light);
+    border-color: var(--blue);
+}
+
+.btn-primary-sm {
+    padding: 0.5rem 1.2rem;
+    background-color: var(--blue);
+    color: var(--white);
+    border: none;
+    border-radius: 24px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary-sm:hover {
+    background-color: var(--blue-dark);
+}
+
+/* ── Submit button (Register-recruiter.vue) ── */
+.submit-btn {
+    width: 100%;
+    padding: 1rem;
+    margin-top: 1rem;
+    background-color: var(--gray-900);
+    color: var(--white);
+    border: 1px solid var(--gray-900);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-base);
+}
+
+.submit-btn:hover {
+    background-color: var(--gray-800);
+    border-color: var(--gray-800);
+    transform: translateY(-1px);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+/* ── Social auth buttons (Welcome.vue) ── */
+.btn-social {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--white);
+    border: 1px solid var(--gray-border);
+    border-radius: 24px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-social:hover {
+    background-color: var(--gray-light);
+}
+
+.social-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* Blue pill primary (Welcome.vue auth form submit) */
+.btn-primary-blue {
+    padding: 0.9rem;
+    background-color: var(--blue);
+    color: var(--white);
+    border: none;
+    border-radius: 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.btn-primary-blue:hover {
+    background-color: var(--blue-dark);
+}
+
+
+/* =============================================================================
+   9. COMPONENTS — FORMS
+   ============================================================================= */
+
+/* Form group wrapper */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Field label — Register.vue / Register-recruiter.vue */
+.field-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* Generic form label (Welcome.vue) */
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/*
+  Input field — two slight variants exist:
+    • Register-recruiter: border var(--gray-200), focus border var(--gray-900), shadow var(--gray-100)
+    • Welcome:            border var(--gray-border), focus border var(--blue),   shadow var(--blue-light)
+
+  The default below mirrors the monochrome variant (most reused across 2 files).
+  If .splash-container context is needed for the blue focus ring, add it there.
+*/
+.form-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: var(--font-base);
+    color: var(--gray-900);
+    background-color: var(--white);
+    transition: all 0.2s ease;
+}
+
+.form-input::placeholder {
+    color: var(--gray-400);
+    font-weight: 400;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--gray-900);
+    background-color: var(--white);
+    box-shadow: 0 0 0 3px var(--gray-100);
+}
+
+/* Blue-focused variant (Welcome.vue) */
+.form-input-blue:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-light);
+}
+
+/* Checkbox row (Welcome.vue) */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+
+/* =============================================================================
+   10. COMPONENTS — CARDS
+   ============================================================================= */
+
+/* ── Role selection card (Register.vue) ── */
+.role-card {
+    max-width: 480px;
+    width: 100%;
+    background-color: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 16px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 640px) {
+    .role-card {
+        padding: 2rem 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .role-card {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Role links inside card */
+.role-link {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    text-decoration: none;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.role-link:hover {
+    border-color: var(--gray-400);
+    background-color: var(--gray-50);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.role-link.applicant {
+    border-left: 3px solid var(--gray-900);
+}
+
+.role-link.recruiter {
+    border-left: 3px solid var(--gray-400);
+}
+
+.role-label {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+}
+
+.role-description {
+    font-size: 0.95rem;
+    color: var(--gray-500);
+    line-height: 1.5;
+}
+
+.arrow {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: var(--gray-400);
+    transition: transform 0.2s ease;
+}
+
+.role-link:hover .arrow {
+    transform: translate(5px, -50%);
+    color: var(--gray-900);
+}
+
+@media (max-width: 640px) {
+    .role-link {
+        padding: 1.25rem;
+    }
+
+    .role-label {
+        font-size: 1.1rem;
+    }
+
+    .role-description {
+        font-size: 0.85rem;
+    }
+
+    .arrow {
+        font-size: 1.25rem;
+        right: 1.25rem;
+    }
+}
+
+/* ── Registration card (Register-recruiter.vue) ── */
+.register-card {
+    max-width: 480px;
+    width: 100%;
+    background-color: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 20px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 640px) {
+    .register-card {
+        padding: 2rem 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .register-card {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* ── Indicator / dashboard cards (Welcome.vue) ── */
+.indicator-card {
+    background-color: var(--white);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-border);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.card-header h3 {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+/* ── Auth card (Welcome.vue) ── */
+.auth-card {
+    background-color: var(--white);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-border);
+    max-width: 480px;
+    margin-bottom: 2rem;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--gray-border);
+}
+
+.tab {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.auth-divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 100px);
+    height: 1px;
+    background-color: var(--gray-border);
+}
+
+.auth-divider::before { left: 0; }
+.auth-divider::after  { right: 0; }
+
+.auth-divider span {
+    background-color: var(--white);
+    padding: 0 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.social-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.auth-footer {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+
+/* =============================================================================
+   11. COMPONENTS — BADGES & ALERTS
+   ============================================================================= */
+
+/* Badge (Welcome.vue) */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--gray-light);
+    color: var(--text-secondary);
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--gray-border);
+}
+
+.badge.success {
+    background-color: #e6f3e6;
+    color: var(--success);
+    border-color: #c3e6c3;
+}
+
+.badge.warning {
+    background-color: #fff4e5;
+    color: var(--warning);
+    border-color: #ffe0b2;
+}
+
+/* Alert (Welcome.vue) */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    background-color: var(--white);
+    border: 1px solid var(--gray-border);
+}
+
+.alert.success {
+    border-left: 4px solid var(--success);
+    background-color: #f0f9f0;
+}
+
+.alert-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--success);
+}
+
+
+/* =============================================================================
+   12. COMPONENTS — PROGRESS BARS
+   ============================================================================= */
+
+/* Progress container (Welcome.vue) */
+.progress-container {
+    margin-top: 0.5rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: var(--gray-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--blue);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+
+/* =============================================================================
+   13. COMPONENTS — DIVIDERS & DECORATIVE ELEMENTS
+   ============================================================================= */
+
+/* Horizontal rule divider — Register.vue, Register-recruiter.vue */
+.divider {
+    height: 1px;
+    background-color: var(--gray-200);
+    margin: 2rem 0 1.5rem;
+}
+
+/* Decorative accent line — Home.vue */
+.divider-accent {
+    width: 60px;
+    height: 2px;
+    background-color: var(--gray-300);
+    margin: 2rem 0;
+}
+
+/* Subtle grid background — Home.vue */
+.minimal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(var(--gray-200) 1px, transparent 1px),
+        linear-gradient(90deg, var(--gray-200) 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.3;
+    z-index: 0;
+    pointer-events: none;
+}
+
+
+/* =============================================================================
+   14. UTILITIES
+   ============================================================================= */
+
+/* Text helpers */
+.text-center  { text-align: center; }
+.text-muted   { color: var(--gray-500); }
+.text-primary-color { color: var(--gray-900); }
+
+/* Margin helpers */
+.mt-auto { margin-top: auto; }
+.mb-0    { margin-bottom: 0; }
+
+/* Flex helpers */
+.flex         { display: flex; }
+.flex-col     { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+
+/* Grid */
+.indicators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .indicators-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Footer elements */
+.footer-note {
+    margin-top: 3rem;
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+.footer-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--gray-500);
+    margin: 0;
+}
+
+.footer-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+/* Inline login link (Register.vue, Register-recruiter.vue) */
+.login-link {
+    color: var(--gray-900);
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 0.25rem;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.login-link:hover {
+    border-bottom-color: var(--gray-900);
+}
