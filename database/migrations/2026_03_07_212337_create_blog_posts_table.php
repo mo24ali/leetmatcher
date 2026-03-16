@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('blog_posts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('autho_id')->constrained('users');
+            $table->string('title');
+            $table->enum('status',['draft','published']);            
             $table->timestamps();
         });
     }

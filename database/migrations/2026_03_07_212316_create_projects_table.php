@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('recruiter_id')->constrained('users')->cascadeOnDelete();
+            $table->string('title');
+            $table->string('description');
+            $table->timestamp('deadline');
+            $table->enum('status',['open','closed']);
             $table->timestamps();
         });
     }

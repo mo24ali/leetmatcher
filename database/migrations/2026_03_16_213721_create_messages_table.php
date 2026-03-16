@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('interviews', function (Blueprint $table) {
+        Schema::create('messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('application_id')->constrained('applications')->cascadeOnDelete();
-            $table->timestamp('scheduled_at');
-            $table->string('meeting_link');
-            $table->text('notes');
-            $table->integer('score');
+            $table->foreignId('sender_id')->constrained('users');
+            $table->foreignId('receiver_id')->constrained('users');
+            $table->text('content');
+            $table->timestamp('read_at');
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('interviews');
+        Schema::dropIfExists('messages');
     }
 };

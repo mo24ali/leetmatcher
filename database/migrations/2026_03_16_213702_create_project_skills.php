@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('interviews', function (Blueprint $table) {
+        Schema::create('project_skills', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('application_id')->constrained('applications')->cascadeOnDelete();
-            $table->timestamp('scheduled_at');
-            $table->string('meeting_link');
-            $table->text('notes');
-            $table->integer('score');
+            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->foreignId('skill_id')->constrained('skills')->cascadeOnDelete();
+            $table->enum('level',['beginner','intermidiate','advanced']);
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('interviews');
+        Schema::dropIfExists('project_skills');
     }
 };
