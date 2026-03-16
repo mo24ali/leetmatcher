@@ -1,18 +1,42 @@
+<script setup>
+import { reactive } from "vue";
+import axios from "axios";
+
+const form = reactive({
+    email: "",
+    password: "",
+});
+
+async function login() {
+    try {
+        const response = await axios.post(
+            "http://127.0.0.1:8000/api/v1/login",
+            form,
+        );
+
+        console.log(response.data);
+    } catch (error) {
+        console.log(error.response.data);
+    }
+}
+</script>
+
 <template>
     <div class="page-centered">
         <div class="register-card">
             <div class="header">
-                <h2 class="title">Welcome Back</h2>
-                <p class="subtitle">Enter your credentials to access your account</p>
+                <h2 class="cta-title">Welcome Back</h2>
+                <p class="cta-subtitle">Enter your credentials to access your account</p>
             </div>
 
-            <form class="register-form">
+            <form @submit.prevent="login" class="register-form">
                 <div class="form-group">
                     <label for="email" class="field-label">Email address</label>
                     <input 
                         id="email"
                         type="email" 
                         placeholder="john@example.com" 
+                        v-model="form.email"
                         class="form-input"
                     />
                 </div>
@@ -23,6 +47,7 @@
                         id="password"
                         type="password" 
                         placeholder="••••••••" 
+                        v-model="form.password"
                         class="form-input"
                     />
                 </div>
@@ -39,9 +64,6 @@
         </div>
     </div>
 </template>
-
-<script setup>
-</script>
 
 <style scoped>
 </style>

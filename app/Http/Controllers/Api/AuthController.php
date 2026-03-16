@@ -11,13 +11,14 @@ class AuthController extends Controller
         $validatedData = $request->validate([
             "email" => "required|max:255|string|unique:users",
             "name" => "required|max:30|string",
-            "password" => "required|max:30|string",
-            "password_confirmation" => "required|max:30|string",
+            "password" => "required|max:30|string|confirmed",
+            "role" => "required|string"
         ]);
         $user = User::create([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
-            'password' => $validatedData['password']
+            'password' => $validatedData['password'],
+            'role' => $validatedData['role']
         ]);
         return response()->json([
             'message' => 'User created successfully',

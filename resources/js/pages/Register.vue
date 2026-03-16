@@ -1,7 +1,7 @@
 <template>
     <div class="page-centered">
         <div class="role-card">
-            <h1 class="role-title">Join as</h1>
+            <h1 class="cta-title">Join as</h1>
             
             <!-- Applicant link -->
             <router-link 

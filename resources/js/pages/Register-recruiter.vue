@@ -7,6 +7,7 @@ const form = reactive({
     email: "",
     password: "",
     password_confirmation: "",
+    role: "recruiter"
 });
 
 async function register() {
@@ -28,8 +29,8 @@ async function register() {
         <div class="register-card">
             <!-- Header -->
             <div class="header">
-                <h2 class="title">Create account</h2>
-                <p class="subtitle">Join as a recruiter</p>
+                <h2 class="cta-title">Create account</h2>
+                <p class="cta-subtitle">Join as a recruiter</p>
             </div>
 
             <!-- Registration form -->
@@ -81,7 +82,6 @@ async function register() {
                         class="form-input"
                     />
                 </div>
-
                 <!-- Submit button -->
                 <button type="submit" class="submit-btn">
                     Register
