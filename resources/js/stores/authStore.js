@@ -3,6 +3,7 @@ import { reactive, computed } from 'vue'
 const BASE_URL = 'http://127.0.0.1:8000/api'
 
 // ─── Persisted state ─────────────────────────────────────────────────────────
+// ─── Persisted state ─────────────────────────────────────────────────────────
 function loadStoredAuth() {
     try {
         const raw = localStorage.getItem('lm_auth')
@@ -10,33 +11,39 @@ function loadStoredAuth() {
     } catch {
         /* ignore corrupt data */
     }
-    return { user: null, token: null }
+    return { user: null }
 }
 
 const stored = loadStoredAuth()
 
 const state = reactive({
     user:  stored.user,
-    token: stored.token,
 })
 
 function persist() {
-    localStorage.setItem('lm_auth', JSON.stringify({ user: state.user, token: state.token }))
+    localStorage.setItem('lm_auth', JSON.stringify({ user: state.user }))
 }
 
 // ─── Computed helpers ─────────────────────────────────────────────────────────
-const isAuthenticated = computed(() => !!state.token && !!state.user)
+const isAuthenticated = computed(() => !!state.user)
 const role            = computed(() => state.user?.role ?? 'guest')
 
 // ─── API helper ───────────────────────────────────────────────────────────────
 async function apiFetch(endpoint, options = {}) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+
     const headers = {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        ...(state.token ? { Authorization: `Bearer ${state.token}` } : {}),
+        ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
         ...(options.headers ?? {}),
     }
-    const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers })
+    const res = await fetch(`${BASE_URL}${endpoint}`, { 
+        ...options, 
+        headers, 
+        credentials: 'include' 
+    })
+
     const data = await res.json().catch(() => ({}))
     if (!res.ok) {
         const err = new Error(data.message ?? `HTTP ${res.status}`)
@@ -54,7 +61,6 @@ async function login(email, password) {
         body: JSON.stringify({ email, password }),
     })
     state.user  = data.user
-    state.token = data.token
     persist()
     return data.user
 }
@@ -65,7 +71,6 @@ async function register(payload) {
         body: JSON.stringify(payload),
     })
     state.user  = data.user
-    state.token = data.token
     persist()
     return data.user
 }
@@ -75,21 +80,17 @@ async function logout() {
         await apiFetch('/v1/logout', { method: 'POST' })
     } catch { /* best-effort */ }
     state.user  = null
-    state.token = null
     persist()
 }
 
 async function fetchMe() {
-    if (!state.token) return null
     try {
         const data = await apiFetch('/v1/me')
         state.user = data
         persist()
         return data
     } catch {
-        // token probably expired
         state.user  = null
-        state.token = null
         persist()
         return null
     }
@@ -99,12 +100,14 @@ async function uploadCv(file) {
     const formData = new FormData()
     formData.append('cv', file)
 
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
     const res = await fetch(`${BASE_URL}/v1/cv/upload`, {
         method: 'POST',
         headers: {
             Accept: 'application/json',
-            Authorization: `Bearer ${state.token}`,
+            ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
         },
+        credentials: 'include',
         body: formData,
     })
     const data = await res.json().catch(() => ({}))

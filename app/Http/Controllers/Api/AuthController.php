@@ -25,7 +25,8 @@ class AuthController extends Controller
             'role'     => $validatedData['role'],
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        Auth::login($user);
+        $request->session()->regenerate();
 
         return response()->json([
             'message' => 'User created successfully',
@@ -35,7 +36,6 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role'  => $user->role,
             ],
-            'token'   => $token,
         ], 201);
     }
 
@@ -52,13 +52,10 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $request->session()->regenerate();
+
         /** @var User $user */
         $user = Auth::user();
-
-        // Revoke all old tokens on login (single-session enforcement)
-        $user->tokens()->delete();
-
-        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
@@ -68,20 +65,26 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role'  => $user->role,
             ],
-            'token'   => $token,
         ]);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function me(Request $request)
     {
-        $user = $request->user();
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
 
         return response()->json([
             'id'    => $user->id,

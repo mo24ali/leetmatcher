@@ -23,7 +23,6 @@
 
         <!-- Right side actions -->
         <div class="header-actions">
-          <!-- User badge when logged in -->
           <div v-if="auth.isAuthenticated.value" class="user-badge">
             <span class="user-name">{{ auth.state.user?.name }}</span>
             <span class="role-chip" :class="auth.role.value">{{ auth.role.value }}</span>
