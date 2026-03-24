@@ -137,6 +137,10 @@ async function uploadCv(file) {
     return data
 }
 
+async function fetchSkills() {
+    return await apiFetch('/v1/profile/skills')
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 export function useAuthStore() {
     return {
@@ -148,6 +152,7 @@ export function useAuthStore() {
         logout,
         fetchMe,
         uploadCv,
+        fetchSkills,
         apiFetch,
         // verifyOtp, // Future OTP verification logic
     }

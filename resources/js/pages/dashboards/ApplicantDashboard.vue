@@ -136,6 +136,16 @@
               </div>
             </div>
           </transition>
+          <!-- Persistent Stored Skills -->
+          <div v-if="persistentSkills.length" class="parsed-results mt-4">
+            <h3 class="parsed-title">🛠️ Your Profile Skills</h3>
+            <div class="skill-tags">
+              <span v-for="skill in persistentSkills" :key="skill.id" class="skill-tag" :title="'Added: ' + new Date(skill.created_at).toLocaleDateString()">
+                {{ skill.name }}
+                <span v-if="skill.proficiency" class="skill-level">· {{ skill.proficiency }}</span>
+              </span>
+            </div>
+          </div>
         </section>
 
         <!-- Browse Jobs panel (placeholder) -->
@@ -217,6 +227,16 @@ const dragging    = ref(false)
 const uploading   = ref(false)
 const uploadError = ref('')
 const parsed      = ref(null)
+const persistentSkills = ref([])
+
+onMounted(async () => {
+    try {
+        const res = await auth.fetchSkills()
+        persistentSkills.value = res.skills
+    } catch {
+        /* best-effort */
+    }
+})
 
 function handleDrop(e) {
   dragging.value = false
@@ -260,6 +280,7 @@ async function uploadCv() {
   try {
     const res = await auth.uploadCv(selectedFile.value)
     parsed.value = res.parsed
+    persistentSkills.value = res.skills
   } catch (e) {
     uploadError.value = e.message || 'Upload failed. Please try again.'
   } finally {
@@ -272,6 +293,14 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
+
+// // ─── Sample job listings ──────────────────────────────────────────────────────
+// const sampleJobs = [
+//   { id: 1, title: 'Frontend Engineer',      company: 'TechCorp Inc.',    type: 'Remote', skills: ['Vue', 'TypeScript'] },
+//   { id: 2, title: 'Backend Developer',      company: 'FinanceFlow',      type: 'Onsite', skills: ['Laravel', 'PostgreSQL'] },
+//   { id: 3, title: 'Full-Stack Developer',   company: 'StartupXYZ',       type: 'Remote', skills: ['React', 'Node.js'] },
+//   { id: 4, title: 'ML Engineer',            company: 'DataVision AI',    type: 'Onsite', skills: ['Python', 'TensorFlow'] },
+// ]
 </script>
 
 <style scoped>
@@ -549,4 +578,6 @@ function formatBytes(bytes) {
 
 .fade-slide-enter-active { transition: opacity 0.35s ease, transform 0.35s ease; }
 .fade-slide-enter-from   { opacity: 0; transform: translateY(12px); }
+.mt-4 { margin-top: 1.5rem; }
+.skill-level { font-size: 0.7rem; opacity: 0.7; margin-left: 0.3rem; font-weight: 400; }
 </style>
