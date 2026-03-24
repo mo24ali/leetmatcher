@@ -12,7 +12,8 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        //
+        $this->authorize('viewAny', Project::class);
+        return response()->json(Project::with('recruiter')->paginate(10));
     }
 
     /**
@@ -20,7 +21,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        //
+        $this->authorize('create', Project::class);
     }
 
     /**
@@ -28,7 +29,24 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create', Project::class);
+
+        $validatedData = $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'required|string',
+            'deadline'    => 'required|date',
+            'status'      => 'required|in:open,closed',
+        ]);
+
+        $project = Project::create([
+            ...$validatedData,
+            'recruiter_id' => $request->user()->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Project created successfully',
+            'project' => $project,
+        ], 201);
     }
 
     /**
@@ -36,7 +54,8 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        //
+        $this->authorize('view', $project);
+        return response()->json($project->load(['recruiter', 'applications']));
     }
 
     /**
@@ -44,7 +63,7 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        //
+        $this->authorize('update', $project);
     }
 
     /**
@@ -52,7 +71,21 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        //
+        $this->authorize('update', $project);
+
+        $validatedData = $request->validate([
+            'title'       => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'deadline'    => 'sometimes|date',
+            'status'      => 'sometimes|in:open,closed',
+        ]);
+
+        $project->update($validatedData);
+
+        return response()->json([
+            'message' => 'Project updated successfully',
+            'project' => $project,
+        ]);
     }
 
     /**
@@ -60,6 +93,28 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        //
+        $this->authorize('delete', $project);
+        $project->delete();
+        return response()->json(['message' => 'Project deleted successfully'], 204);
+    }
+
+    /**
+     * Get matching profiles for a project.
+     */
+    public function matches(Project $project, \App\Services\MatchingService $matchingService)
+    {
+        $this->authorize('view', $project);
+
+        $profiles = \App\Models\Profile::with(['user', 'skills'])->get();
+
+        $matches = $profiles->map(function ($profile) use ($project, $matchingService) {
+            $profile->match_score = $matchingService->calculateMatch($project, $profile);
+            return $profile;
+        })
+        ->filter(fn($profile) => $profile->match_score > 0)
+        ->sortByDesc('match_score')
+        ->values();
+
+        return response()->json($matches);
     }
 }

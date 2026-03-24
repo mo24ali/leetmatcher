@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('blog_posts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('author_id')->constrained('users');
-            $table->string('title');
-            $table->enum('status',['draft','published']);            
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('otp_code')->nullable()->after('role');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('blog_posts');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('otp_code');
+        });
     }
 };

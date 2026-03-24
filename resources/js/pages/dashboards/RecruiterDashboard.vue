@@ -145,12 +145,15 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/authStore'
 
 const auth = useAuthStore()
+const loading = ref(true)
 
-const stats = reactive({ activeListings: 7, totalApplicants: 84, interviews: 12, filled: 3 })
+// Recruiter statistics (initialized to zero)
+// These will be populated by an API call to a recruiter-specific stats endpoint
+const stats = reactive({ activeListings: 0, totalApplicants: 0, interviews: 0, filled: 0 })
 
 // ─── Job form ─────────────────────────────────────────────────────────────────
 const jobForm = reactive({ title: '', description: '', deadline: '', status: 'open' })
@@ -162,41 +165,89 @@ async function postJob() {
   postSuccess.value = false
   postError.value   = ''
   posting.value     = true
-  // Simulated API call
-  await new Promise(r => setTimeout(r, 900))
+  
   try {
-    listings.value.unshift({
-      id: Date.now(), title: jobForm.title, status: jobForm.status,
-      posted: 'Today', deadline: jobForm.deadline, applicants: 0,
+    // API call to create a new job listing
+    const res = await auth.apiFetch('/v1/projects', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: jobForm.title,
+        description: jobForm.description,
+        deadline: jobForm.deadline,
+        status: jobForm.status
+      })
     })
+    
+    // Add the new listing to the local list
+    listings.value.unshift(res)
+    
+    // Reset form
     jobForm.title = ''; jobForm.description = ''; jobForm.deadline = ''; jobForm.status = 'open'
     postSuccess.value = true
     setTimeout(() => postSuccess.value = false, 3000)
-  } catch {
-    postError.value = 'Failed to post job. Please try again.'
+  } catch (err) {
+    postError.value = err.message || 'Failed to post job. Please try again.'
   } finally {
     posting.value = false
   }
 }
 
 // ─── Listings ─────────────────────────────────────────────────────────────────
-const listings = ref([
-  { id: 1, title: 'Senior Frontend Engineer', status: 'open',   posted: '2 days ago', deadline: '2026-04-01', applicants: 24 },
-  { id: 2, title: 'Backend Developer',         status: 'open',   posted: '5 days ago', deadline: '2026-03-28', applicants: 18 },
-  { id: 3, title: 'DevOps Engineer',           status: 'closed', posted: '2 weeks ago', deadline: '2026-03-10', applicants: 42 },
-])
+// List of jobs posted by this recruiter
+const listings = ref([])
 
-function closeListing(listing) { listing.status = 'closed' }
+async function closeListing(listing) {
+  try {
+    // API call to update listing status
+    // await auth.apiFetch(`/v1/projects/${listing.id}`, {
+    //   method: 'PATCH',
+    //   body: JSON.stringify({ status: 'closed' })
+    // })
+    listing.status = 'closed'
+  } catch (err) {
+    console.error('Failed to close listing:', err)
+  }
+}
 
 // ─── Applicants panel ─────────────────────────────────────────────────────────
 const selectedListing = ref(null)
-const applicants = [
-  { id: 1, name: 'Alice Johnson', email: 'alice@example.com', applied: '2 days ago', status: 'pending'  },
-  { id: 2, name: 'Bob Smith',     email: 'bob@example.com',   applied: '3 days ago', status: 'accepted' },
-  { id: 3, name: 'Carol White',   email: 'carol@example.com', applied: '4 days ago', status: 'rejected' },
-]
+const applicants = ref([]) // Populated when a listing is selected
 
-function viewApplicants(listing) { selectedListing.value = listing }
+/**
+ * Fetch recruiter dashboard overview data
+ */
+async function loadRecruiterData() {
+  loading.value = true
+  try {
+    // const [sData, lData] = await Promise.all([
+    //   auth.apiFetch('/v1/recruiter/stats'),
+    //   auth.apiFetch('/v1/recruiter/listings')
+    // ])
+    // stats.activeListings = sData.active_count
+    // listings.value = lData
+    
+    console.log('Recruiter data fetching logic ready for backend implementation.')
+  } catch (err) {
+    console.error('Failed to load recruiter data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadRecruiterData()
+})
+
+async function viewApplicants(listing) {
+  selectedListing.value = listing
+  applicants.value = []
+  try {
+    // Fetch applicants for the specific listing
+    // applicants.value = await auth.apiFetch(`/v1/projects/${listing.id}/applications`)
+  } catch (err) {
+    console.error('Failed to load applicants:', err)
+  }
+}
 </script>
 
 <style scoped>

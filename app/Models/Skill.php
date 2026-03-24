@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class skills extends Model
+class Skill extends Model
 {
-    /** @use HasFactory<\Database\Factories\SkillsFactory> */
+    /** @use HasFactory<\Database\Factories\SkillFactory> */
     use HasFactory;
 }

@@ -60,9 +60,11 @@ async function login(email, password) {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     })
-    state.user  = data.user
-    persist()
-    return data.user
+    if (data.user) {
+        state.user  = data.user
+        persist()
+    }
+    return data
 }
 
 async function register(payload) {
@@ -70,10 +72,26 @@ async function register(payload) {
         method: 'POST',
         body: JSON.stringify(payload),
     })
-    state.user  = data.user
-    persist()
-    return data.user
+    if (data.user) {
+        state.user  = data.user
+        persist()
+    }
+    return data
 }
+
+/* OTP AUTHENTICATION (Commented for future use)
+async function verifyOtp(email, otp) {
+    const data = await apiFetch('/v1/otp/verify', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+    })
+    if (data.user) {
+        state.user = data.user
+        persist()
+    }
+    return data
+}
+*/
 
 async function logout() {
     try {
@@ -130,5 +148,7 @@ export function useAuthStore() {
         logout,
         fetchMe,
         uploadCv,
+        apiFetch,
+        // verifyOtp, // Future OTP verification logic
     }
 }
