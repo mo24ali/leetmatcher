@@ -23,10 +23,12 @@
 
         <!-- Right side actions -->
         <div class="header-actions">
-          <div v-if="auth.isAuthenticated.value" class="user-badge">
-            <span class="user-name">{{ auth.state.user?.name }}</span>
-            <span class="role-chip" :class="auth.role.value">{{ auth.role.value }}</span>
-          </div>
+          <router-link v-if="auth.isAuthenticated.value" to="/profile" class="user-badge-link">
+            <div class="user-badge">
+              <span class="user-name">{{ auth.state.user?.name }}</span>
+              <span class="role-chip" :class="auth.role.value">{{ auth.role.value }}</span>
+            </div>
+          </router-link>
 
           <button
             v-if="auth.isAuthenticated.value"
@@ -67,20 +69,18 @@ const navLinks = {
   ],
   applicant: [
     { path: '/dashboard/applicant',        label: 'Dashboard'    },
+    { path: '/profile',                    label: 'Profile'      },
     { path: '/dashboard/applicant#browse', label: 'Browse Jobs'  },
-    { path: '/dashboard/applicant#apps',   label: 'My Applications' },
   ],
   recruiter: [
     { path: '/dashboard/recruiter',            label: 'Dashboard'       },
+    { path: '/profile',                        label: 'Profile'         },
     { path: '/dashboard/recruiter#post',       label: 'Post a Job'      },
-    { path: '/dashboard/recruiter#listings',   label: 'My Listings'     },
-    { path: '/dashboard/recruiter#applicants', label: 'View Applicants' },
   ],
   admin: [
     { path: '/dashboard/admin',             label: 'Dashboard'       },
+    { path: '/profile',                     label: 'Profile'         },
     { path: '/dashboard/admin#users',       label: 'Manage Users'    },
-    { path: '/dashboard/admin#listings',    label: 'Manage Listings' },
-    { path: '/dashboard/admin#settings',    label: 'Site Settings'   },
   ],
 }
 
@@ -105,6 +105,16 @@ async function handleLogout() {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.user-badge-link {
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+}
+.user-badge-link:hover {
+  background: var(--gray-50);
 }
 
 .user-badge {

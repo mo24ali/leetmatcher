@@ -25,6 +25,18 @@ class AuthController extends Controller
             'role'     => $validatedData['role'],
         ]);
 
+        /* OTP AUTHENTICATION (Commented for future use)
+        $otp = rand(100000, 999999);
+        $user->update(['otp_code' => $otp]);
+        \Illuminate\Support\Facades\Log::info("OTP for newly registered user {$user->email}: {$otp}");
+        return response()->json([
+            'message'      => 'User created successfully. Please verify your account with the OTP sent to your email.',
+            'requires_otp' => true,
+            'email'        => $user->email,
+        ], 201);
+        */
+
+        // Direct login if OTP is disabled
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -45,18 +57,31 @@ class AuthController extends Controller
             'email'    => 'required|string|email',
             'password' => 'required|string',
         ]);
-
+        
         if (!Auth::attempt($credentials)) {
             return response()->json([
                 'message' => 'Invalid credentials. Please check your email and password.',
             ], 401);
         }
 
-        $request->session()->regenerate();
-
         /** @var User $user */
         $user = Auth::user();
 
+        /* OTP AUTHENTICATION (Commented for future use)
+        $otp = rand(100000, 999999);
+        $user->update(['otp_code' => $otp]);
+        \Illuminate\Support\Facades\Log::info("OTP for {$user->email}: {$otp}");
+        Auth::logout();
+        return response()->json([
+            'message'      => 'Login successful. Please verify the OTP sent to your email.',
+            'requires_otp' => true,
+            'email'        => $user->email,
+        ]);
+        */
+
+        // Direct login success if OTP is disabled
+        $request->session()->regenerate();
+        
         return response()->json([
             'message' => 'Login successful',
             'user'    => [
@@ -67,6 +92,40 @@ class AuthController extends Controller
             ],
         ]);
     }
+
+    /* OTP AUTHENTICATION (Commented for future use)
+    public function verifyOtp(Request $request)
+    {
+        $validatedData = $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'otp'   => 'required|string',
+        ]);
+
+        $user = User::where('email', $validatedData['email'])
+                    ->where('otp_code', $validatedData['otp'])
+                    ->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Invalid or expired OTP. Please try again.',
+            ], 401);
+        }
+
+        $user->update(['otp_code' => null]);
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return response()->json([
+            'message' => 'OTP verified. Welcome back!',
+            'user'    => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'role'  => $user->role,
+            ],
+        ]);
+    }
+    */
 
     public function logout(Request $request)
     {

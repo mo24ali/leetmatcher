@@ -12,7 +12,20 @@ class ApplicationController extends Controller
      */
     public function index()
     {
-        //
+        $this->authorize('viewAny', Application::class);
+
+        $user = auth()->user();
+        $query = Application::query();
+
+        if ($user->role === 'recruiter') {
+            $query->whereHas('project', function ($q) use ($user) {
+                $q->where('recruiter_id', $user->id);
+            });
+        } elseif ($user->role === 'student' || $user->role === 'applicant') {
+            $query->where('student_id', $user->id);
+        }
+
+        return response()->json($query->with(['project', 'student'])->paginate(15));
     }
 
     /**
@@ -20,7 +33,7 @@ class ApplicationController extends Controller
      */
     public function create()
     {
-        //
+        $this->authorize('create', Application::class);
     }
 
     /**
@@ -28,7 +41,23 @@ class ApplicationController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create', Application::class);
+
+        $validatedData = $request->validate([
+            'project_id'   => 'required|exists:projects,id',
+            'cover_letter' => 'required|string',
+        ]);
+
+        $application = Application::create([
+            ...$validatedData,
+            'student_id' => $request->user()->id,
+            'status'     => 'pending',
+        ]);
+
+        return response()->json([
+            'message'     => 'Application submitted successfully',
+            'application' => $application,
+        ], 201);
     }
 
     /**
@@ -36,7 +65,8 @@ class ApplicationController extends Controller
      */
     public function show(Application $application)
     {
-        //
+        $this->authorize('view', $application);
+        return response()->json($application->load(['project', 'student']));
     }
 
     /**
@@ -44,7 +74,7 @@ class ApplicationController extends Controller
      */
     public function edit(Application $application)
     {
-        //
+        $this->authorize('update', $application);
     }
 
     /**
@@ -52,7 +82,19 @@ class ApplicationController extends Controller
      */
     public function update(Request $request, Application $application)
     {
-        //
+        $this->authorize('update', $application);
+
+        $validatedData = $request->validate([
+            'status'       => 'sometimes|in:pending,accepted,rejected',
+            'cover_letter' => 'sometimes|string',
+        ]);
+
+        $application->update($validatedData);
+
+        return response()->json([
+            'message'     => 'Application updated successfully',
+            'application' => $application,
+        ]);
     }
 
     /**
@@ -60,6 +102,8 @@ class ApplicationController extends Controller
      */
     public function destroy(Application $application)
     {
-        //
+        $this->authorize('delete', $application);
+        $application->delete();
+        return response()->json(['message' => 'Application withdrawn successfully'], 204);
     }
 }

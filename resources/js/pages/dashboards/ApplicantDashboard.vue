@@ -155,7 +155,7 @@
             <p class="dash-card-subtitle">Open positions matching your profile</p>
           </div>
           <div class="job-list">
-            <div v-for="job in sampleJobs" :key="job.id" class="job-card">
+            <div v-for="job in recommendedJobs" :key="job.id" class="job-card">
               <div class="job-card-top">
                 <div>
                   <p class="job-title">{{ job.title }}</p>
@@ -168,6 +168,8 @@
                 <button class="job-apply-btn">Apply →</button>
               </div>
             </div>
+            <!-- Empty state for no jobs found -->
+            <p v-if="!loading && recommendedJobs.length === 0" class="empty-hint">No jobs matching your profile yet. Try uploading a CV!</p>
           </div>
         </section>
       </div>
@@ -180,8 +182,43 @@ import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/authStore'
 
 const auth = useAuthStore()
+const loading = ref(true)
 
-const stats = reactive({ applied: 12, pending: 5, accepted: 3, rejected: 4 })
+// Applicant statistics (initialized to zero)
+// These will be populated by an API call to a dashboard stats endpoint
+const stats = reactive({ applied: 0, pending: 0, accepted: 0, rejected: 0 })
+
+// Recommended job listings for the applicant
+// These will be populated by the matching algorithm via API
+const recommendedJobs = ref([])
+
+/**
+ * Fetch all applicant-specific dashboard data
+ */
+async function loadApplicantData() {
+  loading.value = true
+  try {
+    // Endpoints to be implemented in ApplicantController or similar
+    // const [sData, jData] = await Promise.all([
+    //   auth.apiFetch('/v1/applicant/stats'),
+    //   auth.apiFetch('/v1/applicant/recommended-jobs')
+    // ])
+    
+    // Assign fetched data to reactive refs
+    // stats.applied = sData.applied_count
+    // recommendedJobs.value = jData
+    
+    console.log('Applicant data fetching logic ready for backend implementation.')
+  } catch (err) {
+    console.error('Failed to load applicant dashboard data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadApplicantData()
+})
 
 // ─── CV Upload ────────────────────────────────────────────────────────────────
 const fileInput   = ref(null)

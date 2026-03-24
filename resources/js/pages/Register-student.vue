@@ -17,13 +17,24 @@ const form = reactive({
 
 const error   = ref('')
 const loading = ref(false)
+/* OTP AUTHENTICATION (Commented for future use)
+const mode    = ref('register') // 'register' or 'otp'
+const otpCode = ref('')
+*/
 
 async function register() {
     error.value   = ''
     loading.value = true
     try {
-        const user = await auth.register({ ...form })
-        router.push(dashboardRouteForRole(user.role))
+        const res = await auth.register({ ...form })
+        /* OTP AUTHENTICATION (Commented for future use)
+        if (res.requires_otp) {
+            mode.value = 'otp'
+        } else 
+        */
+        if (res.user) {
+            router.push(dashboardRouteForRole(res.user.role))
+        }
     } catch (e) {
         if (e.errors && Object.keys(e.errors).length) {
             const firstKey = Object.keys(e.errors)[0]
@@ -35,12 +46,35 @@ async function register() {
         loading.value = false
     }
 }
+
+/* OTP AUTHENTICATION (Commented for future use)
+async function verify() {
+    error.value   = ''
+    loading.value = true
+    try {
+        const res = await auth.verifyOtp(form.email, otpCode.value)
+        if (res.user) {
+            router.push(dashboardRouteForRole(res.user.role))
+        }
+    } catch (e) {
+        error.value = e.message || 'OTP verification failed.'
+    } finally {
+        loading.value = false
+    }
+}
+*/
 </script>
 
 <template>
     <div class="page-centered">
         <div class="register-card">
             <div class="header">
+                <!-- OTP AUTHENTICATION (Commented for future use)
+                <h2 class="cta-title">{{ mode === 'register' ? 'Join as Applicant' : 'Verify Account' }}</h2>
+                <p class="cta-subtitle">
+                    {{ mode === 'register' ? 'Start your journey to the top tech companies' : 'A verification code has been sent to your email' }}
+                </p>
+                -->
                 <h2 class="cta-title">Join as Applicant</h2>
                 <p class="cta-subtitle">Start your journey to the top tech companies</p>
             </div>
@@ -49,6 +83,9 @@ async function register() {
                 {{ error }}
             </div>
 
+            <!-- OTP AUTHENTICATION (Commented for future use)
+            <form v-if="mode === 'register'" @submit.prevent="register" class="register-form">
+            -->
             <form @submit.prevent="register" class="register-form">
                 <div class="form-group">
                     <label for="name" class="field-label">Full Name</label>
@@ -82,6 +119,32 @@ async function register() {
                     <router-link to="/login" class="login-link">Sign In</router-link>
                 </p>
             </form>
+
+            <!-- OTP AUTHENTICATION (Commented for future use)
+            <form v-else @submit.prevent="verify" class="register-form">
+                <div class="form-group">
+                    <label for="otp" class="field-label">Account Verification Code</label>
+                    <input
+                        id="otp"
+                        type="text"
+                        placeholder="123456"
+                        v-model="otpCode"
+                        class="form-input text-center tracking-widest text-2xl"
+                        required
+                        maxlength="6"
+                    />
+                </div>
+
+                <button type="submit" class="submit-btn" :disabled="loading">
+                    <span v-if="loading" class="btn-spinner"></span>
+                    <span>{{ loading ? 'Verifying…' : 'Verify Code' }}</span>
+                </button>
+
+                <p class="footer-text">
+                    <a href="#" @click.prevent="mode = 'register'" class="login-link">Back to Registration</a>
+                </p>
+            </form>
+            -->
         </div>
     </div>
 </template>
