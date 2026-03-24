@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,16 +22,42 @@ class CvController extends Controller
 
         // Store cv_path on profile (create profile row if needed)
         $user = $request->user();
-        $user->profile()->updateOrCreate(
+        $profile = $user->profile()->updateOrCreate(
             ['user_id' => $user->id],
             ['cv_path' => $path]
         );
+
+        // Store extracted skills in the new skills table
+        if (isset($parsed['skills'])) {
+            $user->skills()->delete();
+            foreach ($parsed['skills'] as $skillName) {
+                $user->skills()->create([
+                    'name' => $skillName,
+                    'proficiency' => 'intermediate' // Heuristic/Default
+                ]);
+            }
+        }
+
+        // Recalculate cv_score (calling logic similar to ProfileController)
+        $profile->cv_score = $this->calculateScore($profile);
+        $profile->save();
 
         return response()->json([
             'message' => 'CV uploaded and parsed successfully',
             'path'    => $path,
             'parsed'  => $parsed,
+            'skills'  => $user->skills,
+            'score'   => $profile->cv_score
         ]);
+    }
+
+    private function calculateScore($profile)
+    {
+        $score = 0;
+        if ($profile->user->skills()->exists()) $score += 40;
+        if ($profile->cv_path) $score += 30;
+        if ($profile->bio) $score += 30;
+        return $score;
     }
 
     private function parseFile($file): array
@@ -121,11 +148,12 @@ class CvController extends Controller
         $skills = [];
         if (preg_match('/skills?[:\s]+([^\n]+(?:\n(?!education|experience|summary)[^\n]+)*)/i', $text, $skillsMatch)) {
             $raw = $skillsMatch[1];
-            $skills = array_values(array_filter(
-                preg_split('/[,|•\n]+/', $raw),
-                fn($s) => strlen(trim($s)) > 1 && strlen(trim($s)) < 40
-            ));
-            $skills = array_map('trim', array_slice($skills, 0, 15));
+            $sections = preg_split('/[,|•\n\t]+/', $raw);
+            $skills = array_values(array_unique(array_filter(
+                array_map('trim', $sections),
+                fn($s) => strlen($s) > 1 && strlen($s) < 40
+            )));
+            $skills = array_slice($skills, 0, 15);
         }
 
         // --- Education ---

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CvController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,7 @@ Route::prefix('api')->group(function () {
         Route::get('/v1/me',       [AuthController::class, 'me']);
         Route::post('/v1/logout',  [AuthController::class, 'logout']);
         Route::post('/v1/cv/upload', [CvController::class, 'upload']);
+        Route::get('/v1/profile/skills', [ProfileController::class, 'getSkills']);
     });
 });
 

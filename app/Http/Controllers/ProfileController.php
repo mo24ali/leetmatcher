@@ -3,63 +3,86 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Models\Skill;
 use Illuminate\Http\Request;
+use Smalot\PdfParser\Parser;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+
+    public function uploadCv(Request $request)
     {
-        //
+        $request->validate([
+            'cv' => 'required|mimes:pdf|max:2048'
+        ]);
+
+        $file = $request->file('cv');
+
+        $path = $file->store('cvs');
+
+        $parser = new Parser();
+        $pdf = $parser->parseFile(storage_path('app/' . $path));
+        $text = strtolower($pdf->getText());
+
+        $skills = $this->extractSkills($text);
+
+        $user = $request->user();
+        $profile = $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['cv_path' => $path]
+        );
+        // The previous line was likely failing or not doing anything persistent if column 'skills' didn't exist
+        // I'll keep the profile updated with the score logic but migrate storage to the skills table
+        
+        // Sync skills: for simplicity delete existing ones and add new ones (normalized)
+        $user->skills()->delete();
+        
+        foreach ($skills as $skillName) {
+            $user->skills()->create([
+                'name' => $skillName,
+                'proficiency' => 'intermediate', // Default or extracted if possible
+            ]);
+        }
+
+        $profile->cv_score = $this->calculateScore($profile);
+        $profile->save();
+
+        return response()->json([
+            'skills' => $user->skills()->get(),
+            'score' => $profile->cv_score
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function getSkills(Request $request)
     {
-        //
+        return response()->json([
+            'skills' => $request->user()->skills
+        ]);
+    }
+    private function extractSkills($text)
+    {
+        $knownSkills = ['php', 'laravel', 'vue', 'react', 'mysql', 'js'];
+
+        $found = [];
+
+        foreach ($knownSkills as $skill) {
+            if (str_contains($text, $skill)) {
+                $found[] = $skill;
+            }
+        }
+
+        return $found;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    private function calculateScore($profile)
     {
-        //
-    }
+        $score = 0;
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Profile $profile)
-    {
-        //
-    }
+        if ($profile->user->skills()->exists()) $score += 40;
+        if ($profile->cv_path) $score += 30;
+        if ($profile->bio) $score += 30;
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Profile $profile)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Profile $profile)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Profile $profile)
-    {
-        //
+        return $score;
     }
 }
