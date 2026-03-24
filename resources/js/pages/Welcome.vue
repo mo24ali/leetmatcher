@@ -1,3 +1,25 @@
+<script setup>
+import { reactive } from 'vue'
+
+// Platform statistics (initialized to zero)
+// These should be fetched from a public statistics API endpoint
+const stats = reactive({
+    talentsCount: 0,
+    companiesCount: 0,
+    matchesCount: 0,
+    latestJoinersCount: 0
+})
+
+/**
+ * TODO: Fetch public stats to display on landing page
+ * async function fetchPublicStats() {
+ *   const res = await fetch('/api/v1/public-stats')
+ *   const data = await res.json()
+ *   Object.assign(stats, data)
+ * }
+ */
+</script>
+
 <template>
     <div class="splash-container">
         <!-- Topbar navigation (minimalist) -->
@@ -78,7 +100,7 @@
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                             />
                         </svg>
                         <span>Tableau de bord</span>
@@ -105,35 +127,35 @@
                     <div class="indicator-card">
                         <div class="card-header">
                             <h3>Talents inscrits</h3>
-                            <span class="badge success">+12%</span>
+                            <span class="badge success">Active</span>
                         </div>
-                        <div class="stat-value">2,847</div>
+                        <div class="stat-value">{{ stats.talentsCount.toLocaleString() }}</div>
                         <div class="progress-container">
                             <div class="progress-bar">
                                 <div
                                     class="progress-fill"
-                                    style="width: 75%"
+                                    :style="{ width: (stats.talentsCount > 0 ? 75 : 0) + '%' }"
                                 ></div>
                             </div>
-                            <span class="progress-label">Objectif: 75%</span>
+                            <span class="progress-label">Compte vérifié</span>
                         </div>
                     </div>
 
                     <div class="indicator-card">
                         <div class="card-header">
                             <h3>Entreprises partenaires</h3>
-                            <span class="badge success">+8%</span>
+                            <span class="badge success">Verified</span>
                         </div>
-                        <div class="stat-value">156</div>
+                        <div class="stat-value">{{ stats.companiesCount.toLocaleString() }}</div>
                         <div class="progress-container">
                             <div class="progress-bar">
                                 <div
                                     class="progress-fill"
-                                    style="width: 62%"
+                                    :style="{ width: (stats.companiesCount > 0 ? 62 : 0) + '%' }"
                                 ></div>
                             </div>
                             <span class="progress-label"
-                                >62% de croissance</span
+                                >Partenaires actifs</span
                             >
                         </div>
                     </div>
@@ -141,18 +163,18 @@
                     <div class="indicator-card">
                         <div class="card-header">
                             <h3>Matchs réussis</h3>
-                            <span class="badge warning">+24%</span>
+                            <span class="badge warning">New</span>
                         </div>
-                        <div class="stat-value">892</div>
+                        <div class="stat-value">{{ stats.matchesCount.toLocaleString() }}</div>
                         <div class="progress-container">
                             <div class="progress-bar">
                                 <div
                                     class="progress-fill"
-                                    style="width: 89%"
+                                    :style="{ width: (stats.matchesCount > 0 ? 89 : 0) + '%' }"
                                 ></div>
                             </div>
                             <span class="progress-label"
-                                >Taux de satisfaction: 89%</span
+                                >Taux de satisfaction</span
                             >
                         </div>
                     </div>
@@ -174,7 +196,7 @@
                         />
                     </svg>
                     <span
-                        >Nouveau: 15 talents CS viennent de rejoindre la
+                        >Nouveau: {{ stats.latestJoinersCount }} talents CS viennent de rejoindre la
                         plateforme</span
                     >
                 </div>
@@ -271,11 +293,5 @@
     </div>
 </template>
 
-<script setup>
-// No script needed for static splash page
-// Add your login/signup logic here later
-</script>
-
 <style scoped>
 </style>
-

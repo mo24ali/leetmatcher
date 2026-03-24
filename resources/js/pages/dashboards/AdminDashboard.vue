@@ -158,56 +158,74 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/authStore'
 
 const auth = useAuthStore()
+const loading = ref(true)
 
-const stats = reactive({ users: 1247, jobs: 183, applications: 3421, growth: 14 })
+// Individual data properties initialized to empty states
+// These will be populated by API calls in onMounted
+const stats = reactive({ users: 0, jobs: 0, applications: 0, growth: 0 })
 
-const roleBreakdown = [
-  { role: 'applicant', label: 'Applicants', count: 1024, pct: 82 },
-  { role: 'recruiter', label: 'Recruiters', count:  215, pct: 17 },
-  { role: 'admin',     label: 'Admins',     count:    8, pct:  1 },
-]
-
-const users = ref([
-  { id: 1, name: 'Alice Johnson',  email: 'alice@example.com',     role: 'applicant', joined: '2026-01-15' },
-  { id: 2, name: 'Bob Recruiter',  email: 'bob.hr@techcorp.com',   role: 'recruiter', joined: '2026-02-03' },
-  { id: 3, name: 'Carol Williams', email: 'carol@startupxyz.com',  role: 'recruiter', joined: '2026-02-28' },
-  { id: 4, name: 'Dave Student',   email: 'dave.cs@university.edu',role: 'applicant', joined: '2026-03-01' },
+const roleBreakdown = ref([
+  { role: 'applicant', label: 'Applicants', count: 0, pct: 0 },
+  { role: 'recruiter', label: 'Recruiters', count: 0, pct: 0 },
+  { role: 'admin',     label: 'Admins',     count: 0, pct: 0 },
 ])
 
-function removeUser(user) {
+const users = ref([])
+const allJobs = ref([])
+const activity = ref([])
+
+// Site performance and feature flags (initialized to safe defaults)
+const settings = reactive([
+  { key: 'registration',   label: 'Open Registration',    desc: 'Allow new users to register on the platform', enabled: false },
+  { key: 'email_notif',    label: 'Email Notifications',  desc: 'Send email alerts for applications and updates', enabled: false },
+  { key: 'maintenance',    label: 'Maintenance Mode',     desc: 'Take the platform offline for maintenance',    enabled: false },
+  { key: 'cv_parsing',     label: 'CV Parser',            desc: 'Enable automatic CV parsing on upload',        enabled: false },
+])
+
+/**
+ * Fetch all platform management data from the backend
+ */
+async function loadDashboardData() {
+  loading.value = true
+  try {
+    // These are endpoints to be implemented in AdminController
+    // const [sData, uData, jData, aData] = await Promise.all([
+    //   auth.apiFetch('/v1/admin/stats'),
+    //   auth.apiFetch('/v1/admin/users'),
+    //   auth.apiFetch('/v1/admin/projects'),
+    //   auth.apiFetch('/v1/admin/activity')
+    // ])
+    
+    // Assign fetched data to reactive refs here
+    // example: stats.users = sData.total_users
+    
+    console.log('Admin data fetching logic ready for backend implementation.')
+  } catch (err) {
+    console.error('Failed to load admin dashboard data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadDashboardData()
+})
+
+async function removeUser(user) {
+  // TODO: Call API to delete user
+  // await auth.apiFetch(`/v1/admin/users/${user.id}`, { method: 'DELETE' })
   users.value = users.value.filter(u => u.id !== user.id)
 }
 
-const allJobs = ref([
-  { id: 1, title: 'Senior Frontend Engineer', recruiter: 'TechCorp',   applicants: 24, status: 'open',   deadline: '2026-04-01' },
-  { id: 2, title: 'Backend Developer',         recruiter: 'FinanceFlo', applicants: 18, status: 'open',   deadline: '2026-03-28' },
-  { id: 3, title: 'DevOps Engineer',           recruiter: 'StartupXYZ', applicants: 42, status: 'closed', deadline: '2026-03-10' },
-  { id: 4, title: 'ML Engineer',               recruiter: 'DataVision', applicants: 31, status: 'open',   deadline: '2026-04-15' },
-])
-
-function removeJob(job) {
+async function removeJob(job) {
+  // TODO: Call API to delete job listing
+  // await auth.apiFetch(`/v1/admin/projects/${job.id}`, { method: 'DELETE' })
   allJobs.value = allJobs.value.filter(j => j.id !== job.id)
 }
-
-const activity = [
-  { id: 1, type: 'user',    text: 'New applicant registered: Dave Student',           time: '2 minutes ago'  },
-  { id: 2, type: 'job',     text: 'New job posted by TechCorp: Senior Frontend Eng.', time: '15 minutes ago' },
-  { id: 3, type: 'apply',   text: 'Alice Johnson applied to Backend Developer',        time: '32 minutes ago' },
-  { id: 4, type: 'user',    text: 'New recruiter joined: Carol Williams',              time: '1 hour ago'     },
-  { id: 5, type: 'job',     text: 'DevOps Engineer listing closed',                   time: '3 hours ago'    },
-  { id: 6, type: 'system',  text: 'Database backup completed successfully',            time: '6 hours ago'    },
-]
-
-const settings = reactive([
-  { key: 'registration',   label: 'Open Registration',    desc: 'Allow new users to register on the platform', enabled: true  },
-  { key: 'email_notif',    label: 'Email Notifications',  desc: 'Send email alerts for applications and updates', enabled: true  },
-  { key: 'maintenance',    label: 'Maintenance Mode',     desc: 'Take the platform offline for maintenance',    enabled: false },
-  { key: 'cv_parsing',     label: 'CV Parser',            desc: 'Enable automatic CV parsing on upload',        enabled: true  },
-])
 </script>
 
 <style scoped>

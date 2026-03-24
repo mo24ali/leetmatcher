@@ -10,6 +10,8 @@ import RegisterStudent   from '../pages/Register-student.vue'
 import RegisterRecruiter from '../pages/Register-recruiter.vue'
 import Login             from '../pages/Login.vue'
 
+import Profile from '../pages/Profile.vue'
+
 // Dashboards (lazy-loaded)
 const ApplicantDashboard = () => import('../pages/dashboards/ApplicantDashboard.vue')
 const RecruiterDashboard = () => import('../pages/dashboards/RecruiterDashboard.vue')
@@ -26,6 +28,7 @@ const routes = [
     { path: '/register-student',    name: 'Register-student',  component: RegisterStudent },
     { path: '/register-recruiter',  name: 'Register-recruiter',component: RegisterRecruiter },
     { path: '/login',   name: 'Login',             component: Login },
+    { path: '/profile', name: 'Profile',           component: Profile, meta: { requiresAuth: true } },
     { path: '/403',     name: 'Forbidden',         component: Forbidden },
 
     // Protected — role-gated dashboards
