@@ -1,11 +1,10 @@
 <template>
   <div class="dashboard-page">
-    <!-- Hero -->
     <section class="dash-hero">
       <div class="dash-hero-inner">
         <div>
           <p class="dash-welcome">Recruiter Portal</p>
-          <h1 class="dash-title">{{ auth.state.user?.name }} 👋</h1>
+          <h1 class="dash-title">{{ auth.state.user?.name }}</h1>
           <p class="dash-subtitle">Manage your job postings and discover top talent.</p>
         </div>
         <div class="hero-badge recruiter">Recruiter</div>
@@ -13,31 +12,30 @@
     </section>
 
     <div class="dash-content">
-      <!-- Stats row -->
       <section class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon">📌</div>
+          <div class="stat-icon-box"><span>&#9646;</span></div>
           <div class="stat-body">
             <p class="stat-label">Active Listings</p>
             <p class="stat-number">{{ stats.activeListings }}</p>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">👥</div>
+          <div class="stat-icon-box"><span>&#128101;</span></div>
           <div class="stat-body">
             <p class="stat-label">Total Applicants</p>
             <p class="stat-number">{{ stats.totalApplicants }}</p>
           </div>
         </div>
         <div class="stat-card positive">
-          <div class="stat-icon">✅</div>
+          <div class="stat-icon-box success"><span>&#10003;</span></div>
           <div class="stat-body">
             <p class="stat-label">Interviews Scheduled</p>
             <p class="stat-number">{{ stats.interviews }}</p>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">🎯</div>
+          <div class="stat-icon-box"><span>&#9670;</span></div>
           <div class="stat-body">
             <p class="stat-label">Positions Filled</p>
             <p class="stat-number">{{ stats.filled }}</p>
@@ -49,13 +47,11 @@
         <!-- Post a Job form -->
         <section class="dash-card" id="post">
           <div class="dash-card-header">
-            <h2 class="dash-card-title">📝 Post a New Job</h2>
+            <h2 class="dash-card-title">Post a New Job</h2>
             <p class="dash-card-subtitle">Create a listing to attract top candidates</p>
           </div>
 
-          <div v-if="postSuccess" class="success-banner">
-            ✅ Job posted successfully!
-          </div>
+          <div v-if="postSuccess" class="success-banner">Job posted successfully!</div>
           <div v-if="postError" class="error-banner">{{ postError }}</div>
 
           <form @submit.prevent="postJob" class="post-form">
@@ -80,7 +76,7 @@
                 </select>
               </div>
             </div>
-            <button type="submit" class="upload-btn" :disabled="posting">
+            <button type="submit" class="submit-btn" :disabled="posting">
               <span v-if="posting" class="btn-spinner"></span>
               <span>{{ posting ? 'Posting…' : 'Post Job' }}</span>
             </button>
@@ -90,7 +86,7 @@
         <!-- My Listings -->
         <section class="dash-card" id="listings">
           <div class="dash-card-header">
-            <h2 class="dash-card-title">📋 My Listings</h2>
+            <h2 class="dash-card-title">My Listings</h2>
             <p class="dash-card-subtitle">Jobs you've posted on LeetMatcher</p>
           </div>
 
@@ -99,7 +95,7 @@
               <div class="listing-top">
                 <div>
                   <p class="listing-title">{{ listing.title }}</p>
-                  <p class="listing-meta">Posted {{ listing.posted }} · Deadline {{ listing.deadline }}</p>
+                  <p class="listing-meta">Posted {{ listing.posted }} &middot; Deadline {{ listing.deadline }}</p>
                 </div>
                 <div class="listing-right">
                   <span class="listing-status" :class="listing.status">{{ listing.status }}</span>
@@ -107,19 +103,20 @@
                 </div>
               </div>
               <div class="listing-actions">
-                <button class="listing-btn" id="applicants" @click="viewApplicants(listing)">View Applicants →</button>
+                <button class="listing-btn" @click="viewApplicants(listing)">View Applicants</button>
                 <button class="listing-btn danger" @click="closeListing(listing)">Close</button>
               </div>
             </div>
+            <p v-if="listings.length === 0" class="empty-hint">No listings yet. Post your first job above.</p>
           </div>
         </section>
       </div>
 
-      <!-- Applicants panel -->
+      <!-- Applicants panel — shown when a listing is selected -->
       <section v-if="selectedListing" class="dash-card applicants-panel" id="applicants">
-        <div class="dash-card-header">
-          <h2 class="dash-card-title">👤 Applicants for "{{ selectedListing.title }}"</h2>
-          <button class="close-panel" @click="selectedListing = null">✕ Close</button>
+        <div class="dash-card-header panel-header">
+          <h2 class="dash-card-title">Applicants for "{{ selectedListing.title }}"</h2>
+          <button class="close-panel" @click="selectedListing = null">&times; Close</button>
         </div>
         <table class="applicants-table">
           <thead>
@@ -151,71 +148,15 @@ import { useAuthStore } from '../../stores/authStore'
 const auth = useAuthStore()
 const loading = ref(true)
 
-// Recruiter statistics (initialized to zero)
-// These will be populated by an API call to a recruiter-specific stats endpoint
 const stats = reactive({ activeListings: 0, totalApplicants: 0, interviews: 0, filled: 0 })
-
-// ─── Job form ─────────────────────────────────────────────────────────────────
 const jobForm = reactive({ title: '', description: '', deadline: '', status: 'open' })
 const posting     = ref(false)
 const postSuccess = ref(false)
 const postError   = ref('')
-
-async function postJob() {
-  postSuccess.value = false
-  postError.value   = ''
-  posting.value     = true
-  
-  try {
-    // API call to create a new job listing
-    const res = await auth.apiFetch('/v1/projects', {
-      method: 'POST',
-      body: JSON.stringify({
-        title: jobForm.title,
-        description: jobForm.description,
-        deadline: jobForm.deadline,
-        status: jobForm.status
-      })
-    })
-    
-    // Add the new listing to the local list
-    listings.value.unshift(res)
-    
-    // Reset form
-    jobForm.title = ''; jobForm.description = ''; jobForm.deadline = ''; jobForm.status = 'open'
-    postSuccess.value = true
-    setTimeout(() => postSuccess.value = false, 3000)
-  } catch (err) {
-    postError.value = err.message || 'Failed to post job. Please try again.'
-  } finally {
-    posting.value = false
-  }
-}
-
-// ─── Listings ─────────────────────────────────────────────────────────────────
-// List of jobs posted by this recruiter
-const listings = ref([])
-
-async function closeListing(listing) {
-  try {
-    // API call to update listing status
-    // await auth.apiFetch(`/v1/projects/${listing.id}`, {
-    //   method: 'PATCH',
-    //   body: JSON.stringify({ status: 'closed' })
-    // })
-    listing.status = 'closed'
-  } catch (err) {
-    console.error('Failed to close listing:', err)
-  }
-}
-
-// ─── Applicants panel ─────────────────────────────────────────────────────────
+const listings    = ref([])
 const selectedListing = ref(null)
-const applicants = ref([]) // Populated when a listing is selected
+const applicants  = ref([])
 
-/**
- * Fetch recruiter dashboard overview data
- */
 async function loadRecruiterData() {
   loading.value = true
   try {
@@ -223,10 +164,8 @@ async function loadRecruiterData() {
     //   auth.apiFetch('/v1/recruiter/stats'),
     //   auth.apiFetch('/v1/recruiter/listings')
     // ])
-    // stats.activeListings = sData.active_count
+    // Object.assign(stats, sData)
     // listings.value = lData
-    
-    console.log('Recruiter data fetching logic ready for backend implementation.')
   } catch (err) {
     console.error('Failed to load recruiter data:', err)
   } finally {
@@ -238,11 +177,44 @@ onMounted(() => {
   loadRecruiterData()
 })
 
+async function postJob() {
+  postSuccess.value = false
+  postError.value   = ''
+  posting.value     = true
+  try {
+    const res = await auth.apiFetch('/v1/projects', {
+      method: 'POST',
+      body: JSON.stringify({
+        title:       jobForm.title,
+        description: jobForm.description,
+        deadline:    jobForm.deadline,
+        status:      jobForm.status,
+      }),
+    })
+    listings.value.unshift(res)
+    jobForm.title = ''; jobForm.description = ''; jobForm.deadline = ''; jobForm.status = 'open'
+    postSuccess.value = true
+    setTimeout(() => postSuccess.value = false, 3000)
+  } catch (err) {
+    postError.value = err.message || 'Failed to post job. Please try again.'
+  } finally {
+    posting.value = false
+  }
+}
+
+async function closeListing(listing) {
+  try {
+    // await auth.apiFetch(`/v1/projects/${listing.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'closed' }) })
+    listing.status = 'closed'
+  } catch (err) {
+    console.error('Failed to close listing:', err)
+  }
+}
+
 async function viewApplicants(listing) {
   selectedListing.value = listing
   applicants.value = []
   try {
-    // Fetch applicants for the specific listing
     // applicants.value = await auth.apiFetch(`/v1/projects/${listing.id}/applications`)
   } catch (err) {
     console.error('Failed to load applicants:', err)
@@ -265,46 +237,52 @@ async function viewApplicants(listing) {
 .hero-badge { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.4rem 1rem; border-radius: 99px; }
 .hero-badge.recruiter { background: #f0fdf4; color: #15803d; }
 
-.dash-content { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.dash-content { max-width: 1200px; margin: 0 auto; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
 
-.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 2rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
 @media(max-width:900px){ .stats-grid { grid-template-columns: repeat(2,1fr); } }
 @media(max-width:480px){ .stats-grid { grid-template-columns: 1fr; } }
 
-.stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; }
+.stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; transition: box-shadow 0.2s; }
+.stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
 .stat-card.positive { border-left: 3px solid #22c55e; }
-.stat-icon   { font-size: 1.75rem; }
+.stat-icon-box { width: 40px; height: 40px; background: var(--gray-100); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gray-500); font-size: 1rem; }
+.stat-icon-box.success { background: #dcfce7; color: #16a34a; }
 .stat-label  { font-size: 0.8rem; color: var(--gray-500); margin: 0 0 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .stat-number { font-size: 1.75rem; font-weight: 700; color: var(--gray-900); margin: 0; line-height: 1; }
 
-.dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 @media(max-width:900px){ .dash-two-col { grid-template-columns: 1fr; } }
 
 .dash-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 1.75rem; }
 .dash-card-header { margin-bottom: 1.5rem; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; }
 .dash-card-title  { font-size: 1.1rem; font-weight: 600; color: var(--gray-900); margin: 0 0 0.3rem; }
 .dash-card-subtitle { font-size: 0.85rem; color: var(--gray-500); margin: 0; }
 
-/* ── Post form ── */
 .post-form { display: flex; flex-direction: column; gap: 1rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media(max-width:640px){ .form-row { grid-template-columns: 1fr; } }
 .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.field-label { font-size: 0.8rem; font-weight: 500; color: var(--gray-700); }
+.form-input { border: 1px solid var(--gray-300); border-radius: 8px; padding: 0.55rem 0.8rem; font-size: 0.9rem; font-family: var(--font-base); color: var(--gray-900); background: var(--white); outline: none; transition: border-color 0.15s; }
+.form-input:focus { border-color: var(--gray-600); }
 .form-textarea { resize: vertical; min-height: 100px; }
 
 .success-banner { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1rem; }
-.error-banner   { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;  border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1rem; }
+.error-banner   { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.9rem; margin-bottom: 1rem; }
 
-.upload-btn {
+.submit-btn {
   width: 100%; padding: 0.9rem; background: var(--gray-900); color: var(--white);
   border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 500; cursor: pointer;
   transition: background 0.2s; font-family: var(--font-base);
   display: flex; align-items: center; justify-content: center; gap: 0.5rem;
 }
-.upload-btn:hover:not(:disabled) { background: var(--gray-800); }
-.upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn:hover:not(:disabled) { background: var(--gray-800); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Listings ── */
+.empty-hint { font-size: 0.875rem; color: var(--gray-400); text-align: center; padding: 2rem 0; margin: 0; }
+
 .listing-list { display: flex; flex-direction: column; gap: 0.75rem; }
 .listing-card { border: 1px solid var(--gray-200); border-radius: 10px; padding: 1rem 1.25rem; }
 .listing-top  { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
@@ -326,9 +304,7 @@ async function viewApplicants(listing) {
 .listing-btn.danger:hover { background: #ef4444; color: var(--white); border-color: #ef4444; }
 .listing-btn.small { padding: 0.2rem 0.5rem; font-size: 0.75rem; }
 
-/* ── Applicants panel ── */
-.applicants-panel { margin-top: 0; }
-.close-panel { background: none; border: none; cursor: pointer; color: var(--gray-500); font-size: 0.9rem; }
+.close-panel { background: none; border: none; cursor: pointer; color: var(--gray-500); font-size: 0.9rem; font-family: var(--font-base); }
 .close-panel:hover { color: var(--gray-900); }
 
 .applicants-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }

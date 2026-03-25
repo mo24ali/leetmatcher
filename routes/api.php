@@ -1,13 +1,40 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CvController;
+use App\Http\Controllers\Api\ProfileApiController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\InterviewController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| The API routes have been moved to routes/web.php to support
-| native session-based authentication and CSRF protection.
-|
-*/
+Route::post('/v1/register', [AuthController::class, 'register']);
+Route::post('/v1/login',    [AuthController::class, 'login']);
+
+Route::middleware('auth')->group(function () {
+    Route::get('/user',       fn(Request $r) => $r->user());
+    Route::get('/v1/me',      [AuthController::class, 'me']);
+    Route::post('/v1/logout', [AuthController::class, 'logout']);
+
+    // CV upload & legacy skills endpoint
+    Route::post('/v1/cv/upload',         [CvController::class, 'upload']);
+    Route::get('/v1/profile/skills',     [ProfileController::class, 'getSkills']);
+
+    // Profile management
+    Route::get('/v1/profile',            [ProfileApiController::class, 'show']);
+    Route::patch('/v1/profile',          [ProfileApiController::class, 'update']);
+    Route::post('/v1/profile/password',  [ProfileApiController::class, 'changePassword']);
+    Route::post('/v1/profile/avatar',    [ProfileApiController::class, 'uploadAvatar']);
+    Route::post('/v1/profile/skills',    [ProfileApiController::class, 'addSkill']);
+    Route::delete('/v1/profile/skills/{skill}', [ProfileApiController::class, 'removeSkill']);
+
+    // Job listings and applications
+    Route::get('/v1/projects/{project}/matches', [ProjectController::class, 'matches']);
+    Route::apiResource('/v1/projects',     ProjectController::class);
+    Route::apiResource('/v1/applications', ApplicationController::class);
+    Route::apiResource('/v1/interviews',   InterviewController::class);
+    Route::apiResource('/v1/messages',     MessageController::class);
+});
