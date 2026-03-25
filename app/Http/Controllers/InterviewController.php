@@ -30,13 +30,6 @@ class InterviewController extends Controller
         return response()->json($query->with(['application.project', 'application.student'])->paginate(15));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $this->authorize('create', Interview::class);
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -70,13 +63,6 @@ class InterviewController extends Controller
         return response()->json($interview->load(['application.project', 'application.student']));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Interview $interview)
-    {
-        $this->authorize('update', $interview);
-    }
 
     /**
      * Update the specified resource in storage.

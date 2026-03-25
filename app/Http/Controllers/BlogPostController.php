@@ -16,13 +16,6 @@ class BlogPostController extends Controller
         return response()->json(BlogPost::with('author')->where('status', 'published')->paginate(10));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $this->authorize('create', BlogPost::class);
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -56,13 +49,6 @@ class BlogPostController extends Controller
         return response()->json($blogPost->load('author'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(BlogPost $blogPost)
-    {
-        $this->authorize('update', $blogPost);
-    }
 
     /**
      * Update the specified resource in storage.
