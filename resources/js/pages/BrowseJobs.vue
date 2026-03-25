@@ -148,9 +148,8 @@ const filteredJobs = computed(() => {
 async function loadJobs() {
   loading.value = true
   try {
-    // const data = await auth.apiFetch('/v1/applicant/recommended-jobs')
-    // jobs.value = data
-    jobs.value = []
+    const data = await auth.apiFetch('/v1/projects/recommended')
+    jobs.value = data
   } catch (err) {
     console.error('Failed to load jobs:', err)
   } finally {

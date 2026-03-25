@@ -117,4 +117,32 @@ class ProjectController extends Controller
 
         return response()->json($matches);
     }
+
+    /**
+     * Get recommended projects for the authenticated user.
+     */
+    public function recommended(Request $request, \App\Services\MatchingService $matchingService)
+    {
+        $profile = $request->user()->profile;
+
+        if (!$profile) {
+            return response()->json([]);
+        }
+
+        $recommendations = $matchingService->getRecommendedProjects($profile);
+
+        // Map to expected frontend format
+        $formatted = $recommendations->map(fn($p) => [
+            'id' => $p->id,
+            'title' => $p->title,
+            'company' => $p->recruiter?->name ?? 'Acme Corp',
+            'type' => $p->type ?? 'Remote',
+            'match' => $p->match_score,
+            'skills' => $p->skills->pluck('name')->toArray(),
+            'description' => $p->description,
+            'deadline' => $p->deadline?->format('Y-m-d'),
+        ]);
+
+        return response()->json($formatted);
+    }
 }

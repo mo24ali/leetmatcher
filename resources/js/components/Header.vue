@@ -134,7 +134,7 @@
                 {{ initials }}
               </div>
               <div class="flex flex-col pr-1">
-                <span class="text-xs font-bold text-gray-900 leading-tight truncate max-w-[80px]">
+                <span class="text-xs font-bold text-gray-900 leading-tight truncate max-w-[120px]">
                   {{ auth.state.user?.name?.split(' ')[0] }}
                 </span>
                 <span class="text-[0.62rem] text-gray-500 font-bold uppercase tracking-widest leading-none mt-0.5">
@@ -248,9 +248,8 @@ function toggleApps() {
 async function fetchMatches() {
   loadingJobs.value = true
   try {
-    // const data = await auth.apiFetch('/v1/projects/recommended')
-    // matchedJobs.value = data
-    matchedJobs.value = []
+    const data = await auth.apiFetch('/v1/projects/recommended')
+    matchedJobs.value = data
   } catch (err) {
     console.error('Failed to fetch matched jobs:', err)
   } finally {

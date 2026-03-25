@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/v1/profile/skills/{skill}', [ProfileApiController::class, 'removeSkill']);
 
     // Job listings and applications
+    Route::get('/v1/projects/recommended', [ProjectController::class, 'recommended']);
     Route::get('/v1/projects/{project}/matches', [ProjectController::class, 'matches']);
     Route::apiResource('/v1/projects',     ProjectController::class);
     Route::apiResource('/v1/applications', ApplicationController::class);
