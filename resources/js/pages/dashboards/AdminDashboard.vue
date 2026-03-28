@@ -182,16 +182,16 @@ const settings = reactive([
 async function loadDashboardData() {
   loading.value = true
   try {
-    // const [sData, uData, jData, aData] = await Promise.all([
-    //   auth.apiFetch('/v1/admin/stats'),
-    //   auth.apiFetch('/v1/admin/users'),
-    //   auth.apiFetch('/v1/admin/projects'),
-    //   auth.apiFetch('/v1/admin/activity')
-    // ])
-    // Object.assign(stats, sData)
-    // users.value    = uData
-    // allJobs.value  = jData
-    // activity.value = aData
+     const [sData, uData, jData, aData] = await Promise.all([
+       auth.apiFetch('/v1/admin/stats'),
+       auth.apiFetch('/v1/admin/users'),
+       auth.apiFetch('/v1/admin/projects'),
+       auth.apiFetch('/v1/admin/activity')
+     ])
+     Object.assign(stats, sData)
+     users.value    = uData
+     allJobs.value  = jData
+     activity.value = aData
   } catch (err) {
     console.error('Failed to load admin dashboard data:', err)
   } finally {
@@ -204,12 +204,12 @@ onMounted(() => {
 })
 
 async function removeUser(user) {
-  // await auth.apiFetch(`/v1/admin/users/${user.id}`, { method: 'DELETE' })
+  await auth.apiFetch(`/v1/admin/users/${user.id}`, { method: 'DELETE' })
   users.value = users.value.filter(u => u.id !== user.id)
 }
 
 async function removeJob(job) {
-  // await auth.apiFetch(`/v1/admin/projects/${job.id}`, { method: 'DELETE' })
+  await auth.apiFetch(`/v1/admin/projects/${job.id}`, { method: 'DELETE' })
   allJobs.value = allJobs.value.filter(j => j.id !== job.id)
 }
 </script>

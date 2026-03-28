@@ -188,8 +188,8 @@ const stats = reactive({ applied: 0, pending: 0, accepted: 0, rejected: 0 })
 async function loadApplicantData() {
   loading.value = true
   try {
-    // const sData = await auth.apiFetch('/v1/applicant/stats')
-    // Object.assign(stats, sData)
+    const sData = await auth.apiFetch('/v1/applicant/stats')
+    Object.assign(stats, sData)
   } catch (err) {
     console.error('Failed to load applicant dashboard data:', err)
   } finally {

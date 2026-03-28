@@ -157,15 +157,15 @@ const listings    = ref([])
 const selectedListing = ref(null)
 const applicants  = ref([])
 
-async function loadRecruiterData() {
+async function loadRecruiterData() {  
   loading.value = true
   try {
-    // const [sData, lData] = await Promise.all([
-    //   auth.apiFetch('/v1/recruiter/stats'),
-    //   auth.apiFetch('/v1/recruiter/listings')
-    // ])
-    // Object.assign(stats, sData)
-    // listings.value = lData
+    const [sData, lData] = await Promise.all([
+      auth.apiFetch('/v1/recruiter/stats'),
+      auth.apiFetch('/v1/recruiter/listings')
+    ])
+    Object.assign(stats, sData)
+    listings.value = lData
   } catch (err) {
     console.error('Failed to load recruiter data:', err)
   } finally {
@@ -204,18 +204,18 @@ async function postJob() {
 
 async function closeListing(listing) {
   try {
-    // await auth.apiFetch(`/v1/projects/${listing.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'closed' }) })
+    await auth.apiFetch(`/v1/projects/${listing.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'closed' }) })
     listing.status = 'closed'
   } catch (err) {
     console.error('Failed to close listing:', err)
   }
-}
+} 
 
 async function viewApplicants(listing) {
   selectedListing.value = listing
   applicants.value = []
   try {
-    // applicants.value = await auth.apiFetch(`/v1/projects/${listing.id}/applications`)
+    applicants.value = await auth.apiFetch(`/v1/projects/${listing.id}/applications`)
   } catch (err) {
     console.error('Failed to load applicants:', err)
   }
