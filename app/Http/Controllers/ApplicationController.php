@@ -28,13 +28,6 @@ class ApplicationController extends Controller
         return response()->json($query->with(['project', 'student'])->paginate(15));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $this->authorize('create', Application::class);
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -69,13 +62,6 @@ class ApplicationController extends Controller
         return response()->json($application->load(['project', 'student']));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Application $application)
-    {
-        $this->authorize('update', $application);
-    }
 
     /**
      * Update the specified resource in storage.

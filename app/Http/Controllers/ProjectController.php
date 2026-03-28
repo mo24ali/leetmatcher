@@ -16,13 +16,6 @@ class ProjectController extends Controller
         return response()->json(Project::with('recruiter')->paginate(10));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $this->authorize('create', Project::class);
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -58,13 +51,6 @@ class ProjectController extends Controller
         return response()->json($project->load(['recruiter', 'applications']));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Project $project)
-    {
-        $this->authorize('update', $project);
-    }
 
     /**
      * Update the specified resource in storage.
@@ -116,5 +102,33 @@ class ProjectController extends Controller
         ->values();
 
         return response()->json($matches);
+    }
+
+    /**
+     * Get recommended projects for the authenticated user.
+     */
+    public function recommended(Request $request, \App\Services\MatchingService $matchingService)
+    {
+        $profile = $request->user()->profile;
+
+        if (!$profile) {
+            return response()->json([]);
+        }
+
+        $recommendations = $matchingService->getRecommendedProjects($profile);
+
+        // Map to expected frontend format
+        $formatted = $recommendations->map(fn($p) => [
+            'id' => $p->id,
+            'title' => $p->title,
+            'company' => $p->recruiter?->name ?? 'Acme Corp',
+            'type' => $p->type ?? 'Remote',
+            'match' => $p->match_score,
+            'skills' => $p->skills->pluck('name')->toArray(),
+            'description' => $p->description,
+            'deadline' => $p->deadline?->format('Y-m-d'),
+        ]);
+
+        return response()->json($formatted);
     }
 }

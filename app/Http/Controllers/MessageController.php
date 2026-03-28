@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Message;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 class MessageController extends Controller
 {
     /**
@@ -12,7 +12,7 @@ class MessageController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
 
         $messages = Message::where('sender_id', $user->id)
@@ -29,7 +29,7 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
 
         $validatedData = $request->validate([

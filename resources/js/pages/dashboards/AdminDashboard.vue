@@ -1,11 +1,10 @@
 <template>
   <div class="dashboard-page">
-    <!-- Hero -->
     <section class="dash-hero">
       <div class="dash-hero-inner">
         <div>
           <p class="dash-welcome">Admin Control Panel</p>
-          <h1 class="dash-title">{{ auth.state.user?.name }} 👋</h1>
+          <h1 class="dash-title">{{ auth.state.user?.name }}</h1>
           <p class="dash-subtitle">Platform overview and management tools.</p>
         </div>
         <div class="hero-badge admin">Admin</div>
@@ -13,31 +12,30 @@
     </section>
 
     <div class="dash-content">
-      <!-- Platform stats -->
       <section class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon">👥</div>
+          <div class="stat-icon-box"><span>&#128101;</span></div>
           <div class="stat-body">
             <p class="stat-label">Total Users</p>
             <p class="stat-number">{{ stats.users }}</p>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">💼</div>
+          <div class="stat-icon-box"><span>&#9646;</span></div>
           <div class="stat-body">
             <p class="stat-label">Total Jobs</p>
             <p class="stat-number">{{ stats.jobs }}</p>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📋</div>
+          <div class="stat-icon-box"><span>&#9998;</span></div>
           <div class="stat-body">
             <p class="stat-label">Applications</p>
             <p class="stat-number">{{ stats.applications }}</p>
           </div>
         </div>
         <div class="stat-card positive">
-          <div class="stat-icon">📈</div>
+          <div class="stat-icon-box success"><span>&#8593;</span></div>
           <div class="stat-body">
             <p class="stat-label">Monthly Growth</p>
             <p class="stat-number">+{{ stats.growth }}%</p>
@@ -45,12 +43,11 @@
         </div>
       </section>
 
-      <!-- Charts row -->
       <div class="dash-two-col">
-        <!-- Role breakdown -->
+        <!-- User Management -->
         <section class="dash-card" id="users">
           <div class="dash-card-header">
-            <h2 class="dash-card-title">👥 User Management</h2>
+            <h2 class="dash-card-title">User Management</h2>
             <p class="dash-card-subtitle">Platform user breakdown by role</p>
           </div>
 
@@ -92,10 +89,9 @@
         <!-- Recent activity -->
         <section class="dash-card">
           <div class="dash-card-header">
-            <h2 class="dash-card-title">🕐 Recent Activity</h2>
+            <h2 class="dash-card-title">Recent Activity</h2>
             <p class="dash-card-subtitle">Latest platform events</p>
           </div>
-
           <div class="activity-feed">
             <div v-for="event in activity" :key="event.id" class="activity-item">
               <div class="activity-dot" :class="event.type"></div>
@@ -104,17 +100,17 @@
                 <p class="activity-time">{{ event.time }}</p>
               </div>
             </div>
+            <p v-if="activity.length === 0" class="empty-hint">No recent activity to display.</p>
           </div>
         </section>
       </div>
 
-      <!-- Listings management -->
+      <!-- All job listings -->
       <section class="dash-card" id="listings">
         <div class="dash-card-header">
-          <h2 class="dash-card-title">💼 Manage Job Listings</h2>
+          <h2 class="dash-card-title">Manage Job Listings</h2>
           <p class="dash-card-subtitle">All jobs posted across the platform</p>
         </div>
-
         <table class="admin-table">
           <thead>
             <tr><th>Title</th><th>Recruiter</th><th>Applicants</th><th>Status</th><th>Deadline</th><th>Action</th></tr>
@@ -137,7 +133,7 @@
       <!-- Site settings -->
       <section class="dash-card settings-card" id="settings">
         <div class="dash-card-header">
-          <h2 class="dash-card-title">⚙️ Site Settings</h2>
+          <h2 class="dash-card-title">Site Settings</h2>
           <p class="dash-card-subtitle">Platform-level configuration</p>
         </div>
         <div class="settings-grid">
@@ -164,8 +160,6 @@ import { useAuthStore } from '../../stores/authStore'
 const auth = useAuthStore()
 const loading = ref(true)
 
-// Individual data properties initialized to empty states
-// These will be populated by API calls in onMounted
 const stats = reactive({ users: 0, jobs: 0, applications: 0, growth: 0 })
 
 const roleBreakdown = ref([
@@ -174,36 +168,30 @@ const roleBreakdown = ref([
   { role: 'admin',     label: 'Admins',     count: 0, pct: 0 },
 ])
 
-const users = ref([])
-const allJobs = ref([])
+const users    = ref([])
+const allJobs  = ref([])
 const activity = ref([])
 
-// Site performance and feature flags (initialized to safe defaults)
 const settings = reactive([
-  { key: 'registration',   label: 'Open Registration',    desc: 'Allow new users to register on the platform', enabled: false },
-  { key: 'email_notif',    label: 'Email Notifications',  desc: 'Send email alerts for applications and updates', enabled: false },
-  { key: 'maintenance',    label: 'Maintenance Mode',     desc: 'Take the platform offline for maintenance',    enabled: false },
-  { key: 'cv_parsing',     label: 'CV Parser',            desc: 'Enable automatic CV parsing on upload',        enabled: false },
+  { key: 'registration', label: 'Open Registration',   desc: 'Allow new users to register on the platform',  enabled: false },
+  { key: 'email_notif',  label: 'Email Notifications', desc: 'Send email alerts for applications and updates', enabled: false },
+  { key: 'maintenance',  label: 'Maintenance Mode',    desc: 'Take the platform offline for maintenance',      enabled: false },
+  { key: 'cv_parsing',   label: 'CV Parser',           desc: 'Enable automatic CV parsing on upload',          enabled: false },
 ])
 
-/**
- * Fetch all platform management data from the backend
- */
 async function loadDashboardData() {
   loading.value = true
   try {
-    // These are endpoints to be implemented in AdminController
-    // const [sData, uData, jData, aData] = await Promise.all([
-    //   auth.apiFetch('/v1/admin/stats'),
-    //   auth.apiFetch('/v1/admin/users'),
-    //   auth.apiFetch('/v1/admin/projects'),
-    //   auth.apiFetch('/v1/admin/activity')
-    // ])
-    
-    // Assign fetched data to reactive refs here
-    // example: stats.users = sData.total_users
-    
-    console.log('Admin data fetching logic ready for backend implementation.')
+     const [sData, uData, jData, aData] = await Promise.all([
+       auth.apiFetch('/v1/admin/stats'),
+       auth.apiFetch('/v1/admin/users'),
+       auth.apiFetch('/v1/admin/projects'),
+       auth.apiFetch('/v1/admin/activity')
+     ])
+     Object.assign(stats, sData)
+     users.value    = uData
+     allJobs.value  = jData
+     activity.value = aData
   } catch (err) {
     console.error('Failed to load admin dashboard data:', err)
   } finally {
@@ -216,14 +204,12 @@ onMounted(() => {
 })
 
 async function removeUser(user) {
-  // TODO: Call API to delete user
-  // await auth.apiFetch(`/v1/admin/users/${user.id}`, { method: 'DELETE' })
+  await auth.apiFetch(`/v1/admin/users/${user.id}`, { method: 'DELETE' })
   users.value = users.value.filter(u => u.id !== user.id)
 }
 
 async function removeJob(job) {
-  // TODO: Call API to delete job listing
-  // await auth.apiFetch(`/v1/admin/projects/${job.id}`, { method: 'DELETE' })
+  await auth.apiFetch(`/v1/admin/projects/${job.id}`, { method: 'DELETE' })
   allJobs.value = allJobs.value.filter(j => j.id !== job.id)
 }
 </script>
@@ -249,9 +235,11 @@ async function removeJob(job) {
 @media(max-width:900px){ .stats-grid { grid-template-columns: repeat(2,1fr); } }
 @media(max-width:480px){ .stats-grid { grid-template-columns: 1fr; } }
 
-.stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; }
+.stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; transition: box-shadow 0.2s; }
+.stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
 .stat-card.positive { border-left: 3px solid #22c55e; }
-.stat-icon   { font-size: 1.75rem; }
+.stat-icon-box { width: 40px; height: 40px; background: var(--gray-100); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gray-500); font-size: 1rem; }
+.stat-icon-box.success { background: #dcfce7; color: #16a34a; }
 .stat-label  { font-size: 0.8rem; color: var(--gray-500); margin: 0 0 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .stat-number { font-size: 1.75rem; font-weight: 700; color: var(--gray-900); margin: 0; line-height: 1; }
 
@@ -263,7 +251,6 @@ async function removeJob(job) {
 .dash-card-title  { font-size: 1.1rem; font-weight: 600; color: var(--gray-900); margin: 0 0 0.3rem; }
 .dash-card-subtitle { font-size: 0.85rem; color: var(--gray-500); margin: 0; }
 
-/* ── Role breakdown ── */
 .role-breakdown { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
 .role-row { display: flex; align-items: center; gap: 1rem; }
 .role-info { display: flex; align-items: center; gap: 0.5rem; min-width: 90px; }
@@ -280,7 +267,6 @@ async function removeJob(job) {
 .role-bar-fill.admin      { background: #f59e0b; }
 .role-count { font-size: 0.8rem; color: var(--gray-500); min-width: 35px; text-align: right; }
 
-/* ── Admin table ── */
 .admin-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .admin-table th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-500); padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--gray-200); }
 .admin-table td { padding: 0.75rem; border-bottom: 1px solid var(--gray-100); color: var(--gray-800); }
@@ -299,7 +285,8 @@ async function removeJob(job) {
 .listing-status.open   { background: #dcfce7; color: #16a34a; }
 .listing-status.closed { background: #f3f4f6; color: #6b7280; }
 
-/* ── Activity feed ── */
+.empty-hint { font-size: 0.875rem; color: var(--gray-400); text-align: center; padding: 2rem 0; margin: 0; }
+
 .activity-feed { display: flex; flex-direction: column; gap: 1rem; }
 .activity-item { display: flex; gap: 0.75rem; align-items: flex-start; }
 .activity-dot  { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
@@ -310,7 +297,6 @@ async function removeJob(job) {
 .activity-text { font-size: 0.875rem; color: var(--gray-800); margin: 0 0 0.15rem; }
 .activity-time { font-size: 0.75rem; color: var(--gray-500); margin: 0; }
 
-/* ── Settings ── */
 .settings-grid { display: flex; flex-direction: column; gap: 0; }
 .setting-row  { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--gray-100); }
 .setting-row:last-child { border-bottom: none; }

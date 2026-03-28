@@ -1,11 +1,10 @@
 <template>
   <div class="dashboard-page">
-    <!-- Hero greeting -->
     <section class="dash-hero">
       <div class="dash-hero-inner">
         <div>
           <p class="dash-welcome">Welcome back,</p>
-          <h1 class="dash-title">{{ auth.state.user?.name }} 👋</h1>
+          <h1 class="dash-title">{{ auth.state.user?.name }}</h1>
           <p class="dash-subtitle">Here's an overview of your job search activity.</p>
         </div>
         <div class="hero-badge applicant">Applicant</div>
@@ -13,31 +12,30 @@
     </section>
 
     <div class="dash-content">
-      <!-- Stats row -->
       <section class="stats-grid" id="apps">
         <div class="stat-card">
-          <div class="stat-icon">📋</div>
+          <div class="stat-icon-box"><span class="stat-icon-svg">&#9998;</span></div>
           <div class="stat-body">
             <p class="stat-label">Applications Sent</p>
             <p class="stat-number">{{ stats.applied }}</p>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">⏳</div>
+          <div class="stat-icon-box"><span class="stat-icon-svg">&#8987;</span></div>
           <div class="stat-body">
             <p class="stat-label">Pending Review</p>
             <p class="stat-number">{{ stats.pending }}</p>
           </div>
         </div>
         <div class="stat-card positive">
-          <div class="stat-icon">✅</div>
+          <div class="stat-icon-box success"><span class="stat-icon-svg">&#10003;</span></div>
           <div class="stat-body">
             <p class="stat-label">Accepted</p>
             <p class="stat-number">{{ stats.accepted }}</p>
           </div>
         </div>
         <div class="stat-card negative">
-          <div class="stat-icon">❌</div>
+          <div class="stat-icon-box danger"><span class="stat-icon-svg">&#10005;</span></div>
           <div class="stat-body">
             <p class="stat-label">Rejected</p>
             <p class="stat-number">{{ stats.rejected }}</p>
@@ -49,7 +47,7 @@
         <!-- CV Upload section -->
         <section class="dash-card cv-section" id="cv-upload">
           <div class="dash-card-header">
-            <h2 class="dash-card-title">📄 CV Upload & Parser</h2>
+            <h2 class="dash-card-title">CV Upload &amp; Parser</h2>
             <p class="dash-card-subtitle">Upload your resume to auto-extract your profile information</p>
           </div>
 
@@ -69,17 +67,21 @@
               @change="handleFileSelect"
             />
             <div v-if="!selectedFile" class="drop-placeholder">
-              <div class="drop-icon">📁</div>
+              <div class="drop-icon-wrap">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg>
+              </div>
               <p class="drop-text">Drop your CV here or <span class="drop-link">browse</span></p>
-              <p class="drop-hint">PDF, DOC, DOCX · Max 5 MB</p>
+              <p class="drop-hint">PDF, DOC, DOCX &middot; Max 5 MB</p>
             </div>
             <div v-else class="drop-selected">
-              <div class="file-icon">📎</div>
+              <div class="file-icon-wrap">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
               <div class="file-meta">
                 <p class="file-name">{{ selectedFile.name }}</p>
                 <p class="file-size">{{ formatBytes(selectedFile.size) }}</p>
               </div>
-              <button class="file-remove" @click.stop="clearFile" title="Remove file">✕</button>
+              <button class="file-remove" @click.stop="clearFile" title="Remove file">&times;</button>
             </div>
           </div>
 
@@ -91,13 +93,12 @@
             @click="uploadCv"
           >
             <span v-if="uploading" class="btn-spinner"></span>
-            <span>{{ uploading ? 'Parsing your CV…' : 'Upload & Parse CV' }}</span>
+            <span>{{ uploading ? 'Parsing your CV…' : 'Upload &amp; Parse CV' }}</span>
           </button>
 
-          <!-- Parsed results -->
           <transition name="fade-slide">
             <div v-if="parsed" class="parsed-results">
-              <h3 class="parsed-title">✨ Parsed Information</h3>
+              <h3 class="parsed-title">Parsed Information</h3>
 
               <div class="parsed-grid">
                 <div v-if="parsed.name" class="parsed-field">
@@ -112,6 +113,15 @@
                   <label>Phone</label>
                   <span>{{ parsed.phone }}</span>
                 </div>
+                <div v-if="parsed.location" class="parsed-field">
+                  <label>Location</label>
+                  <span>{{ parsed.location }}</span>
+                </div>
+              </div>
+
+              <div v-if="parsed.summary" class="parsed-section">
+                <h4>Summary</h4>
+                <p class="parsed-summary">{{ parsed.summary }}</p>
               </div>
 
               <div v-if="parsed.skills?.length" class="parsed-section">
@@ -134,44 +144,33 @@
                   <li v-for="item in parsed.experience" :key="item">{{ item }}</li>
                 </ul>
               </div>
+
+              <div v-if="parsed.certifications?.length" class="parsed-section">
+                <h4>Certifications</h4>
+                <ul class="parsed-list">
+                  <li v-for="cert in parsed.certifications" :key="cert">{{ cert }}</li>
+                </ul>
+              </div>
             </div>
           </transition>
-          <!-- Persistent Stored Skills -->
+
           <div v-if="persistentSkills.length" class="parsed-results mt-4">
-            <h3 class="parsed-title">🛠️ Your Profile Skills</h3>
+            <h3 class="parsed-title">Your Profile Skills</h3>
             <div class="skill-tags">
-              <span v-for="skill in persistentSkills" :key="skill.id" class="skill-tag" :title="'Added: ' + new Date(skill.created_at).toLocaleDateString()">
+              <span
+                v-for="skill in persistentSkills"
+                :key="skill.id"
+                class="skill-tag"
+                :title="'Added: ' + new Date(skill.created_at).toLocaleDateString()"
+              >
                 {{ skill.name }}
-                <span v-if="skill.proficiency" class="skill-level">· {{ skill.proficiency }}</span>
+                <span v-if="skill.proficiency" class="skill-level">&middot; {{ skill.proficiency }}</span>
               </span>
             </div>
           </div>
         </section>
 
-        <!-- Browse Jobs panel (placeholder) -->
-        <section class="dash-card browse-section" id="browse">
-          <div class="dash-card-header">
-            <h2 class="dash-card-title">🔍 Browse Jobs</h2>
-            <p class="dash-card-subtitle">Open positions matching your profile</p>
-          </div>
-          <div class="job-list">
-            <div v-for="job in recommendedJobs" :key="job.id" class="job-card">
-              <div class="job-card-top">
-                <div>
-                  <p class="job-title">{{ job.title }}</p>
-                  <p class="job-company">{{ job.company }}</p>
-                </div>
-                <span class="job-badge" :class="job.type === 'Remote' ? 'remote' : 'onsite'">{{ job.type }}</span>
-              </div>
-              <div class="job-card-footer">
-                <span class="job-skills">{{ job.skills.join(' · ') }}</span>
-                <button class="job-apply-btn">Apply →</button>
-              </div>
-            </div>
-            <!-- Empty state for no jobs found -->
-            <p v-if="!loading && recommendedJobs.length === 0" class="empty-hint">No jobs matching your profile yet. Try uploading a CV!</p>
-          </div>
-        </section>
+
       </div>
     </div>
   </div>
@@ -184,31 +183,13 @@ import { useAuthStore } from '../../stores/authStore'
 const auth = useAuthStore()
 const loading = ref(true)
 
-// Applicant statistics (initialized to zero)
-// These will be populated by an API call to a dashboard stats endpoint
 const stats = reactive({ applied: 0, pending: 0, accepted: 0, rejected: 0 })
 
-// Recommended job listings for the applicant
-// These will be populated by the matching algorithm via API
-const recommendedJobs = ref([])
-
-/**
- * Fetch all applicant-specific dashboard data
- */
 async function loadApplicantData() {
   loading.value = true
   try {
-    // Endpoints to be implemented in ApplicantController or similar
-    // const [sData, jData] = await Promise.all([
-    //   auth.apiFetch('/v1/applicant/stats'),
-    //   auth.apiFetch('/v1/applicant/recommended-jobs')
-    // ])
-    
-    // Assign fetched data to reactive refs
-    // stats.applied = sData.applied_count
-    // recommendedJobs.value = jData
-    
-    console.log('Applicant data fetching logic ready for backend implementation.')
+    const sData = await auth.apiFetch('/v1/applicant/stats')
+    Object.assign(stats, sData)
   } catch (err) {
     console.error('Failed to load applicant dashboard data:', err)
   } finally {
@@ -220,22 +201,21 @@ onMounted(() => {
   loadApplicantData()
 })
 
-// ─── CV Upload ────────────────────────────────────────────────────────────────
-const fileInput   = ref(null)
+const fileInput    = ref(null)
 const selectedFile = ref(null)
-const dragging    = ref(false)
-const uploading   = ref(false)
-const uploadError = ref('')
-const parsed      = ref(null)
+const dragging     = ref(false)
+const uploading    = ref(false)
+const uploadError  = ref('')
+const parsed       = ref(null)
 const persistentSkills = ref([])
 
 onMounted(async () => {
-    try {
-        const res = await auth.fetchSkills()
-        persistentSkills.value = res.skills
-    } catch {
-        /* best-effort */
-    }
+  try {
+    const res = await auth.fetchSkills()
+    persistentSkills.value = res.skills
+  } catch {
+    /* best-effort */
+  }
 })
 
 function handleDrop(e) {
@@ -251,9 +231,11 @@ function handleFileSelect(e) {
 
 function validateAndSet(file) {
   uploadError.value = ''
-  const allowed = ['application/pdf',
+  const allowed = [
+    'application/pdf',
     'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ]
   if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|doc|docx)$/i)) {
     uploadError.value = 'Only PDF, DOC, and DOCX files are accepted.'
     return
@@ -280,7 +262,7 @@ async function uploadCv() {
   try {
     const res = await auth.uploadCv(selectedFile.value)
     parsed.value = res.parsed
-    persistentSkills.value = res.skills
+    persistentSkills.value = res.skills ?? persistentSkills.value
   } catch (e) {
     uploadError.value = e.message || 'Upload failed. Please try again.'
   } finally {
@@ -293,18 +275,9 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
-
-// // ─── Sample job listings ──────────────────────────────────────────────────────
-// const sampleJobs = [
-//   { id: 1, title: 'Frontend Engineer',      company: 'TechCorp Inc.',    type: 'Remote', skills: ['Vue', 'TypeScript'] },
-//   { id: 2, title: 'Backend Developer',      company: 'FinanceFlow',      type: 'Onsite', skills: ['Laravel', 'PostgreSQL'] },
-//   { id: 3, title: 'Full-Stack Developer',   company: 'StartupXYZ',       type: 'Remote', skills: ['React', 'Node.js'] },
-//   { id: 4, title: 'ML Engineer',            company: 'DataVision AI',    type: 'Onsite', skills: ['Python', 'TensorFlow'] },
-// ]
 </script>
 
 <style scoped>
-/* ── Layout ── */
 .dashboard-page { min-height: 100vh; background: var(--gray-50); font-family: var(--font-base); }
 
 .dash-hero {
@@ -341,7 +314,6 @@ function formatBytes(bytes) {
   padding: 2rem;
 }
 
-/* ── Stats ── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -365,11 +337,23 @@ function formatBytes(bytes) {
 .stat-card.positive  { border-left: 3px solid #22c55e; }
 .stat-card.negative  { border-left: 3px solid #ef4444; }
 
-.stat-icon   { font-size: 1.75rem; }
+.stat-icon-box {
+  width: 40px;
+  height: 40px;
+  background: var(--gray-100);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.stat-icon-box.success { background: #dcfce7; color: #16a34a; }
+.stat-icon-box.danger  { background: #fee2e2; color: #b91c1c; }
+.stat-icon-svg { font-size: 1rem; color: var(--gray-600); }
+
 .stat-label  { font-size: 0.8rem; color: var(--gray-500); margin: 0 0 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .stat-number { font-size: 1.75rem; font-weight: 700; color: var(--gray-900); margin: 0; line-height: 1; }
 
-/* ── Two-column layout ── */
 .dash-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -388,7 +372,6 @@ function formatBytes(bytes) {
 .dash-card-title  { font-size: 1.1rem; font-weight: 600; color: var(--gray-900); margin: 0 0 0.3rem; }
 .dash-card-subtitle { font-size: 0.85rem; color: var(--gray-500); margin: 0; }
 
-/* ── Drop zone ── */
 .drop-zone {
   border: 2px dashed var(--gray-300);
   border-radius: 12px;
@@ -402,7 +385,7 @@ function formatBytes(bytes) {
 .drop-zone:hover, .drop-zone.drop-active { border-color: var(--gray-600); background: var(--gray-100); }
 .drop-zone.has-file { border-style: solid; border-color: #22c55e; background: #f0fdf4; }
 
-.drop-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.drop-icon-wrap { width: 52px; height: 52px; background: var(--gray-100); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; color: var(--gray-500); }
 .drop-text { font-size: 0.95rem; color: var(--gray-600); margin: 0 0 0.25rem; }
 .drop-link { color: var(--gray-900); font-weight: 600; text-decoration: underline; }
 .drop-hint { font-size: 0.8rem; color: var(--gray-400); margin: 0; }
@@ -413,7 +396,7 @@ function formatBytes(bytes) {
   gap: 1rem;
   text-align: left;
 }
-.file-icon { font-size: 2rem; }
+.file-icon-wrap { color: var(--gray-500); flex-shrink: 0; }
 .file-meta { flex: 1; }
 .file-name { font-size: 0.9rem; font-weight: 500; color: var(--gray-900); margin: 0 0 0.2rem; word-break: break-all; }
 .file-size { font-size: 0.8rem; color: var(--gray-500); margin: 0; }
@@ -421,10 +404,11 @@ function formatBytes(bytes) {
   background: none;
   border: none;
   color: var(--gray-400);
-  font-size: 1rem;
+  font-size: 1.25rem;
   cursor: pointer;
   padding: 0.25rem;
   transition: color 0.15s;
+  line-height: 1;
 }
 .file-remove:hover { color: #ef4444; }
 
@@ -458,7 +442,6 @@ function formatBytes(bytes) {
 .upload-btn:hover:not(:disabled) { background: var(--gray-800); }
 .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Parsed results ── */
 .parsed-results {
   margin-top: 1.5rem;
   border: 1px solid #d1fae5;
@@ -466,21 +449,18 @@ function formatBytes(bytes) {
   border-radius: 12px;
   padding: 1.25rem;
 }
-
 .parsed-title {
   font-size: 0.95rem;
   font-weight: 600;
   color: #166534;
   margin: 0 0 1rem;
 }
-
 .parsed-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
-
 .parsed-field label {
   display: block;
   font-size: 0.72rem;
@@ -494,7 +474,12 @@ function formatBytes(bytes) {
   font-weight: 500;
   color: var(--gray-900);
 }
-
+.parsed-summary {
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  line-height: 1.6;
+  margin: 0;
+}
 .parsed-section { margin-bottom: 0.75rem; }
 .parsed-section h4 {
   font-size: 0.78rem;
@@ -514,11 +499,13 @@ function formatBytes(bytes) {
   border-radius: 99px;
   font-weight: 500;
 }
+.skill-level { font-size: 0.7rem; opacity: 0.7; margin-left: 0.3rem; font-weight: 400; }
 
 .parsed-list { margin: 0; padding-left: 1.25rem; }
 .parsed-list li { font-size: 0.85rem; color: var(--gray-700); margin-bottom: 0.2rem; }
 
-/* ── Job cards ── */
+.empty-hint { font-size: 0.875rem; color: var(--gray-400); text-align: center; padding: 2rem 0; margin: 0; }
+
 .job-list { display: flex; flex-direction: column; gap: 0.75rem; }
 .job-card {
   border: 1px solid var(--gray-200);
@@ -527,7 +514,6 @@ function formatBytes(bytes) {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .job-card:hover { border-color: var(--gray-400); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-
 .job-card-top {
   display: flex;
   justify-content: space-between;
@@ -536,7 +522,6 @@ function formatBytes(bytes) {
 }
 .job-title   { font-size: 0.95rem; font-weight: 600; color: var(--gray-900); margin: 0 0 0.2rem; }
 .job-company { font-size: 0.82rem; color: var(--gray-500); margin: 0; }
-
 .job-badge {
   font-size: 0.7rem;
   font-weight: 600;
@@ -548,7 +533,6 @@ function formatBytes(bytes) {
 }
 .job-badge.remote { background: #e0f2fe; color: #0369a1; }
 .job-badge.onsite { background: #f3f4f6; color: #374151; }
-
 .job-card-footer { display: flex; justify-content: space-between; align-items: center; }
 .job-skills { font-size: 0.78rem; color: var(--gray-500); }
 .job-apply-btn {
@@ -565,7 +549,6 @@ function formatBytes(bytes) {
 }
 .job-apply-btn:hover { background: var(--gray-900); color: var(--white); border-color: var(--gray-900); }
 
-/* ── Transitions ── */
 .btn-spinner {
   width: 16px; height: 16px;
   border: 2px solid rgba(255,255,255,0.35);
@@ -579,5 +562,4 @@ function formatBytes(bytes) {
 .fade-slide-enter-active { transition: opacity 0.35s ease, transform 0.35s ease; }
 .fade-slide-enter-from   { opacity: 0; transform: translateY(12px); }
 .mt-4 { margin-top: 1.5rem; }
-.skill-level { font-size: 0.7rem; opacity: 0.7; margin-left: 0.3rem; font-weight: 400; }
 </style>

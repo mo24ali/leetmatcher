@@ -9,13 +9,13 @@ import Register          from '../pages/Register.vue'
 import RegisterStudent   from '../pages/Register-student.vue'
 import RegisterRecruiter from '../pages/Register-recruiter.vue'
 import Login             from '../pages/Login.vue'
+import Profile           from '../pages/Profile.vue'
 
-import Profile from '../pages/Profile.vue'
-
-// Dashboards (lazy-loaded)
+// Lazy-loaded pages
 const ApplicantDashboard = () => import('../pages/dashboards/ApplicantDashboard.vue')
 const RecruiterDashboard = () => import('../pages/dashboards/RecruiterDashboard.vue')
 const AdminDashboard     = () => import('../pages/dashboards/AdminDashboard.vue')
+const BrowseJobs         = () => import('../pages/BrowseJobs.vue')
 const Forbidden          = () => import('../pages/Forbidden.vue')
 
 // ─── Route definitions ────────────────────────────────────────────────────────
@@ -49,6 +49,12 @@ const routes = [
         name: 'AdminDashboard',
         component: AdminDashboard,
         meta: { requiresAuth: true, role: 'admin' },
+    },
+    {
+        path: '/jobs',
+        name: 'BrowseJobs',
+        component: BrowseJobs,
+        meta: { requiresAuth: true, role: 'applicant' },
     },
 
     // Catch-all
