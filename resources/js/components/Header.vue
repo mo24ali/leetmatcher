@@ -90,6 +90,7 @@
                       </div>
                       <p class="text-[0.75rem] text-gray-500">{{ job.company }}</p>
                     </a>
+                    
                   </div>
                   <router-link
                     to="/jobs"

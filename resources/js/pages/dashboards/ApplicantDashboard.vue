@@ -182,7 +182,6 @@ import { useAuthStore } from '../../stores/authStore'
 
 const auth = useAuthStore()
 const loading = ref(true)
-
 const stats = reactive({ applied: 0, pending: 0, accepted: 0, rejected: 0 })
 
 async function loadApplicantData() {
