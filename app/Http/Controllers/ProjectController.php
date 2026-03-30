@@ -3,10 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Application;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    protected $skillExtractor;
+
+    public function __construct(\App\Services\SkillExtractionService $skillExtractor)
+    {
+        $this->skillExtractor = $skillExtractor;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -36,9 +44,12 @@ class ProjectController extends Controller
             'recruiter_id' => $request->user()->id,
         ]);
 
+        // Auto-extract skills
+        $this->skillExtractor->syncToProject($project);
+
         return response()->json([
             'message' => 'Project created successfully',
-            'project' => $project,
+            'project' => $project->load('skills'),
         ], 201);
     }
 
@@ -130,5 +141,45 @@ class ProjectController extends Controller
         ]);
 
         return response()->json($formatted);
+    }
+
+    /**
+     * Get statistics for the recruiter dashboard.
+     */
+    public function recruiterStats(Request $request)
+    {
+        $user = $request->user();
+        
+        $projectsIds = Project::where('recruiter_id', $user->id)->pluck('id');
+        
+        $totalProjects = $projectsIds->count();
+        $totalApplications = Application::whereIn('project_id', $projectsIds)->count();
+        $pendingReviews = Application::whereIn('project_id', $projectsIds)->where('status', 'pending')->count();
+        
+        // Skill distribution among recruiter's projects
+        $skillsDistribution = \App\Models\Skill::whereHas('projects', function($q) use ($user) {
+            $q->where('recruiter_id', $user->id);
+        })
+        ->withCount(['projects' => function($q) use ($user) {
+            $q->where('recruiter_id', $user->id);
+        }])
+        ->orderByDesc('projects_count')
+        ->limit(10)
+        ->get()
+        ->map(fn($s) => ['name' => $s->name, 'count' => $s->projects_count]);
+
+        return response()->json([
+            'stats' => [
+                'total_projects'     => $totalProjects,
+                'total_applications' => $totalApplications,
+                'pending_reviews'    => $pendingReviews,
+            ],
+            'skills_distribution' => $skillsDistribution,
+            'recent_projects' => Project::where('recruiter_id', $user->id)
+                                        ->withCount('applications')
+                                        ->latest()
+                                        ->limit(5)
+                                        ->get(),
+        ]);
     }
 }
