@@ -37,6 +37,8 @@ class CvController extends Controller
             }
         }
 
+        
+
         // Recalculate cv_score (calling logic similar to ProfileController)
         $profile->cv_score = $this->calculateScore($profile);
         $profile->save();
