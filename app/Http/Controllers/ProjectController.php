@@ -35,6 +35,7 @@ class ProjectController extends Controller
         $user = $request->user();
         return response()->json(
             Project::where('recruiter_id', $user->id)
+                ->with(['skills'])
                 ->withCount('applications')
                 ->latest()
                 ->get()
@@ -61,8 +62,7 @@ class ProjectController extends Controller
             'recruiter_id' => $request->user()->id,
         ]);
 
-        // Auto-extract skills
-        $this->skillExtractor->syncToProject($project);
+        $this->syncManualSkills($project, $request->input('skills', []));
 
         return response()->json([
             'message' => 'Project created successfully',
@@ -96,8 +96,9 @@ class ProjectController extends Controller
 
         $project->update($validatedData);
 
-        // Re-extract skills if content changed
-        if ($request->has('description') || $request->has('title')) {
+        if ($request->has('skills')) {
+            $this->syncManualSkills($project, $request->input('skills', []));
+        } elseif ($request->has('description') || $request->has('title')) {
             $this->skillExtractor->syncToProject($project);
         }
 
@@ -105,6 +106,41 @@ class ProjectController extends Controller
             'message' => 'Project updated successfully',
             'project' => $project->load('skills'),
         ]);
+    }
+
+    /**
+     * Helper to sync manual skill names to a project.
+     */
+    protected function syncManualSkills(Project $project, array $skillNames)
+    {
+        $skillIds = [];
+        $userId = auth()->id();
+
+        foreach ($skillNames as $name) {
+            $name = trim($name);
+            if (empty($name)) continue;
+
+            // Find existing skill by name (case-insensitive)
+            $skill = Skill::whereRaw('LOWER(name) = ?', [strtolower($name)])->first();
+            
+            if (!$skill) {
+                $skill = Skill::create([
+                    'name' => $name,
+                    'user_id' => $userId,
+                    'proficiency' => 'intermediate'
+                ]);
+            }
+
+            $skillIds[$skill->id] = ['level' => 'intermidiate'];
+        }
+
+        // If no skills provided, fall back to extraction
+        if (empty($skillIds)) {
+            $this->skillExtractor->syncToProject($project);
+            return;
+        }
+
+        $project->skills()->sync($skillIds);
     }
 
     /**
@@ -222,5 +258,9 @@ class ProjectController extends Controller
             ],
             'skills_distribution' => $skillsDistribution,
         ]);
+    }
+    public function getSkills(Project $project){
+        $description = Project::where('id',$project->id())->pluck('description');
+        
     }
 }

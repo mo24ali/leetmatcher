@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CvController;
 use App\Http\Controllers\Api\ProfileApiController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SkillController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\InterviewController;
@@ -34,6 +35,7 @@ Route::middleware('auth')->group(function () {
     // Dashboard & Stats
     Route::get('/v1/recruiter/stats', [ProjectController::class , 'recruiterStats']);
     Route::get('/v1/recruiter/listings', [ProjectController::class, 'myProjects']);
+    Route::get('/v1/skills/search', [SkillController::class, 'search']);
     Route::get('/v1/applicant/stats', [ApplicationController::class , 'applicantStats']);
 
     // Job listings and applications
