@@ -65,6 +65,40 @@
                 <label class="field-label">Description</label>
                 <textarea v-model="jobForm.description" class="form-input form-textarea" placeholder="Describe the role, requirements, and expectations…" required></textarea>
               </div>
+
+              <!-- Skills Management Section -->
+              <div class="form-group">
+                <label class="field-label">Required Skills</label>
+                <div class="skills-input-wrapper">
+                  <div class="skills-tags">
+                    <span v-for="(skill, idx) in jobForm.skills" :key="idx" class="skill-tag">
+                      {{ skill }}
+                      <button type="button" class="remove-skill" @click="removeSkillItem(idx)">&times;</button>
+                    </span>
+                  </div>
+                  <div class="autocomplete-container">
+                    <input 
+                      v-model="skillQuery" 
+                      type="text" 
+                      class="form-input skill-input" 
+                      placeholder="Type a skill (e.g. Python) and press Enter…"
+                      @input="handleSkillSearch"
+                      @keydown.enter.prevent="addSkillFromInput"
+                    />
+                    <div v-if="skillSuggestions.length > 0" class="suggestions-list">
+                      <div 
+                        v-for="s in skillSuggestions" 
+                        :key="s" 
+                        class="suggestion-item"
+                        @click="addSkillItem(s)"
+                      >
+                        {{ s }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="form-hint">Press Enter to add, or select from suggestions.</p>
+              </div>
               <div class="form-row">
                 <div class="form-group">
                   <label class="field-label">Deadline</label>
@@ -159,7 +193,9 @@ const auth = useAuthStore()
 const loading = ref(true)
 
 const stats = reactive({ activeListings: 0, totalApplicants: 0, interviews: 0, filled: 0 })
-const jobForm = reactive({ title: '', description: '', deadline: '', status: 'open' })
+const jobForm = reactive({ title: '', description: '', deadline: '', status: 'open', skills: [] })
+const skillQuery = ref('')
+const skillSuggestions = ref([])
 const posting     = ref(false)
 const postSuccess = ref(false)
 const postError   = ref('')
@@ -235,6 +271,7 @@ async function postJob() {
         description: jobForm.description,
         deadline:    jobForm.deadline,
         status:      jobForm.status,
+        skills:      jobForm.skills,
       }),
     })
     
@@ -261,6 +298,7 @@ async function updateJob() {
         description: jobForm.description,
         deadline:    jobForm.deadline,
         status:      jobForm.status,
+        skills:      jobForm.skills,
       }),
     })
     
@@ -282,6 +320,7 @@ function startEdit(listing) {
   // ensure format YYYY-MM-DD for input
   jobForm.deadline = new Date(listing.deadline).toISOString().split('T')[0]
   jobForm.status = listing.status
+  jobForm.skills = listing.skills ? listing.skills.map(s => s.name) : []
   
   // Scroll to form
   document.getElementById('post').scrollIntoView({ behavior: 'smooth' })
@@ -297,6 +336,41 @@ function clearForm() {
   jobForm.description = ''
   jobForm.deadline = ''
   jobForm.status = 'open'
+  jobForm.skills = []
+  skillQuery.value = ''
+  skillSuggestions.value = []
+}
+
+// ─── Skill Management Helpers ──────────────────────────────────────────────
+
+async function handleSkillSearch() {
+  if (skillQuery.value.length < 2) {
+    skillSuggestions.value = []
+    return
+  }
+  try {
+    skillSuggestions.value = await auth.apiFetch(`/v1/skills/search?query=${encodeURIComponent(skillQuery.value)}`)
+  } catch (err) {
+    console.error('Skill search failed:', err)
+  }
+}
+
+function addSkillFromInput() {
+  const val = skillQuery.value.trim()
+  if (val) addSkillItem(val)
+}
+
+function addSkillItem(name) {
+  const normalized = name.trim()
+  if (normalized && !jobForm.skills.includes(normalized)) {
+    jobForm.skills.push(normalized)
+  }
+  skillQuery.value = ''
+  skillSuggestions.value = []
+}
+
+function removeSkillItem(index) {
+  jobForm.skills.splice(index, 1)
 }
 
 async function closeListing(listing) {
@@ -439,5 +513,19 @@ function reviewApplicant(app) {
 .app-status.rejected { background: #fee2e2; color: #b91c1c; }
 
 .btn-spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+
+/* Skills Section Styles */
+.skills-input-wrapper { display: flex; flex-direction: column; gap: 0.75rem; border: 1px solid var(--gray-200); border-radius: 10px; padding: 0.8rem; background: var(--gray-50); }
+.skills-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.skill-tag { background: var(--gray-900); color: var(--white); padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; }
+.remove-skill { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 1rem; padding: 0; line-height: 1; }
+.remove-skill:hover { color: #fff; }
+.autocomplete-container { position: relative; }
+.skill-input { width: 100%; border: 1px solid var(--gray-300); background: var(--white); }
+.suggestions-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--white); border: 1px solid var(--gray-200); border-radius:8px; z-index: 10; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
+.suggestion-item { padding: 0.6rem 1rem; cursor: pointer; font-size: 0.9rem; color: var(--gray-700); }
+.suggestion-item:hover { background: var(--gray-50); color: var(--gray-900); }
+.form-hint { font-size: 0.75rem; color: var(--gray-400); margin: 0.25rem 0 0; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

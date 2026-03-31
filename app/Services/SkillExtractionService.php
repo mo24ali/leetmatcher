@@ -82,7 +82,7 @@ class SkillExtractionService
         
         $syncData = [];
         foreach ($skills as $skill) {
-            $syncData[$skill->id] = ['level' => 'intermediate'];
+            $syncData[$skill->id] = ['level' => 'intermidiate'];
         }
 
         $project->skills()->sync($syncData);
