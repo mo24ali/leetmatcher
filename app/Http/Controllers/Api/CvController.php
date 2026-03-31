@@ -9,60 +9,70 @@ use Illuminate\Support\Facades\Storage;
 
 class CvController extends Controller
 {
+    protected $scoringService;
+    protected $skillExtractor;
+
+    public function __construct(\App\Services\CvScoringService $scoringService, \App\Services\SkillExtractionService $skillExtractor)
+    {
+        $this->scoringService = $scoringService;
+        $this->skillExtractor = $skillExtractor;
+    }
+
     public function upload(Request $request)
     {
-
         $request->validate([
             'cv' => 'required|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
         $file = $request->file('cv');
         $path = $file->store('cvs', 'local');
-        $parsed = $this->parseFile($file);
+        $extension = $file->getClientOriginalExtension();
+        
+        // Extract raw text
+        $text = '';
+        if ($extension === 'pdf') {
+            $text = $this->extractFromPdf($file->getRealPath());
+        } elseif (in_array($extension, ['doc', 'docx'])) {
+            $text = $this->extractFromDocx($file->getRealPath());
+        }
 
+        // Use parsing logic for basic fields
+        $parsed = $this->extractFields($text);
+
+        // Use the skill extractor for better matching against database
+        $skills = $this->skillExtractor->extract($text);
+        $parsed['skills'] = $skills->pluck('name')->toArray();
 
         $user = $request->user();
         $profile = $user->profile()->updateOrCreate(
-        ['user_id' => $user->id],
-        ['cv_path' => $path]
+            ['user_id' => $user->id],
+            ['cv_path' => $path]
         );
 
-        if (isset($parsed['skills'])) {
-            $user->skills()->delete();
-            foreach ($parsed['skills'] as $skillName) {
-                $user->skills()->create([
-                    'name' => $skillName,
-                    'proficiency' => 'intermediate'
-                ]);
-            }
+        // Sync skills to profile
+        $syncData = [];
+        foreach ($skills as $skill) {
+            $syncData[$skill->id] = ['proficiency' => 'intermediate'];
         }
+        $profile->skills()->sync($syncData);
 
-        
-
-        // Recalculate cv_score (calling logic similar to ProfileController)
-        $profile->cv_score = $this->calculateScore($profile);
-        $profile->save();
+        // Use the centralized scoring service
+        $score = $this->scoringService->calculateScore($profile);
 
         return response()->json([
             'message' => 'CV uploaded and parsed successfully',
-            'path' => $path,
-            'parsed' => $parsed,
-            'skills' => $user->skills,
-            'score' => $profile->cv_score
+            'path'    => $path,
+            'parsed'  => $parsed,
+            'skills'  => $profile->skills()->get()->map(fn($s) => [
+                'id' => $s->id,
+                'name' => $s->name,
+                'proficiency' => $s->pivot?->proficiency ?? 'intermediate',
+                'created_at'  => $s->pivot?->created_at?->toIso8601String() ?? now()->toIso8601String(),
+            ]),
+            'score'   => $score
         ]);
     }
 
-    private function calculateScore($profile)
-    {
-        $score = 0;
-        if ($profile->user->skills()->exists())
-            $score += 40;
-        if ($profile->cv_path)
-            $score += 30;
-        if ($profile->bio)
-            $score += 30;
-        return $score;
-    }
 
     private function parseFile($file): array
     {

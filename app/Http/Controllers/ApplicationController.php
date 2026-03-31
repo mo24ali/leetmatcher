@@ -92,4 +92,19 @@ class ApplicationController extends Controller
         $application->delete();
         return response()->json(['message' => 'Application withdrawn successfully'], 204);
     }
+
+    /**
+     * Get statistics for the applicant dashboard.
+     */
+    public function applicantStats(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'applied'  => Application::where('student_id', $user->id)->count(),
+            'pending'  => Application::where('student_id', $user->id)->where('status', 'pending')->count(),
+            'accepted' => Application::where('student_id', $user->id)->where('status', 'accepted')->count(),
+            'rejected' => Application::where('student_id', $user->id)->where('status', 'rejected')->count(),
+        ]);
+    }
 }

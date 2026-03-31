@@ -3,17 +3,42 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Application;
 use Illuminate\Http\Request;
-
+use App\Models\Skill;
+use App\Models\Profile;
+use App\Services\MatchingService;
+use App\Services\SkillExtractionService;
 class ProjectController extends Controller
 {
+    protected $skillExtractor;
+
+    public function __construct(SkillExtractionService $skillExtractor)
+    {
+        $this->skillExtractor = $skillExtractor;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $this->authorize('viewAny', Project::class);
-        return response()->json(Project::with('recruiter')->paginate(10));
+        // Public job board view
+        return response()->json(Project::with(['recruiter', 'skills'])->where('status', 'open')->latest()->paginate(10));
+    }
+
+    /**
+     * Recruiter's own listings.
+     */
+    public function myProjects(Request $request)
+    {
+        $user = $request->user();
+        return response()->json(
+            Project::where('recruiter_id', $user->id)
+                ->withCount('applications')
+                ->latest()
+                ->get()
+        );
     }
 
 
@@ -36,9 +61,12 @@ class ProjectController extends Controller
             'recruiter_id' => $request->user()->id,
         ]);
 
+        // Auto-extract skills
+        $this->skillExtractor->syncToProject($project);
+
         return response()->json([
             'message' => 'Project created successfully',
-            'project' => $project,
+            'project' => $project->load('skills'),
         ], 201);
     }
 
@@ -68,9 +96,14 @@ class ProjectController extends Controller
 
         $project->update($validatedData);
 
+        // Re-extract skills if content changed
+        if ($request->has('description') || $request->has('title')) {
+            $this->skillExtractor->syncToProject($project);
+        }
+
         return response()->json([
             'message' => 'Project updated successfully',
-            'project' => $project,
+            'project' => $project->load('skills'),
         ]);
     }
 
@@ -87,11 +120,11 @@ class ProjectController extends Controller
     /**
      * Get matching profiles for a project.
      */
-    public function matches(Project $project, \App\Services\MatchingService $matchingService)
+    public function matches(Project $project, MatchingService $matchingService)
     {
         $this->authorize('view', $project);
 
-        $profiles = \App\Models\Profile::with(['user', 'skills'])->get();
+        $profiles = Profile::with(['user', 'skills'])->get();
 
         $matches = $profiles->map(function ($profile) use ($project, $matchingService) {
             $profile->match_score = $matchingService->calculateMatch($project, $profile);
@@ -105,9 +138,32 @@ class ProjectController extends Controller
     }
 
     /**
+     * Get applications for a project.
+     */
+    public function applications(Project $project)
+    {
+        $this->authorize('update', $project);
+
+        $applications = Application::where('project_id', $project->id)
+            ->with('student')
+            ->latest()
+            ->get()
+            ->map(fn($app) => [
+                'id'       => $app->id,
+                'name'     => $app->student->name,
+                'email'    => $app->student->email,
+                'applied'  => $app->created_at->diffForHumans(),
+                'status'   => $app->status,
+                'cover_letter' => $app->cover_letter,
+            ]);
+
+        return response()->json($applications);
+    }
+
+    /**
      * Get recommended projects for the authenticated user.
      */
-    public function recommended(Request $request, \App\Services\MatchingService $matchingService)
+    public function recommended(Request $request, MatchingService $matchingService)
     {
         $profile = $request->user()->profile;
 
@@ -130,5 +186,41 @@ class ProjectController extends Controller
         ]);
 
         return response()->json($formatted);
+    }
+
+    public function recruiterStats(Request $request)
+    {
+        $user = $request->user();
+        
+        $projectsIds = Project::where('recruiter_id', $user->id)->pluck('id');
+        
+        $totalProjects     = Project::where('recruiter_id', $user->id)->count();
+        $totalApplications   = Application::whereIn('project_id', $projectsIds)->count();
+        $pendingReviews      = Application::whereIn('project_id', $projectsIds)->where('status', 'pending')->count();
+        $scheduledInterviews = \App\Models\Interview::whereHas('application', function($q) use ($projectsIds) {
+            $q->whereIn('project_id', $projectsIds);
+        })->count();
+
+        // Skill distribution among recruiter's projects
+        $skillsDistribution = Skill::whereHas('projects', function($q) use ($user) {
+            $q->where('recruiter_id', $user->id);
+        })
+        ->withCount(['projects' => function($q) use ($user) {
+            $q->where('recruiter_id', $user->id);
+        }])
+        ->orderByDesc('projects_count')
+        ->limit(10)
+        ->get()
+        ->map(fn($s) => ['name' => $s->name, 'count' => $s->projects_count]);
+
+        return response()->json([
+            'stats' => [
+                'total_projects'      => $totalProjects,
+                'total_applications'  => $totalApplications,
+                'pending_reviews'     => $pendingReviews,
+                'scheduled_interviews' => $scheduledInterviews,
+            ],
+            'skills_distribution' => $skillsDistribution,
+        ]);
     }
 }

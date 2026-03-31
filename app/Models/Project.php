@@ -24,6 +24,11 @@ class Project extends Model
         return $this->belongsTo(User::class , 'recruiter_id');
     }
 
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
+    }
+
     public function skills()
     {
         return $this->belongsToMany(Skill::class, 'project_skills')

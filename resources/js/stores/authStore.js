@@ -1,6 +1,6 @@
 import { reactive, computed } from 'vue'
 
-const BASE_URL = 'http://127.0.0.1:8000/api'
+const BASE_URL = typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://127.0.0.1:8000/api'
 
 function loadStoredAuth() {
     try {
