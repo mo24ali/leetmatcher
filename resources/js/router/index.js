@@ -10,6 +10,7 @@ import RegisterStudent   from '../pages/Register-student.vue'
 import RegisterRecruiter from '../pages/Register-recruiter.vue'
 import Login             from '../pages/Login.vue'
 import Profile           from '../pages/Profile.vue'
+import TopMatches from '../pages/TopMatches.vue'
 
 // Lazy-loaded pages
 const ApplicantDashboard = () => import('../pages/dashboards/ApplicantDashboard.vue')
@@ -56,7 +57,12 @@ const routes = [
         component: BrowseJobs,
         meta: { requiresAuth: true, role: 'applicant' },
     },
-
+    {
+        path: '/top-matches',
+        name: 'TopMatches',
+        component: TopMatches,
+        meta: { requiresAuth: true }
+    },
     // Catch-all
     { path: '/:pathMatch(.*)*', redirect: '/' },
 ]

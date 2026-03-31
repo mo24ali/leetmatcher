@@ -201,10 +201,12 @@ const tabs = computed(() => {
       { path: '/dashboard/applicant', label: 'Dashboard' },
       { path: '/jobs', label: 'Browse Jobs' },
       { path: '/profile', label: 'Profile' },
+      { path: '/top-matches', label: 'Top Matches'},
     ],
     recruiter: [
       { path: '/dashboard/recruiter', label: 'Dashboard' },
       { path: '/profile', label: 'Profile' },
+      { path: '/top-matches', label: 'Top Matches'},
     ],
     admin: [
       { path: '/dashboard/admin', label: 'Control Center' },
