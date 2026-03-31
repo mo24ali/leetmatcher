@@ -33,11 +33,13 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard & Stats
     Route::get('/v1/recruiter/stats', [ProjectController::class , 'recruiterStats']);
+    Route::get('/v1/recruiter/listings', [ProjectController::class, 'myProjects']);
     Route::get('/v1/applicant/stats', [ApplicationController::class , 'applicantStats']);
 
     // Job listings and applications
     Route::get('/v1/projects/recommended', [ProjectController::class , 'recommended']);
     Route::get('/v1/projects/{project}/matches', [ProjectController::class , 'matches']);
+    Route::get('/v1/projects/{project}/applications', [ProjectController::class , 'applications']);
     Route::apiResource('/v1/projects', ProjectController::class);
     Route::apiResource('/v1/applications', ApplicationController::class);
     Route::apiResource('/v1/interviews', InterviewController::class);
