@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
-// ─── Page imports ─────────────────────────────────────────────────────────────
 import Home              from '../pages/Home.vue'
 import About             from '../pages/About.vue'
 import Welcome           from '../pages/Welcome.vue'
@@ -19,7 +18,7 @@ const AdminDashboard     = () => import('../pages/dashboards/AdminDashboard.vue'
 const BrowseJobs         = () => import('../pages/BrowseJobs.vue')
 const Forbidden          = () => import('../pages/Forbidden.vue')
 
-// ─── Route definitions ────────────────────────────────────────────────────────
+
 const routes = [
     // Public
     { path: '/',        name: 'Home',              component: Home },
@@ -72,7 +71,6 @@ const router = createRouter({
     routes,
 })
 
-// ─── Global navigation guard ──────────────────────────────────────────────────
 router.beforeEach((to, _from, next) => {
     const auth = useAuthStore()
 
@@ -93,7 +91,7 @@ router.beforeEach((to, _from, next) => {
 
 export default router
 
-// ─── Helper: redirect to the correct dashboard for the current user ───────────
+
 export function dashboardRouteForRole(role) {
     const map = {
         applicant: '/dashboard/applicant',

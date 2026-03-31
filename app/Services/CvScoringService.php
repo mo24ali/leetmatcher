@@ -13,19 +13,13 @@ class CvScoringService
     {
         $score = 0;
 
-        // Base profile info (30 pts)
-        if ($profile->bio) $score += 15;
-        if ($profile->avatar_url) $score += 15;
-
-        // Professional data (40 pts)
-        if ($profile->cv_path) $score += 20;
-        if ($profile->skills()->count() >= 3) $score += 20;
-        elseif ($profile->skills()->count() > 0) $score += 10;
-
-        // Experience/Education proxy (30 pts)
-        // If they have skills we assume some level of expertise/education for basic score
-        if ($profile->skills()->count() > 5) $score += 30;
-        elseif ($profile->skills()->count() > 2) $score += 15;
+        if ($profile->bio) $score += 15; // profile with bio +15%
+        if ($profile->avatar_url) $score += 15; // profile with avatar +15%
+        if ($profile->cv_path) $score += 20; // profile with cv_path importes +15%
+        if ($profile->skills()->count() >= 3) $score += 20; // profile with skills->count >= 3 +20%
+        elseif ($profile->skills()->count() > 0) $score += 10; // profile with skills->count < 3 > 0 + 10%
+        if ($profile->skills()->count() > 5) $score += 30; // profile with skills->count > 5 +30%
+        elseif ($profile->skills()->count() > 2) $score += 15; // profile with skills->count > 2 +15%
 
         $finalScore = min(100, $score);
         
