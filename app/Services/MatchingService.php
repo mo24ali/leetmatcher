@@ -21,6 +21,8 @@ class MatchingService
         }
 
         $intersection = array_intersect($projectSkills, $profileSkills);
+        // the matching scire is caldulated by dividing the count on intersections by the count of skills demamnded from the project
+        // the division is multiplied by 100
         $score = (count($intersection) / count($projectSkills)) * 100;
 
         return round($score, 2);
@@ -44,5 +46,8 @@ class MatchingService
         ->take($limit);
 
         return $recommendations;
+    }
+    public function getRecommendedCandidate(Project $project){
+
     }
 }
