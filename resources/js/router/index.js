@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
-// ─── Page imports ─────────────────────────────────────────────────────────────
 import Home              from '../pages/Home.vue'
 import About             from '../pages/About.vue'
 import Welcome           from '../pages/Welcome.vue'
@@ -10,6 +9,7 @@ import RegisterStudent   from '../pages/Register-student.vue'
 import RegisterRecruiter from '../pages/Register-recruiter.vue'
 import Login             from '../pages/Login.vue'
 import Profile           from '../pages/Profile.vue'
+import TopMatches from '../pages/TopMatches.vue'
 
 // Lazy-loaded pages
 const ApplicantDashboard = () => import('../pages/dashboards/ApplicantDashboard.vue')
@@ -18,7 +18,7 @@ const AdminDashboard     = () => import('../pages/dashboards/AdminDashboard.vue'
 const BrowseJobs         = () => import('../pages/BrowseJobs.vue')
 const Forbidden          = () => import('../pages/Forbidden.vue')
 
-// ─── Route definitions ────────────────────────────────────────────────────────
+
 const routes = [
     // Public
     { path: '/',        name: 'Home',              component: Home },
@@ -56,7 +56,12 @@ const routes = [
         component: BrowseJobs,
         meta: { requiresAuth: true, role: 'applicant' },
     },
-
+    {
+        path: '/top-matches',
+        name: 'TopMatches',
+        component: TopMatches,
+        meta: { requiresAuth: true }
+    },
     // Catch-all
     { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
@@ -66,7 +71,6 @@ const router = createRouter({
     routes,
 })
 
-// ─── Global navigation guard ──────────────────────────────────────────────────
 router.beforeEach((to, _from, next) => {
     const auth = useAuthStore()
 
@@ -87,7 +91,7 @@ router.beforeEach((to, _from, next) => {
 
 export default router
 
-// ─── Helper: redirect to the correct dashboard for the current user ───────────
+
 export function dashboardRouteForRole(role) {
     const map = {
         applicant: '/dashboard/applicant',
