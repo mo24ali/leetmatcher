@@ -213,12 +213,14 @@ class ProjectController extends Controller
         $formatted = $recommendations->map(fn($p) => [
             'id' => $p->id,
             'title' => $p->title,
-            'company' => $p->recruiter?->name ?? 'Acme Corp',
-            'type' => $p->type ?? 'Remote',
-            'match' => $p->match_score,
-            'skills' => $p->skills->pluck('name')->toArray(),
             'description' => $p->description,
-            'deadline' => $p->deadline?->format('Y-m-d'),
+            'skills' => $p->skills->pluck('name')->toArray(),
+            'recruiter' => [
+                'name' => $p->recruiter?->name,
+                'company' => $p->recruiter?->company_name ?? 'Acme Corp', // Fallback or use company_name field if it exists
+                'details' => $p->recruiter?->email, // Using email as details placeholder
+                'avatar' => $p->recruiter?->avatar_url ?? "https://i.pravatar.cc/150?u={$p->recruiter_id}"
+            ]
         ]);
 
         return response()->json($formatted);
@@ -258,6 +260,23 @@ class ProjectController extends Controller
             ],
             'skills_distribution' => $skillsDistribution,
         ]);
+    }
+    public function recruiterMatches(Request $request, MatchingService $matchingService)
+    {
+        $matches = $matchingService->getRecruiterMatches($request->user());
+
+        // Map to format suitable for TopMatches.vue
+        $formatted = $matches->map(fn($p) => [
+            'id' => $p->id,
+            'name' => $p->user?->name,
+            'avatar' => $p->user?->avatar_url ?? "https://i.pravatar.cc/150?u={$p->id}",
+            'skills' => $p->skills->pluck('name')->toArray(),
+            'experience' => '3+ years experience', // Placeholder for experience
+            'qualifications' => $p->education_level ?? 'B.S. in Computer Science',
+            'match_score' => $p->match_score,
+        ]);
+
+        return response()->json($formatted);
     }
     public function getSkills(Project $project){
         $description = Project::where('id',$project->id())->pluck('description');
