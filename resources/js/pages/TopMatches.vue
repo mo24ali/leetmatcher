@@ -11,8 +11,14 @@
       </p>
     </div>
 
+    <!-- LOADING STATE -->
+    <div v-if="loading" class="flex flex-col items-center justify-center py-20">
+      <div class="w-12 h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mb-4"></div>
+      <p class="text-gray-500 font-medium">Finding your best matches...</p>
+    </div>
+
     <!-- CARD CONTAINER -->
-    <div class="relative w-full max-w-4xl">
+    <div v-else-if="items.length > 0" class="relative w-full max-w-4xl">
 
       <!-- LEFT ARROW -->
       <button
@@ -161,7 +167,7 @@
     </div>
 
     <!-- EMPTY STATE -->
-    <div v-if="items.length === 0" class="text-center py-20">
+    <div v-if="!loading && items.length === 0" class="text-center py-20">
       <p class="text-gray-400 text-lg">No matches found at the moment.</p>
     </div>
 
@@ -175,56 +181,22 @@ import { useAuthStore } from '../stores/authStore'
 const auth = useAuthStore()
 const isRecruiter = computed(() => auth.role.value === 'recruiter')
 
-// Sample data for demonstration
-const seekerItems = [
-  {
-    id: 1,
-    title: 'Senior Frontend Architect',
-    description: 'Lead our UI team in building high-performance web applications using Vue 3 and TypeScript. Experience with GraphQL is a plus.',
-    skills: ['Vue.js', 'TypeScript', 'Tailwind CSS', 'GraphQL'],
-    recruiter: {
-      name: 'Sarah Jenkins',
-      company: 'InnovateTech',
-      details: 'Principal Recruiter • 10+ years exp',
-      avatar: 'https://i.pravatar.cc/150?img=32'
-    }
-  },
-  {
-    id: 2,
-    title: 'Full Stack Developer',
-    description: 'Looking for a versatile developer to work on our Laravel + React stack. You will be responsible for end-to-end features.',
-    skills: ['Laravel', 'PHP', 'React', 'PostgreSQL'],
-    recruiter: {
-      name: 'Michael Chen',
-      company: 'Global Systems',
-      details: 'Technical Talent Partner • San Francisco',
-      avatar: 'https://i.pravatar.cc/150?img=11'
-    }
-  }
-]
-
-const recruiterItems = [
-  {
-    id: 101,
-    name: 'Alex Rivera',
-    avatar: 'https://i.pravatar.cc/150?img=68',
-    skills: ['Golang', 'Kubernetes', 'AWS', 'Python'],
-    experience: '7 years in DevOps and Backend Infrastructure',
-    qualifications: 'MS in Computer Science, AWS Certified Solutions Architect'
-  },
-  {
-    id: 102,
-    name: 'Emma Wilson',
-    avatar: 'https://i.pravatar.cc/150?img=47',
-    skills: ['UI/UX Design', 'Figma', 'React', 'CSS/SCSS'],
-    experience: '4 years of Product Design and Frontend Strategy',
-    qualifications: 'BFA in Graphic Design, Google UX Design Professional Certificate'
-  }
-]
-
-const items = computed(() => isRecruiter.value ? recruiterItems : seekerItems)
+const items = ref([])
+const loading = ref(true)
 const index = ref(0)
 const currentItem = computed(() => items.value[index.value] || null)
+
+async function fetchMatches() {
+  loading.value = true
+  try {
+    const endpoint = isRecruiter.value ? '/v1/recruiter/matches' : '/v1/projects/recommended'
+    items.value = await auth.apiFetch(endpoint)
+  } catch (err) {
+    console.error('Failed to fetch matches:', err)
+  } finally {
+    loading.value = false
+  }
+}
 
 function next() {
   if (index.value < items.value.length - 1) {
@@ -239,8 +211,7 @@ function prev() {
 }
 
 onMounted(() => {
-  // Ensure we start at first item
-  index.value = 0
+  fetchMatches()
 })
 </script>
 

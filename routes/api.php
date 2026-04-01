@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     // Dashboard & Stats
     Route::get('/v1/recruiter/stats', [ProjectController::class , 'recruiterStats']);
     Route::get('/v1/recruiter/listings', [ProjectController::class, 'myProjects']);
+    Route::get('/v1/recruiter/matches', [ProjectController::class, 'recruiterMatches']);
     Route::get('/v1/skills/search', [SkillController::class, 'search']);
     Route::get('/v1/applicant/stats', [ApplicationController::class , 'applicantStats']);
 
