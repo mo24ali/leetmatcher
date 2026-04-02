@@ -84,12 +84,14 @@
           <div class="flex gap-4">
             <button
               class="flex-1 h-14 bg-gray-900 text-white rounded-2xl font-bold text-base hover:bg-black transition-colors shadow-lg shadow-gray-200"
+              @click="sendApplication()"
             >
               Apply Now
             </button>
             <button
               class="flex-1 h-14 border-2 border-gray-200 rounded-2xl text-base font-bold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
+              @click="contactRecruiter()"
+              >
               Contact Recruiter
             </button>
           </div>
@@ -210,6 +212,30 @@ function prev() {
   }
 }
 
+async function sendApplication() {
+  if (!currentItem.value) return
+
+  try {
+    const data = await auth.apiFetch('/v1/application/apply', {
+      method: 'POST',
+      body: JSON.stringify({
+        project_id: currentItem.value.id
+      }),
+    })
+
+    if (data.success) {
+      alert('Application submitted!')
+    } else {
+      alert(data.message || 'You already applied or there was an error.')
+    }
+  } catch (error) {
+    console.error(error)
+    alert(error.message || 'Something went wrong')
+  }
+}
+function contactRecruiter(){
+
+}
 onMounted(() => {
   fetchMatches()
 })
