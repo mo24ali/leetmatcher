@@ -341,7 +341,6 @@ function clearForm() {
   skillSuggestions.value = []
 }
 
-// ─── Skill Management Helpers ──────────────────────────────────────────────
 
 async function handleSkillSearch() {
   if (skillQuery.value.length < 2) {
