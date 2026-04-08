@@ -22,19 +22,25 @@ function persist() {
     localStorage.setItem('lm_auth', JSON.stringify({ user: state.user }))
 }
 
-const isAuthenticated = computed(() => !!state.user)
-const role            = computed(() => state.user?.role ?? 'guest')
+const isAuthenticated = computed(() => !!state.user) // if the user exists from th session true, else false
+const role            = computed(() => state.user?.role ?? 'guest') // if the user role exists( admin/ applicant/ recruiter), else it guest 
 
+
+// globalised customized apiFetch function with unified header to optimize the codebase
 async function apiFetch(endpoint, options = {}) {
+    // keep the csrf toker ( cross-site request forgery) 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
 
     const headers = {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        // using the spread operator , to keep the replacement of the token and option dynamic while fetching 
         ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
         ...(options.headers ?? {}),
     }
 
+
+    // BASE_URL already defined up endpoint changes depending on the request exp /login of /user/1/applications
     const res = await fetch(`${BASE_URL}${endpoint}`, {
         ...options,
         headers,
@@ -43,7 +49,7 @@ async function apiFetch(endpoint, options = {}) {
 
     const data = await res.json().catch(() => ({}))
 
-    if (!res.ok) {
+    if (!res.ok) { // not 200 
         const err = new Error(data.message ?? `HTTP ${res.status}`)
         err.errors = data.errors ?? {}
         err.status = res.status
@@ -53,7 +59,6 @@ async function apiFetch(endpoint, options = {}) {
     return data
 }
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 async function login(email, password) {
     const data = await apiFetch('/v1/login', {
@@ -100,7 +105,7 @@ async function fetchMe() {
     }
 }
 
-// ─── CV Upload ────────────────────────────────────────────────────────────────
+//  CV Upload 
 
 async function uploadCv(file) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
@@ -128,7 +133,7 @@ async function uploadCv(file) {
     return data
 }
 
-// ─── Profile ──────────────────────────────────────────────────────────────────
+//  Profile 
 
 async function fetchProfile() {
     return await apiFetch('/v1/profile')
@@ -183,7 +188,7 @@ async function uploadAvatar(file) {
     return data
 }
 
-// ─── Skills ───────────────────────────────────────────────────────────────────
+//  Skills 
 
 async function fetchSkills() {
     return await apiFetch('/v1/profile/skills')
@@ -200,8 +205,7 @@ async function removeSkill(skillId) {
     return await apiFetch(`/v1/profile/skills/${skillId}`, { method: 'DELETE' })
 }
 
-// ─── Export ───────────────────────────────────────────────────────────────────
-
+// Make these function and variable accessible outside this file
 export function useAuthStore() {
     return {
         state,

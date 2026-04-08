@@ -28,23 +28,6 @@ class ApplicationController extends Controller
 
         return response()->json($query->with(['project', 'student'])->paginate(15));
     }
-    
-    // public function index2(){
-    //     $this->authorize('viewAny', Application::class);
-        
-    //     $user = Auth::user();
-
-    //     $query = Application::query(); // preparing a query for the Application eloquent model
-
-    //     if($user->role === 'recruiter'){
-    //         $query->whereHas('project', function ($q) use ($user){
-    //             $q->where('recruiter_id', $user->id);
-    //         });
-    //     } elseif ($user->role === "student" || $user->role === 'applicant'){
-    //         $query->where('student_id', $user->id);
-    //     }
-    //     return response()->json($query->with(['project', 'student'])->paginate(10));
-    // }
 
     /**
      * Store a newly created resource in storage.
@@ -129,42 +112,43 @@ class ApplicationController extends Controller
     }
 
     public function apply(Request $request)
-{
-    $user = $request->user();
+    {
+        $user = $request->user();
 
-    if (!$user) {
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        $request->validate([
+            'project_id' => 'required|exists:projects,id'
+        ]);
+
+        $projectId = $request->project_id;
+
+        $existingApplication = Application::where('student_id', $user->id)
+            ->where('project_id', $projectId)
+            ->first();
+
+            // check if the applicant already applied to this offer, to prevent duplication
+        if ($existingApplication) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already applied to the project'
+            ]);
+        }
+
+        Application::create([
+            'student_id' => $user->id,
+            'project_id' => $projectId,
+            'status' => 'pending',
+        ]);
+
         return response()->json([
-            'success' => false,
-            'message' => 'Unauthenticated'
-        ], 401);
-    }
-
-    $request->validate([
-        'project_id' => 'required|exists:projects,id'
-    ]);
-
-    $projectId = $request->project_id;
-
-    $existingApplication = Application::where('student_id', $user->id)
-        ->where('project_id', $projectId)
-        ->first();
-
-    if ($existingApplication) {
-        return response()->json([
-            'success' => false,
-            'message' => 'You already applied to the project'
+            'success' => true,
+            'message' => 'Applied successfully'
         ]);
     }
-
-    Application::create([
-        'student_id' => $user->id,
-        'project_id' => $projectId,
-        'status' => 'pending',
-    ]);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Applied successfully'
-    ]);
-}
 }
