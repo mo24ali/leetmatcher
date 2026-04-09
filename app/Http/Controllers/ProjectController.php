@@ -176,22 +176,33 @@ class ProjectController extends Controller
     /**
      * Get applications for a project.
      */
-    public function applications(Project $project)
+    public function applications(Project $project, MatchingService $matchingService)
     {
         $this->authorize('update', $project);
 
         $applications = Application::where('project_id', $project->id)
-            ->with('student')
+            ->with(['student.profile.skills', 'student.skills'])
             ->latest()
             ->get()
-            ->map(fn($app) => [
-                'id'       => $app->id,
-                'name'     => $app->student->name,
-                'email'    => $app->student->email,
-                'applied'  => $app->created_at->diffForHumans(),
-                'status'   => $app->status,
-                'cover_letter' => $app->cover_letter,
-            ]);
+            ->map(function ($app) use ($project, $matchingService) {
+                $profile = $app->student->profile;
+                $skills = $profile ? $profile->skills->pluck('name') : $app->student->skills->pluck('name');
+                $matchScore = $profile ? $matchingService->calculateMatch($project, $profile) : 0;
+                
+                return [
+                    'id'           => $app->id,
+                    'name'         => $app->student->name,
+                    'email'        => $app->student->email,
+                    'applied'      => $app->created_at->diffForHumans(),
+                    'status'       => $app->status,
+                    'cover_letter' => $app->cover_letter,
+                    'description'  => $app->cover_letter ?: ($profile->bio ?? 'No description provided'),
+                    'picture'      => $profile->avatar_url ?? null,
+                    'phone'        => $profile->phone ?? 'N/A',
+                    'skills'       => $skills,
+                    'matchPercent' => $matchScore . '%',
+                ];
+            });
 
         return response()->json($applications);
     }

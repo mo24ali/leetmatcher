@@ -42,7 +42,6 @@
     <div class="max-w-6xl mx-auto px-6 mt-12">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-        <!-- ── Left Column: Profile Card ─────────────────────────── -->
         <div class="lg:col-span-4 space-y-6">
 
           <!-- User Identity Card -->
@@ -427,7 +426,6 @@ import { useAuthStore } from '../stores/authStore'
 
 const auth = useAuthStore()
 
-// ── Configuration ────────────────────────────────────────────────────────────
 const tabs = [
   { id: 'overview', label: 'Overview'  },
   { id: 'skills',   label: 'Skills'    },
@@ -436,7 +434,6 @@ const tabs = [
 ]
 const activeTab = ref('overview')
 
-// ── State Management ─────────────────────────────────────────────────────────
 const profileData = reactive({ bio: '', cv_score: 0 })
 const skills      = ref([])
 const cvData      = reactive({
@@ -478,7 +475,6 @@ const completenessHint = computed(() => {
   return 'A stronger profile leads to 4x higher matching frequency. Start by adding key skills.'
 })
 
-// ── Avatar ───────────────────────────────────────────────────────────────────
 const avatarPreview  = ref(null)
 const pendingAvatar  = ref(null)
 const savingAvatar   = ref(false)
@@ -510,7 +506,6 @@ async function saveAvatar() {
   }
 }
 
-// ── Profile Information ───────────────────────────────────────────────────────
 const editingInfo = ref(false)
 const savingInfo  = ref(false)
 const infoError   = ref('')
@@ -542,7 +537,6 @@ async function saveInfo() {
   }
 }
 
-// ── Skills ───────────────────────────────────────────────────────────────────
 const newSkill   = reactive({ name: '', proficiency: 'intermediate' })
 const addingSkill = ref(false)
 const skillError  = ref('')
@@ -570,7 +564,6 @@ async function deleteSkill(skill) {
   } catch {}
 }
 
-// ── Password ─────────────────────────────────────────────────────────────────
 const pwForm = reactive({ current: '', password: '', confirm: '' })
 const pwErrors   = reactive({ current: '', password: '', confirm: '' })
 const changingPw = ref(false)
@@ -595,7 +588,6 @@ async function submitPasswordChange() {
   }
 }
 
-// ── Utils ────────────────────────────────────────────────────────────────────
 const toast = ref('')
 function showToast(msg) {
   toast.value = msg

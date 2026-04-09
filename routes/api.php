@@ -48,4 +48,8 @@ Route::middleware('auth')->group(function () {
     Route::apiResource('/v1/interviews', InterviewController::class);
     Route::apiResource('/v1/messages', MessageController::class);
     Route::post('/v1/application/apply', [ApplicationController::class, 'apply']);
+    
+
+    // Interviews
+    Route::post('/v1/interviews/{application}/create', [InterviewController::class, 'store']);
 });
