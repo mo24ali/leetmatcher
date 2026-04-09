@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('project_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('status',['pending','accepted','rejected']);
-            $table->text('cover_letter');
+            $table->enum('status',['pending','accepted','rejected'])->default('pending');
+            $table->text('cover_letter')->nullable();
             $table->timestamps();
         });
     }

@@ -13,7 +13,7 @@ class ApplicationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === 'admin' || $user->role === 'recruiter' || $user->role === 'student';
+        return $user->role === 'admin' || $user->role === 'recruiter' || $user->role === 'applicant';
     }
 
     /**
@@ -22,7 +22,7 @@ class ApplicationPolicy
     public function view(User $user, Application $application): bool
     {
         return $user->role === 'admin' || 
-               ($user->role === 'student' && $user->id === $application->student_id) || 
+               ($user->role === 'applicant' && $user->id === $application->student_id) || 
                ($user->role === 'recruiter' && $user->id === $application->project->recruiter_id);
     }
 
@@ -31,7 +31,7 @@ class ApplicationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === 'student';
+        return $user->role === 'applicant';
     }
 
     /**
@@ -39,12 +39,12 @@ class ApplicationPolicy
      */
     public function update(User $user, Application $application): bool
     {
-        // Recruiters update status, Students might update cover letter
+        // Recruiters update status, applicants might update cover letter
         if ($user->role === 'admin') return true;
         if ($user->role === 'recruiter') {
             return $user->id === $application->project->recruiter_id;
         }
-        if ($user->role === 'student') {
+        if ($user->role === 'applicant') {
             return $user->id === $application->student_id;
         }
         return false;
@@ -56,6 +56,6 @@ class ApplicationPolicy
     public function delete(User $user, Application $application): bool
     {
         return $user->role === 'admin' || 
-               ($user->role === 'student' && $user->id === $application->student_id);
+               ($user->role === 'applicant' && $user->id === $application->student_id);
     }
 }

@@ -15,7 +15,6 @@ class Application extends Model
         'student_id',
         'project_id',
         'status',
-        'cover_letter',
     ];
 
     public function project(): BelongsTo

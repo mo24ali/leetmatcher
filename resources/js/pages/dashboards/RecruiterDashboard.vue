@@ -1,189 +1,236 @@
-  <template>
-    <div class="dashboard-page">
-      <section class="dash-hero">
-        <div class="dash-hero-inner">
-          <div>
-            <p class="dash-welcome">Recruiter Portal</p>
-            <h1 class="dash-title">{{ auth.state.user?.name }}</h1>
-            <p class="dash-subtitle">Manage your job postings and discover top talent.</p>
-          </div>
-          <div class="hero-badge recruiter">Recruiter</div>
-        </div>
-      </section>
-
-      <div class="dash-content">
-        <section class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon-box"><span>&#9646;</span></div>
-            <div class="stat-body">
-              <p class="stat-label">Active Listings</p>
-              <p class="stat-number">{{ stats.activeListings }}</p>
+    <template>
+      <div class="dashboard-page">
+        <section class="dash-hero">
+          <div class="dash-hero-inner">
+            <div>
+              <p class="dash-welcome">Recruiter Portal</p>
+              <h1 class="dash-title">{{ auth.state.user?.name }}</h1>
+              <p class="dash-subtitle">Manage your job postings and discover top talent.</p>
             </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon-box"><span>&#128101;</span></div>
-            <div class="stat-body">
-              <p class="stat-label">Total Applicants</p>
-              <p class="stat-number">{{ stats.totalApplicants }}</p>
-            </div>
-          </div>
-          <div class="stat-card positive">
-            <div class="stat-icon-box success"><span>&#10003;</span></div>
-            <div class="stat-body">
-              <p class="stat-label">Interviews Scheduled</p>
-              <p class="stat-number">{{ stats.interviews }}</p>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon-box"><span>&#9670;</span></div>
-            <div class="stat-body">
-              <p class="stat-label">Positions Filled</p>
-              <p class="stat-number">{{ stats.filled }}</p>
-            </div>
+            <div class="hero-badge recruiter">Recruiter</div>
           </div>
         </section>
 
-        <div class="dash-two-col">
-          <!-- Post a Job form -->
-          <section class="dash-card" id="post">
-            <div class="dash-card-header">
-              <h2 class="dash-card-title">{{ editingId ? 'Edit Job Posting' : 'Post a New Job' }}</h2>
-              <p class="dash-card-subtitle">
-                {{ editingId ? 'Update this listing details' : 'Create a listing to attract top candidates' }}
-              </p>
+        <div class="dash-content">
+          <section class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon-box"><span>&#9646;</span></div>
+              <div class="stat-body">
+                <p class="stat-label">Active Listings</p>
+                <p class="stat-number">{{ stats.activeListings }}</p>
+              </div>
             </div>
-
-            <div v-if="postSuccess" class="success-banner">Job posted successfully!</div>
-            <div v-if="postError" class="error-banner">{{ postError }}</div>
-
-            <form @submit.prevent="handleSubmit" class="post-form">
-              <div class="form-group">
-                <label class="field-label">Job Title</label>
-                <input v-model="jobForm.title" type="text" class="form-input" placeholder="e.g. Senior Frontend Engineer" required />
+            <div class="stat-card">
+              <div class="stat-icon-box"><span>&#128101;</span></div>
+              <div class="stat-body">
+                <p class="stat-label">Total Applicants</p>
+                <p class="stat-number">{{ stats.totalApplicants }}</p>
               </div>
-              <div class="form-group">
-                <label class="field-label">Description</label>
-                <textarea v-model="jobForm.description" class="form-input form-textarea" placeholder="Describe the role, requirements, and expectations…" required></textarea>
+            </div>
+            <div class="stat-card positive">
+              <div class="stat-icon-box success"><span>&#10003;</span></div>
+              <div class="stat-body">
+                <p class="stat-label">Interviews Scheduled</p>
+                <p class="stat-number">{{ stats.interviews }}</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-box"><span>&#9670;</span></div>
+              <div class="stat-body">
+                <p class="stat-label">Positions Filled</p>
+                <p class="stat-number">{{ stats.filled }}</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="dash-two-col">
+            <!-- Post a Job form -->
+            <section class="dash-card" id="post">
+              <div class="dash-card-header">
+                <h2 class="dash-card-title">{{ editingId ? 'Edit Job Posting' : 'Post a New Job' }}</h2>
+                <p class="dash-card-subtitle">
+                  {{ editingId ? 'Update this listing details' : 'Create a listing to attract top candidates' }}
+                </p>
               </div>
 
-              <!-- Skills Management Section -->
-              <div class="form-group">
-                <label class="field-label">Required Skills</label>
-                <div class="skills-input-wrapper">
-                  <div class="skills-tags">
-                    <span v-for="(skill, idx) in jobForm.skills" :key="idx" class="skill-tag">
-                      {{ skill }}
-                      <button type="button" class="remove-skill" @click="removeSkillItem(idx)">&times;</button>
-                    </span>
-                  </div>
-                  <div class="autocomplete-container">
-                    <input 
-                      v-model="skillQuery" 
-                      type="text" 
-                      class="form-input skill-input" 
-                      placeholder="Type a skill (e.g. Python) and press Enter…"
-                      @input="handleSkillSearch"
-                      @keydown.enter.prevent="addSkillFromInput"
-                    />
-                    <div v-if="skillSuggestions.length > 0" class="suggestions-list">
-                      <div 
-                        v-for="s in skillSuggestions" 
-                        :key="s" 
-                        class="suggestion-item"
-                        @click="addSkillItem(s)"
-                      >
-                        {{ s }}
+              <div v-if="postSuccess" class="success-banner">Job posted successfully!</div>
+              <div v-if="postError" class="error-banner">{{ postError }}</div>
+
+              <form @submit.prevent="handleSubmit" class="post-form">
+                <div class="form-group">
+                  <label class="field-label">Job Title</label>
+                  <input v-model="jobForm.title" type="text" class="form-input" placeholder="e.g. Senior Frontend Engineer" required />
+                </div>
+                <div class="form-group">
+                  <label class="field-label">Description</label>
+                  <textarea v-model="jobForm.description" class="form-input form-textarea" placeholder="Describe the role, requirements, and expectations…" required></textarea>
+                </div>
+
+                <!-- Skills Management Section -->
+                <div class="form-group">
+                  <label class="field-label">Required Skills</label>
+                  <div class="skills-input-wrapper">
+                    <div class="skills-tags">
+                      <span v-for="(skill, idx) in jobForm.skills" :key="idx" class="skill-tag">
+                        {{ skill }}
+                        <button type="button" class="remove-skill" @click="removeSkillItem(idx)">&times;</button>
+                      </span>
+                    </div>
+                    <div class="autocomplete-container">
+                      <input 
+                        v-model="skillQuery" 
+                        type="text" 
+                        class="form-input skill-input" 
+                        placeholder="Type a skill (e.g. Python) and press Enter…"
+                        @input="handleSkillSearch"
+                        @keydown.enter.prevent="addSkillFromInput"
+                      />
+                      <div v-if="skillSuggestions.length > 0" class="suggestions-list">
+                        <div 
+                          v-for="s in skillSuggestions" 
+                          :key="s" 
+                          class="suggestion-item"
+                          @click="addSkillItem(s)"
+                        >
+                          {{ s }}
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <p class="form-hint">Press Enter to add, or select from suggestions.</p>
                 </div>
-                <p class="form-hint">Press Enter to add, or select from suggestions.</p>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="field-label">Deadline</label>
-                  <input v-model="jobForm.deadline" type="date" class="form-input" required />
-                </div>
-                <div class="form-group">
-                  <label class="field-label">Status</label>
-                  <select v-model="jobForm.status" class="form-input">
-                    <option value="open">Open</option>
-                    <option value="closed">Closed</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <button type="submit" class="submit-btn" :disabled="posting">
-                  <span v-if="posting" class="btn-spinner"></span>
-                  <span>{{ posting ? 'Saving…' : (editingId ? 'Update Listing' : 'Post Job') }}</span>
-                </button>
-                <button v-if="editingId" type="button" @click="cancelEdit" class="listing-btn cancel-btn">Cancel</button>
-              </div>
-            </form>
-          </section>
-
-          <!-- My Listings -->
-          <section class="dash-card" id="listings">
-            <div class="dash-card-header">
-              <h2 class="dash-card-title">My Listings</h2>
-              <p class="dash-card-subtitle">Jobs you've posted on LeetMatcher</p>
-            </div>
-
-            <div class="listing-list">
-              <div v-for="listing in listings" :key="listing.id" class="listing-card">
-                <div class="listing-top">
-                  <div>
-                    <p class="listing-title">{{ listing.title }}</p>
-                    <p class="listing-meta">Posted {{ listing.posted }} &middot; Deadline {{ listing.deadlineDisplay }}</p>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="field-label">Deadline</label>
+                    <input v-model="jobForm.deadline" type="date" class="form-input" required />
                   </div>
-                  <div class="listing-right">
-                    <span class="listing-status" :class="listing.status">{{ listing.status }}</span>
-                    <span class="listing-count">{{ listing.applications_count }} applicants</span>
+                  <div class="form-group">
+                    <label class="field-label">Status</label>
+                    <select v-model="jobForm.status" class="form-input">
+                      <option value="open">Open</option>
+                      <option value="closed">Closed</option>
+                    </select>
                   </div>
                 </div>
-                <div class="listing-actions">
-                  <button class="listing-btn" @click="viewApplicants(listing)">View Applicants</button>
-                  <button class="listing-btn" @click="startEdit(listing)">Edit</button>
-                  <button v-if="listing.status !== 'closed'" class="listing-btn" @click="closeListing(listing)">Close</button>
-                  <button class="listing-btn danger" @click="deleteListing(listing)">Delete</button>
+                <div class="form-row">
+                  <button type="submit" class="submit-btn" :disabled="posting">
+                    <span v-if="posting" class="btn-spinner"></span>
+                    <span>{{ posting ? 'Saving…' : (editingId ? 'Update Listing' : 'Post Job') }}</span>
+                  </button>
+                  <button v-if="editingId" type="button" @click="cancelEdit" class="listing-btn cancel-btn">Cancel</button>
                 </div>
+              </form>
+            </section>
+
+            <!-- My Listings -->
+            <section class="dash-card" id="listings">
+              <div class="dash-card-header">
+                <h2 class="dash-card-title">My Listings</h2>
+                <p class="dash-card-subtitle">Jobs you've posted on LeetMatcher</p>
               </div>
-              <p v-if="listings.length === 0" class="empty-hint">No listings yet. Post your first job above.</p>
+
+              <div class="listing-list">
+                <div v-for="listing in listings" :key="listing.id" class="listing-card">
+                  <div class="listing-top">
+                    <div>
+                      <p class="listing-title">{{ listing.title }}</p>
+                      <p class="listing-meta">Posted {{ listing.posted }} &middot; Deadline {{ listing.deadlineDisplay }}</p>
+                    </div>
+                    <div class="listing-right">
+                      <span class="listing-status" :class="listing.status">{{ listing.status }}</span>
+                      <span class="listing-count">{{ listing.applications_count }} applicants</span>
+                    </div>
+                  </div>
+                  <div class="listing-actions">
+                    <button class="listing-btn" @click="viewApplicants(listing)">View Applicants</button>
+                    <button class="listing-btn" @click="startEdit(listing)">Edit</button>
+                    <button v-if="listing.status !== 'closed'" class="listing-btn" @click="closeListing(listing)">Close</button>
+                    <button class="listing-btn danger" @click="deleteListing(listing)">Delete</button>
+                  </div>
+                </div>
+                <p v-if="listings.length === 0" class="empty-hint">No listings yet. Post your first job above.</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- Applicants panel — shown when a listing is selected -->
+          <section v-if="selectedListing" class="dash-card applicants-panel" id="applicants">
+            <div class="dash-card-header panel-header">
+              <h2 class="dash-card-title">Applicants for "{{ selectedListing.title }}"</h2>
+              <button class="close-panel" @click="selectedListing = null">&times; Close</button>
             </div>
+            
+            <div v-if="loadingApplicants" class="loading-state">Loading applicants...</div>
+            <table v-else-if="applicants.length > 0" class="applicants-table">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Email</th><th>Applied</th><th>Status</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="app in applicants" :key="app.id">
+                  <td>{{ app.name }}</td>
+                  <td>{{ app.email }}</td>
+                  <td>{{ app.applied }}</td>
+                  <td><span class="app-status" :class="app.status">{{ app.status }}</span></td>
+                  <td>
+                    <button class="listing-btn small" @click="reviewApplicant(app)">Review</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-else class="empty-hint">No applicants yet for this listing.</p>
+
           </section>
         </div>
 
-        <!-- Applicants panel — shown when a listing is selected -->
-        <section v-if="selectedListing" class="dash-card applicants-panel" id="applicants">
-          <div class="dash-card-header panel-header">
-            <h2 class="dash-card-title">Applicants for "{{ selectedListing.title }}"</h2>
-            <button class="close-panel" @click="selectedListing = null">&times; Close</button>
-          </div>
-          
-          <div v-if="loadingApplicants" class="loading-state">Loading applicants...</div>
-          <table v-else-if="applicants.length > 0" class="applicants-table">
-            <thead>
-              <tr>
-                <th>Name</th><th>Email</th><th>Applied</th><th>Status</th><th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="app in applicants" :key="app.id">
-                <td>{{ app.name }}</td>
-                <td>{{ app.email }}</td>
-                <td>{{ app.applied }}</td>
-                <td><span class="app-status" :class="app.status">{{ app.status }}</span></td>
-                <td>
-                  <button class="listing-btn small" @click="reviewApplicant(app)">Review</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p v-else class="empty-hint">No applicants yet for this listing.</p>
-        </section>
+        <!-- Application review popup -->
+            <div  
+            
+                v-if="reviewingApplicant"
+                id="application-review-pannel" 
+                  class="review-pannel-overlay"
+                  @click.self="closeReviewPanel">
+                <div class="review-pannel">
+                  <button class="close-btn"
+                          @click="closeReviewPanel">
+                    &times;
+                  </button>
+                  <div class="review-header">
+                      <img :src="reviewingApplicant.picture || '/default-avatar'" 
+                              alt="Applicant Photo"
+                              class="app-photo" >
+                              <h2> {{ reviewingApplicant.name }}</h2>
+                              <p> {{  reviewingApplicant.description }}</p>
+                              <p> <strong>Email: </strong> {{ reviewingApplicant.email }}</p>
+                              <p> <strong>Phone: </strong> {{ reviewingApplicant.phone }}</p>
+                  </div>
+                  <div class="reviewing-body">
+                    <h3>Skills</h3>
+                    <ul class="skills-list">
+                      <li v-for="skill in reviewingApplicant.skills" :key="skill">
+                          {{ skill }}
+                      </li>
+                    </ul>
+                    <h3>Match</h3>
+                    <p>
+                      {{  reviewingApplicant.matchPercent }}
+                    </p>
+                  </div>
+                  <div class="review-actions">
+                    <button id="accept" @click="createInterview(reviewingApplicant)" class="action-btn accept-btn">
+                        Move forward
+                    </button>
+                    <button id="reject" @click="rejectApplication(reviewingApplicant)" class="action-btn reject-btn">
+                        Reject applicant
+                    </button>
+                  </div>
+
+
+                </div>
+            </div>
       </div>
-    </div>
-  </template>
+    </template>
 
 <script setup>
 import { reactive, ref, onMounted, onUnmounted } from 'vue'
@@ -341,7 +388,6 @@ function clearForm() {
   skillSuggestions.value = []
 }
 
-// ─── Skill Management Helpers ──────────────────────────────────────────────
 
 async function handleSkillSearch() {
   if (skillQuery.value.length < 2) {
@@ -410,9 +456,68 @@ async function viewApplicants(listing) {
   }
 }
 
+
+const reviewingApplicant = ref(null)
+
+
 function reviewApplicant(app) {
-  // Placeholder for review logic
-  alert(`Reviewing ${app.name}'s application...`)
+
+  reviewingApplicant.value = app
+}
+
+function closeReviewPanel(){
+  reviewingApplicant.value = null
+}
+
+async function createInterview(app){
+  try {
+    const today = new Date();
+    today.setDate(today.getDate() + 1); // schedule for tomorrow
+    const current_time = today.toISOString().split('T')[0] + ' 10:00:00';
+    
+    await auth.apiFetch(`/v1/interviews`, {
+      method: 'POST',
+      body: JSON.stringify({
+        application_id : app.id,
+        scheduled_at : current_time,
+        meeting_link: 'https://meet.google.com/xyz',
+        notes : 'test Notes',
+        score: 0
+      })
+    });
+
+    // Accept application as well
+    await auth.apiFetch(`/v1/applications/${app.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'accepted' })
+    });
+
+    app.status = 'accepted';
+    alert('Interview created and applicant moved forward!');
+    closeReviewPanel();
+    await loadRecruiterData(true);
+  } catch(err) {
+    console.error('Failed to schedule interview:', err);
+    alert(err.message || 'Failed to schedule interview');
+  }
+}
+
+async function rejectApplication(app) {
+  if (!confirm('Are you sure you want to reject this applicant?')) return;
+  try {
+    await auth.apiFetch(`/v1/applications/${app.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'rejected' })
+    });
+    
+    app.status = 'rejected';
+    alert('Applicant rejected successfully.');
+    closeReviewPanel();
+    await loadRecruiterData(true);
+  } catch (err) {
+    console.error('Failed to reject applicant:', err);
+    alert(err.message || 'Failed to reject applicant');
+  }
 }
 </script>
 
@@ -528,4 +633,27 @@ function reviewApplicant(app) {
 .form-hint { font-size: 0.75rem; color: var(--gray-400); margin: 0.25rem 0 0; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Application Review Popup Styles */
+.review-pannel-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+.review-pannel { background: var(--white); border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; padding: 2.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; gap: 1.5rem; font-family: var(--font-base); }
+.close-btn { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 2rem; cursor: pointer; color: var(--gray-500); transition: color 0.2s; line-height: 1; padding: 0.5rem; display: flex; align-items: center; justify-content: center; }
+.close-btn:hover { color: var(--gray-900); }
+.review-header { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.app-photo { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gray-200); margin-bottom: 0.5rem; }
+.review-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--gray-900); margin: 0; }
+.review-header p { font-size: 0.95rem; color: var(--gray-600); margin: 0; line-height: 1.4; }
+.review-header p strong { color: var(--gray-800); }
+.reviewing-body { display: flex; flex-direction: column; gap: 1rem; border-top: 1px solid var(--gray-200); padding-top: 1.5rem; }
+.reviewing-body h3 { font-size: 1.05rem; font-weight: 600; color: var(--gray-900); margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+.skills-list { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; margin: 0; }
+.skills-list li { background: var(--gray-900); color: var(--white); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
+.reviewing-body p { font-size: 1.25rem; font-weight: 700; color: #16a34a; margin: 0; display: inline-block; background: #dcfce7; padding: 0.4rem 1rem; border-radius: 99px; align-self: flex-start; }
+
+.review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem; border-top: 1px solid var(--gray-200); padding-top: 1.5rem; }
+.action-btn { padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-size: 0.95rem; font-family: var(--font-base); display: flex; justify-content: center; align-items: center;}
+.accept-btn { background: #16a34a; color: white; }
+.accept-btn:hover { background: #15803d; }
+.reject-btn { background: #ef4444; color: white; }
+.reject-btn:hover { background: #b91c1c; }
 </style>
