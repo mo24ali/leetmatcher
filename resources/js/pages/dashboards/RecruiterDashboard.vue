@@ -217,13 +217,31 @@
                       {{  reviewingApplicant.matchPercent }}
                     </p>
                   </div>
-                  <div class="review-actions">
-                    <button id="accept" @click="createInterview(reviewingApplicant)" class="action-btn accept-btn">
+                  <div class="review-actions" v-if="!schedulingInterview">
+                    <button id="accept" @click="schedulingInterview = true" class="action-btn accept-btn">
                         Move forward
                     </button>
                     <button id="reject" @click="rejectApplication(reviewingApplicant)" class="action-btn reject-btn">
                         Reject applicant
                     </button>
+                  </div>
+                  
+                  <div v-if="schedulingInterview" class="mt-5 p-4 border border-gray-200 rounded-xl bg-gray-50/80">
+                    <h3 class="text-[0.95rem] font-bold text-gray-900 mb-3">Schedule Interview</h3>
+                    <div class="flex flex-col gap-3">
+                      <div>
+                        <label class="block text-[0.8rem] font-semibold text-gray-700 mb-1">Date & Time</label>
+                        <input type="datetime-local" v-model="interviewForm.scheduled_at" class="w-full border border-gray-300 rounded-md text-[0.85rem] px-3 py-2 bg-white focus:outline-none focus:border-gray-500" />
+                      </div>
+                      <div>
+                        <label class="block text-[0.8rem] font-semibold text-gray-700 mb-1">Meeting Link</label>
+                        <input type="url" v-model="interviewForm.meeting_link" placeholder="https://meet.google.com/..." class="w-full border border-gray-300 rounded-md text-[0.85rem] px-3 py-2 bg-white focus:outline-none focus:border-gray-500" />
+                      </div>
+                      <div class="flex gap-2 mt-2">
+                        <button @click="createInterview(reviewingApplicant)" class="flex-1 bg-green-600 text-white px-3 py-2 rounded-md text-[0.85rem] font-bold hover:bg-green-700 transition-colors">Book Interview</button>
+                        <button @click="schedulingInterview = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-[0.85rem] font-bold hover:bg-gray-300 transition-colors">Cancel</button>
+                      </div>
+                    </div>
                   </div>
 
 
@@ -458,42 +476,52 @@ async function viewApplicants(listing) {
 
 
 const reviewingApplicant = ref(null)
-
+const schedulingInterview = ref(false)
+const interviewForm = reactive({
+  scheduled_at: '',
+  meeting_link: ''
+})
 
 function reviewApplicant(app) {
-
   reviewingApplicant.value = app
+  schedulingInterview.value = false
+  interviewForm.scheduled_at = ''
+  interviewForm.meeting_link = ''
 }
 
 function closeReviewPanel(){
   reviewingApplicant.value = null
+  schedulingInterview.value = false
 }
 
 async function createInterview(app){
+  if (!interviewForm.scheduled_at || !interviewForm.meeting_link) {
+    alert("Please provide both Date/Time and Meeting Link.")
+    return
+  }
+  
   try {
-    const today = new Date();
-    today.setDate(today.getDate() + 1); // schedule for tomorrow
-    const current_time = today.toISOString().split('T')[0] + ' 10:00:00';
-    
+    const formattedDate = new Date(interviewForm.scheduled_at).toISOString().slice(0, 19).replace('T', ' ');
+
     await auth.apiFetch(`/v1/interviews`, {
       method: 'POST',
       body: JSON.stringify({
         application_id : app.id,
-        scheduled_at : current_time,
-        meeting_link: 'https://meet.google.com/xyz',
-        notes : 'test Notes',
+        scheduled_at : formattedDate,
+        meeting_link: interviewForm.meeting_link,
+        notes : '',
         score: 0
       })
     });
 
-    // Accept application as well
+    // Accept application as well -> Change status to in_progress
     await auth.apiFetch(`/v1/applications/${app.id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ status: 'accepted' })
+      body: JSON.stringify({ status: 'in_progress' })
     });
 
-    app.status = 'accepted';
-    alert('Interview created and applicant moved forward!');
+    app.status = 'in_progress';
+    alert('Interview scheduled! Application is now In Progress.');
     closeReviewPanel();
     await loadRecruiterData(true);
   } catch(err) {
