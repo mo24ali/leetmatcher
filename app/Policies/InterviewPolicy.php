@@ -40,7 +40,8 @@ class InterviewPolicy
     public function update(User $user, Interview $interview): bool
     {
         return $user->role === 'admin' || 
-               ($user->role === 'recruiter' && $user->id === $interview->application->project->recruiter_id);
+               ($user->role === 'recruiter' && $user->id === $interview->application->project->recruiter_id) ||
+               (in_array($user->role, ['student', 'applicant']) && $user->id === $interview->application->student_id);
     }
 
     /**
