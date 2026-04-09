@@ -72,7 +72,7 @@ class ApplicationController extends Controller
         $this->authorize('update', $application);
 
         $validatedData = $request->validate([
-            'status'       => 'sometimes|in:pending,accepted,rejected',
+            'status'       => 'sometimes|in:pending,in_progress,accepted,rejected',
             'cover_letter' => 'sometimes|string',
         ]);
 

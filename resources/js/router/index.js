@@ -62,6 +62,12 @@ const routes = [
         component: TopMatches,
         meta: { requiresAuth: true }
     },
+    {
+        path: '/interviews',
+        name: 'Interviews',
+        component: () => import('../pages/Interviews.vue'),
+        meta: { requiresAuth: true }
+    },
     // Catch-all
     { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
