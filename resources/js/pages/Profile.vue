@@ -56,24 +56,22 @@
               <!-- Animated Avatar Circle -->
               <div class="relative mb-6">
                 <div class="absolute -inset-2 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-full blur-sm opacity-20 group-hover:opacity-40 transition-opacity animate-pulse"></div>
-                <div class="relative w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100 group">
-                  <img
-                    v-if="avatarPreview"
-                    :src="avatarPreview"
-                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    alt="Profile photo"
-                  />
-                  <div v-else class="w-full h-full flex items-center justify-center text-4xl font-black text-slate-300 select-none">
-                    {{ initials }}
-                  </div>
+                <div class="relative group">
+                   <ProfileAvatar 
+                     :url="avatarPreview" 
+                     :name="auth.state.user?.name" 
+                     size="xxl"
+                     border
+                     class="shadow-2xl transition-transform duration-500 group-hover:scale-105"
+                   />
 
-                  <!-- Overlay upload trigger -->
-                  <label class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
-                    <svg class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    <span class="text-[0.65rem] font-black uppercase tracking-widest">Update</span>
-                    <input type="file" accept="image/*" class="hidden" @change="handleAvatarSelect" />
-                  </label>
-                </div>
+                   <!-- Overlay upload trigger -->
+                   <label class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+                     <svg class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                     <span class="text-[0.65rem] font-black uppercase tracking-widest">Update</span>
+                     <input type="file" accept="image/*" class="hidden" @change="handleAvatarSelect" />
+                   </label>
+                 </div>
 
                 <!-- Status indicator -->
                 <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full shadow-md"></div>
@@ -423,6 +421,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import ProfileAvatar from '../components/ProfileAvatar.vue'
 
 const auth = useAuthStore()
 

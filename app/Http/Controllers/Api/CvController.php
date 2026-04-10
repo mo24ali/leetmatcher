@@ -26,38 +26,29 @@ class CvController extends Controller
 
         $file = $request->file('cv');
         $path = $file->store('cvs', 'local');
-        $extension = $file->getClientOriginalExtension();
         
-        // Extract raw text
-        $text = '';
-        if ($extension === 'pdf') {
-            $text = $this->extractFromPdf($file->getRealPath());
-        } elseif (in_array($extension, ['doc', 'docx'])) {
-            $text = $this->extractFromDocx($file->getRealPath());
-        }
-
-        // Use parsing logic for basic fields
+        $text = $this->extractText($file);
         $parsed = $this->extractFields($text);
 
-        // Use the skill extractor for better matching against database
-        $skills = $this->skillExtractor->extract($text);
-        $parsed['skills'] = $skills->pluck('name')->toArray();
-
+        // Get matching skills from database
+        $extractedSkills = $this->skillExtractor->extract($text);
+        
         $user = $request->user();
         $profile = $user->profile()->updateOrCreate(
             ['user_id' => $user->id],
             ['cv_path' => $path]
         );
 
-        // Sync skills to profile
+        // Sync skills to profile pivot
         $syncData = [];
-        foreach ($skills as $skill) {
+        foreach ($extractedSkills as $skill) {
             $syncData[$skill->id] = ['proficiency' => 'intermediate'];
         }
         $profile->skills()->sync($syncData);
 
-        // Use the centralized scoring service
+        // Calculate score
         $score = $this->scoringService->calculateScore($profile);
+        $profile->update(['cv_score' => $score]);
 
         return response()->json([
             'message' => 'CV uploaded and parsed successfully',
@@ -67,38 +58,35 @@ class CvController extends Controller
                 'id' => $s->id,
                 'name' => $s->name,
                 'proficiency' => $s->pivot?->proficiency ?? 'intermediate',
-                'created_at'  => $s->pivot?->created_at?->toIso8601String() ?? now()->toIso8601String(),
             ]),
             'score'   => $score
         ]);
     }
 
-
-    private function parseFile($file): array
+    private function extractText($file): string
     {
-        $extension = strtolower($file->getClientOriginalExtension());
-        $text = '';
+        $extension = $file->getClientOriginalExtension();
+        $path = $file->getRealPath();
 
         if ($extension === 'pdf') {
-            $text = $this->extractFromPdf($file->getRealPath());
-        }
-        elseif (in_array($extension, ['doc', 'docx'])) {
-            $text = $this->extractFromDocx($file->getRealPath());
+            return $this->extractFromPdf($path);
+        } elseif (in_array($extension, ['doc', 'docx'])) {
+            return $this->extractFromDocx($path);
         }
 
-        return $this->extractFields($text);
+        return '';
     }
 
     private function extractFromPdf(string $path): string
     {
-        // Use pdftotext if available on the system, otherwise fall back gracefully
         if (shell_exec('which pdftotext 2>/dev/null')) {
             $escaped = escapeshellarg($path);
             return shell_exec("pdftotext {$escaped} - 2>/dev/null") ?? '';
         }
 
-        // Naive binary scan for readable text (best-effort for plain PDFs)
-        $content = file_get_contents($path);
+        $content = @file_get_contents($path);
+        if (!$content) return '';
+        
         $text = '';
         preg_match_all('/BT (.+?) ET/s', $content, $matches);
         foreach ($matches[1] as $block) {
@@ -110,24 +98,16 @@ class CvController extends Controller
 
     private function extractFromDocx(string $path): string
     {
-        // DOCX is a ZIP archive; word/document.xml holds the text
-        if (!class_exists('ZipArchive')) {
-            return '';
-        }
+        if (!class_exists('ZipArchive')) return '';
 
         $zip = new \ZipArchive();
-        if ($zip->open($path) !== true) {
-            return '';
-        }
+        if ($zip->open($path) !== true) return '';
 
         $xml = $zip->getFromName('word/document.xml');
         $zip->close();
 
-        if (!$xml) {
-            return '';
-        }
+        if (!$xml) return '';
 
-        // Strip XML tags, decode entities
         $text = strip_tags(str_replace('</w:p>', "\n", $xml));
         return html_entity_decode($text);
     }
@@ -137,7 +117,7 @@ class CvController extends Controller
         $lines = array_filter(array_map('trim', explode("\n", $text)));
 
         $name = '';
-        foreach (array_slice(array_values($lines), 0, 5) as $line) {
+        foreach (array_slice($lines, 0, 5) as $line) {
             if (preg_match('/^[A-Z][a-z]+([ \'][A-Z][a-z]+)+$/', $line)) {
                 $name = $line;
                 break;
@@ -146,62 +126,31 @@ class CvController extends Controller
 
         $email = '';
         preg_match('/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/', $text, $emailMatch);
-        if ($emailMatch) {
-            $email = $emailMatch[0];
-        }
+        $email = $emailMatch[0] ?? '';
 
         $phone = '';
         preg_match('/(\+?\d[\d\s\-().]{7,}\d)/', $text, $phoneMatch);
-        if ($phoneMatch) {
-            $phone = trim($phoneMatch[1]);
-        }
+        $phone = trim($phoneMatch[1] ?? '');
 
-        // --- Skills ---
-        $skillsPatterns = ['skills?', 'compétences?\s+techniques', 'compétences?', 'outils', 'langages', 'savoir-faire', 'technologies', 'téchnologies'];
-        $breakPatterns = [
-            'education', 'experience', 'summary', 'formation', 'expériences?\s+professionnelles',
-            'expériences?', 'études', 'diplômes', 'parcours\s+professionnel', 'parcours', 'résumé'
-        ];
-
-        $skillsRegex = '/(?:' . implode('|', $skillsPatterns) . ')[:\s]+([^\n]+(?:\n(?!(?:' . implode('|', $breakPatterns) . '))[^\n]+)*)/i';
-
-        $skills = [];
-        if (preg_match($skillsRegex, $text, $skillsMatch)) {
-            $raw = $skillsMatch[1];
-            $sections = preg_split('/[,|•\n\t]+/', $raw);
-            $skills = array_values(array_unique(array_filter(
-                array_map('trim', $sections),
-            fn($s) => strlen($s) > 1 && strlen($s) < 40
-            )));
-            $skills = array_slice($skills, 0, 15);
-        }
-
-        // --- Education ---
-        $eduPatterns = ['education', 'formation', 'études', 'diplômes'];
-        $eduRegex = '/(?:' . implode('|', $eduPatterns) . ')[:\s]+((?:[^\n]+\n?){1,6})/i';
-        $education = [];
-        if (preg_match($eduRegex, $text, $eduMatch)) {
-            $raw = $eduMatch[1];
-            $education = array_values(array_filter(
-                explode("\n", $raw),
-            fn($l) => strlen(trim($l)) > 3
-            ));
-            $education = array_map('trim', array_slice($education, 0, 4));
-        }
-
-        // --- Experience ---
-        $expPatterns = ['experience', 'expériences?\s+professionnelles', 'expériences?', 'parcours\s+professionnel', 'parcours'];
-        $expRegex = '/(?:' . implode('|', $expPatterns) . ')[:\s]+((?:[^\n]+\n?){1,10})/i';
-        $experience = [];
-        if (preg_match($expRegex, $text, $expMatch)) {
-            $raw = $expMatch[1];
-            $experience = array_values(array_filter(
-                explode("\n", $raw),
-            fn($l) => strlen(trim($l)) > 3
-            ));
-            $experience = array_map('trim', array_slice($experience, 0, 6));
-        }
+        // Basic sections
+        $skills = $this->grepSection($text, ['skills', 'compétences', 'outils', 'technologies']);
+        $education = $this->grepSection($text, ['education', 'formation', 'études']);
+        $experience = $this->grepSection($text, ['experience', 'expériences', 'parcours']);
 
         return compact('name', 'email', 'phone', 'skills', 'education', 'experience');
+    }
+
+    private function grepSection(string $text, array $keywords): array
+    {
+        $pattern = '/(?:' . implode('|', $keywords) . ')[:\s]+([^\n]+(?:\n(?!(?:education|experience|formation|études|skills|compétences))[^\n]+)*)/i';
+        
+        if (preg_match($pattern, $text, $matches)) {
+            $sections = preg_split('/[,|•\n\t]+/', $matches[1]);
+            return array_values(array_unique(array_filter(
+                array_map('trim', $sections),
+                fn($s) => strlen($s) > 1 && strlen($s) < 100
+            )));
+        }
+        return [];
     }
 }

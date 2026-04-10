@@ -131,9 +131,11 @@
               to="/profile"
               class="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors no-underline"
             >
-              <div class="w-7 h-7 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-bold select-none">
-                {{ initials }}
-              </div>
+              <ProfileAvatar 
+                :url="auth.state.user?.avatar_url" 
+                :name="auth.state.user?.name" 
+                size="sm"
+              />
               <div class="flex flex-col pr-1">
                 <span class="text-xs font-bold text-gray-900 leading-tight truncate max-w-[120px]">
                   {{ auth.state.user?.name?.split(' ')[0] }}
@@ -179,6 +181,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import ProfileAvatar from './ProfileAvatar.vue'
 
 const auth = useAuthStore()
 const route = useRoute()

@@ -16,8 +16,16 @@ class ProfileApiController extends Controller
     public function show(Request $request)
     {
         $user    = $request->user();
-        $profile = $user->profile;
-        $skills  = $user->skills()->orderBy('name')->get();
+        $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
+        
+        // Use the pivot relationship correctly
+        $skills  = $profile->skills()->orderBy('name')->get()->map(function($skill) {
+            return [
+                'id' => $skill->id,
+                'name' => $skill->name,
+                'proficiency' => $skill->pivot->proficiency,
+            ];
+        });
 
         return response()->json([
             'user'    => [
@@ -25,14 +33,12 @@ class ProfileApiController extends Controller
                 'name'       => $user->name,
                 'email'      => $user->email,
                 'role'       => $user->role,
-                'avatar_url' => $profile?->avatar_url
-                                    ? Storage::url($profile->avatar_url)
-                                    : null,
+                'avatar_url' => $user->avatar_url,
             ],
             'profile' => [
-                'bio'      => $profile?->bio,
-                'cv_score' => $profile?->cv_score,
-                'cv_path'  => $profile?->cv_path ? true : false, // existence flag only
+                'bio'      => $profile->bio,
+                'cv_score' => $profile->cv_score,
+                'cv_path'  => $profile->cv_path ? true : false,
             ],
             'skills'  => $skills,
         ]);
@@ -64,10 +70,11 @@ class ProfileApiController extends Controller
         return response()->json([
             'message' => 'Profile updated successfully',
             'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'avatar_url' => $user->avatar_url,
             ],
         ]);
     }
@@ -106,10 +113,8 @@ class ProfileApiController extends Controller
         ]);
 
         $user = $request->user();
-
         $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
 
-        // Delete old avatar from storage to avoid orphaned files
         if ($profile->avatar_url) {
             Storage::delete($profile->avatar_url);
         }
@@ -133,28 +138,23 @@ class ProfileApiController extends Controller
             'proficiency' => 'nullable|in:beginner,intermediate,advanced,expert',
         ]);
 
-        $user = $request->user();
+        $profile = $request->user()->profile()->firstOrCreate(['user_id' => $request->user()->id]);
+        
+        // Find or create global skill
+        $skill = \App\Models\Skill::firstOrCreate(['name' => trim($request->name)]);
 
-        // Prevent exact duplicate skill names (case-insensitive)
-        $exists = $user->skills()
-                       ->whereRaw('LOWER(name) = ?', [strtolower($request->name)])
-                       ->exists();
-
-        if ($exists) {
-            return response()->json([
-                'message' => 'This skill already exists in your profile.',
-                'errors'  => ['name' => ['Skill already exists.']],
-            ], 422);
-        }
-
-        $skill = $user->skills()->create([
-            'name'        => trim($request->name),
-            'proficiency' => $request->proficiency ?? 'intermediate',
+        // Sync to pivot
+        $profile->skills()->syncWithoutDetaching([
+            $skill->id => ['proficiency' => $request->proficiency ?? 'intermediate']
         ]);
 
         return response()->json([
             'message' => 'Skill added.',
-            'skill'   => $skill,
+            'skill'   => [
+                'id' => $skill->id,
+                'name' => $skill->name,
+                'proficiency' => $request->proficiency ?? 'intermediate'
+            ],
         ], 201);
     }
 
@@ -163,9 +163,10 @@ class ProfileApiController extends Controller
      */
     public function removeSkill(Request $request, int $skillId)
     {
-        $user  = $request->user();
-        $skill = $user->skills()->findOrFail($skillId);
-        $skill->delete();
+        $profile = $request->user()->profile;
+        if ($profile) {
+            $profile->skills()->detach($skillId);
+        }
 
         return response()->json(['message' => 'Skill removed.']);
     }

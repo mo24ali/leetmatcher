@@ -14,6 +14,8 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $appends = ['avatar_url'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -53,6 +55,11 @@ class User extends Authenticatable
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->profile?->full_avatar_url;
     }
 
     public function skills(): HasMany
