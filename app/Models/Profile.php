@@ -22,6 +22,9 @@ class Profile extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Get the skills associated with the profile.
+     */
     public function skills()
     {
         return $this->belongsToMany(Skill::class, 'profile_skills')
