@@ -43,10 +43,11 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'User created successfully',
             'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'avatar_url' => $user->avatar_url,
             ],
         ], 201);
     }
@@ -85,10 +86,11 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login successful',
             'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'avatar_url' => $user->avatar_url,
             ],
         ]);
     }
@@ -118,10 +120,11 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'OTP verified. Welcome back!',
             'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'avatar_url' => $user->avatar_url,
             ],
         ]);
     }
@@ -139,6 +142,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         if (!$user) {
@@ -146,10 +150,11 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'id'    => $user->id,
-            'name'  => $user->name,
-            'email' => $user->email,
-            'role'  => $user->role,
+            'id'         => $user->id,
+            'name'       => $user->name,
+            'email'      => $user->email,
+            'role'       => $user->role,
+            'avatar_url' => $user->avatar_url,
         ]);
     }
 }

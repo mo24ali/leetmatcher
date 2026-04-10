@@ -68,6 +68,12 @@ const routes = [
         component: () => import('../pages/Interviews.vue'),
         meta: { requiresAuth: true }
     },
+    {
+        path: '/interview-room/:id',
+        name: 'InterviewRoom',
+        component: () => import('../pages/InterviewRoom.vue'),
+        meta: { requiresAuth: true }
+    },
     // Catch-all
     { path: '/:pathMatch(.*)*', redirect: '/' },
 ]

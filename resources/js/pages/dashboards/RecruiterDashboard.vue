@@ -197,54 +197,61 @@
                     &times;
                   </button>
                   <div class="review-header">
-                      <img :src="reviewingApplicant.picture || '/default-avatar'" 
-                              alt="Applicant Photo"
-                              class="app-photo" >
-                              <h2> {{ reviewingApplicant.name }}</h2>
-                              <p> {{  reviewingApplicant.description }}</p>
-                              <p> <strong>Email: </strong> {{ reviewingApplicant.email }}</p>
-                              <p> <strong>Phone: </strong> {{ reviewingApplicant.phone }}</p>
+                      <ProfileAvatar 
+                        :url="reviewingApplicant.picture" 
+                        :name="reviewingApplicant.name" 
+                        size="xl"
+                      />
+                      <h2 class="mt-2 text-xl font-bold text-gray-900">{{ reviewingApplicant.name }}</h2>
+                      <p class="text-sm text-gray-500">{{ reviewingApplicant.description }}</p>
+                      <div class="flex flex-col gap-1 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                        <span><strong>Email:</strong> {{ reviewingApplicant.email }}</span>
+                        <span><strong>Phone:</strong> {{ reviewingApplicant.phone }}</span>
+                      </div>
                   </div>
                   <div class="reviewing-body">
-                    <h3>Skills</h3>
+                    <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Technical Skills</h3>
                     <ul class="skills-list">
                       <li v-for="skill in reviewingApplicant.skills" :key="skill">
                           {{ skill }}
                       </li>
                     </ul>
-                    <h3>Match</h3>
-                    <p>
-                      {{  reviewingApplicant.matchPercent }}
+                    <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 mt-4 mb-2">Matching Precision</h3>
+                    <p class="text-xl font-black text-green-600 bg-green-50 px-4 py-2 rounded-2xl inline-block">
+                      {{ reviewingApplicant.matchPercent }}
                     </p>
                   </div>
                   <div class="review-actions" v-if="!schedulingInterview">
                     <button id="accept" @click="schedulingInterview = true" class="action-btn accept-btn">
-                        Move forward
+                        Schedule Interview
                     </button>
                     <button id="reject" @click="rejectApplication(reviewingApplicant)" class="action-btn reject-btn">
-                        Reject applicant
+                        Not a fit
                     </button>
                   </div>
                   
-                  <div v-if="schedulingInterview" class="mt-5 p-4 border border-gray-200 rounded-xl bg-gray-50/80">
-                    <h3 class="text-[0.95rem] font-bold text-gray-900 mb-3">Schedule Interview</h3>
-                    <div class="flex flex-col gap-3">
+                  <div v-if="schedulingInterview" class="mt-5 p-6 border border-blue-100 rounded-3xl bg-blue-50/30 animate-in slide-in-from-bottom-2">
+                    <h3 class="text-sm font-black uppercase tracking-widest text-slate-900 mb-4">Set Interview Time</h3>
+                    <div class="flex flex-col gap-4">
                       <div>
-                        <label class="block text-[0.8rem] font-semibold text-gray-700 mb-1">Date & Time</label>
-                        <input type="datetime-local" v-model="interviewForm.scheduled_at" class="w-full border border-gray-300 rounded-md text-[0.85rem] px-3 py-2 bg-white focus:outline-none focus:border-gray-500" />
+                        <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Preferred Date & Time</label>
+                        <input type="datetime-local" v-model="interviewForm.scheduled_at" class="w-full border border-slate-200 rounded-xl text-sm px-4 py-3 bg-white focus:outline-none focus:border-blue-500 shadow-sm transition-all" />
                       </div>
-                      <div>
-                        <label class="block text-[0.8rem] font-semibold text-gray-700 mb-1">Meeting Link</label>
-                        <input type="url" v-model="interviewForm.meeting_link" placeholder="https://meet.google.com/..." class="w-full border border-gray-300 rounded-md text-[0.85rem] px-3 py-2 bg-white focus:outline-none focus:border-gray-500" />
+                      <div class="p-4 bg-white/60 rounded-2xl border border-blue-100/50 flex items-center gap-3">
+                         <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 10l5-5v14l-5-5v-4z"/><rect x="2" y="3" width="11" height="18" rx="2" ry="2"/></svg>
+                         </div>
+                         <div class="flex flex-col">
+                            <span class="text-xs font-bold text-slate-900 uppercase tracking-tight">Internal Video Room</span>
+                            <span class="text-[0.6rem] text-slate-400 font-bold uppercase tracking-widest">Auto-generated link</span>
+                         </div>
                       </div>
                       <div class="flex gap-2 mt-2">
-                        <button @click="createInterview(reviewingApplicant)" class="flex-1 bg-green-600 text-white px-3 py-2 rounded-md text-[0.85rem] font-bold hover:bg-green-700 transition-colors">Book Interview</button>
-                        <button @click="schedulingInterview = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-[0.85rem] font-bold hover:bg-gray-300 transition-colors">Cancel</button>
+                        <button @click="createInterview(reviewingApplicant)" class="flex-1 bg-slate-900 text-white px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition shadow-lg shadow-slate-200">Confirm Booking</button>
+                        <button @click="schedulingInterview = false" class="bg-white text-slate-400 px-4 py-3.5 rounded-2xl text-xs font-bold hover:text-slate-600 transition">Cancel</button>
                       </div>
                     </div>
                   </div>
-
-
                 </div>
             </div>
       </div>
@@ -253,6 +260,7 @@
 <script setup>
 import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../../stores/authStore'
+import ProfileAvatar from '../../components/ProfileAvatar.vue'
 
 const auth = useAuthStore()
 const loading = ref(true)
@@ -280,7 +288,6 @@ async function loadRecruiterData(quiet = false) {
       auth.apiFetch('/v1/recruiter/listings')
     ])
     
-    // Update stats reactively with defensive checks
     if (sData?.stats) {
       stats.activeListings = sData.stats.total_projects || 0
       stats.totalApplicants = sData.stats.total_applications || 0
@@ -288,7 +295,6 @@ async function loadRecruiterData(quiet = false) {
       stats.filled = 0 
     }
     
-    // Map data for display with defensive check
     if (Array.isArray(lData)) {
       listings.value = lData.map(l => ({
         ...l,
@@ -308,7 +314,6 @@ async function loadRecruiterData(quiet = false) {
 
 onMounted(() => {
   loadRecruiterData()
-  // Reactive polling for real-time dashboard sync
   pollInterval = setInterval(() => loadRecruiterData(true), 30000)
 })
 
@@ -382,12 +387,10 @@ function startEdit(listing) {
   editingId.value = listing.id
   jobForm.title = listing.title
   jobForm.description = listing.description
-  // ensure format YYYY-MM-DD for input
   jobForm.deadline = new Date(listing.deadline).toISOString().split('T')[0]
   jobForm.status = listing.status
   jobForm.skills = listing.skills ? listing.skills.map(s => s.name) : []
   
-  // Scroll to form
   document.getElementById('post').scrollIntoView({ behavior: 'smooth' })
 }
 
@@ -479,14 +482,13 @@ const reviewingApplicant = ref(null)
 const schedulingInterview = ref(false)
 const interviewForm = reactive({
   scheduled_at: '',
-  meeting_link: ''
+  meeting_link: 'INTERNAL' // Default to internal
 })
 
 function reviewApplicant(app) {
   reviewingApplicant.value = app
   schedulingInterview.value = false
   interviewForm.scheduled_at = ''
-  interviewForm.meeting_link = ''
 }
 
 function closeReviewPanel(){
@@ -495,8 +497,8 @@ function closeReviewPanel(){
 }
 
 async function createInterview(app){
-  if (!interviewForm.scheduled_at || !interviewForm.meeting_link) {
-    alert("Please provide both Date/Time and Meeting Link.")
+  if (!interviewForm.scheduled_at) {
+    alert("Please provide the Interview Date & Time.")
     return
   }
   
@@ -508,20 +510,19 @@ async function createInterview(app){
       body: JSON.stringify({
         application_id : app.id,
         scheduled_at : formattedDate,
-        meeting_link: interviewForm.meeting_link,
+        meeting_link: 'INTERNAL',
         notes : '',
         score: 0
       })
     });
 
-    // Accept application as well -> Change status to in_progress
     await auth.apiFetch(`/v1/applications/${app.id}`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'in_progress' })
     });
 
     app.status = 'in_progress';
-    alert('Interview scheduled! Application is now In Progress.');
+    alert('Interview scheduled in internal room! Application is now In Progress.');
     closeReviewPanel();
     await loadRecruiterData(true);
   } catch(err) {

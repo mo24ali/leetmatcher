@@ -82,11 +82,12 @@
 
         <div class="p-5 border-t border-gray-100 flex flex-col gap-2">
           <!-- Room logic: Let's assume you can join if it's within 15 min or something, or just unconditionally -->
-          <a :href="interview.meeting_link" target="_blank" rel="noopener noreferrer" 
-            class="block w-full text-center py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm focus:ring-2 focus:ring-offset-1 focus:ring-blue-600"
+          <router-link 
+            :to="isJoinable(interview.scheduled_at) ? '/interview-room/' + interview.id : ''"
+            class="block w-full text-center py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm focus:ring-2 focus:ring-offset-1 focus:ring-blue-600 no-underline"
             :class="isJoinable(interview.scheduled_at) ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-500 pointer-events-none'">
             {{ isJoinable(interview.scheduled_at) ? 'Join Interview Room' : 'Not time yet' }}
-          </a>
+          </router-link>
           
           <div v-if="auth.role.value === 'recruiter' && isPast(interview.scheduled_at) && interview.application.status === 'in_progress'" class="flex gap-2 mt-2">
              <button @click="finalizeApplication(interview, 'accepted')" class="flex-1 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-200 transition">Candidate Passed</button>

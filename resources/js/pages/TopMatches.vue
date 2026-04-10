@@ -37,10 +37,11 @@
         <div v-if="!isRecruiter" class="job-seeker-view">
           <!-- JOB SEEKER VIEW: Recruiter Info (Top-Left) -->
           <div class="flex items-center gap-5 mb-10">
-            <img
-              :src="currentItem.recruiter?.avatar || `https://i.pravatar.cc/150?u=${currentItem.id}`"
-              class="w-14 h-14 rounded-2xl object-cover border-2 border-gray-50 shadow-sm"
-              alt="Recruiter profile"
+            <ProfileAvatar 
+              :url="currentItem.recruiter?.avatar" 
+              :name="currentItem.recruiter?.name" 
+              size="lg"
+              shape="rounded"
             />
             <div>
               <p class="text-lg font-bold text-gray-900 leading-tight">
@@ -100,10 +101,11 @@
         <div v-else class="recruiter-view">
           <!-- RECRUITER VIEW: Applicant Profile (Top-Left) -->
           <div class="flex items-center gap-5 mb-10">
-            <img
-              :src="currentItem.avatar || `https://i.pravatar.cc/150?u=${currentItem.id}`"
-              class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md"
-              alt="Applicant profile picture"
+            <ProfileAvatar 
+              :url="currentItem.avatar" 
+              :name="currentItem.name" 
+              size="lg"
+              shape="circle"
             />
             <div>
               <p class="text-xl font-bold text-gray-900 leading-tight">
@@ -179,6 +181,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import ProfileAvatar from '../components/ProfileAvatar.vue'
 
 const auth = useAuthStore()
 const isRecruiter = computed(() => auth.role.value === 'recruiter')
