@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::apiResource('/v1/applications', ApplicationController::class);
     Route::apiResource('/v1/interviews', InterviewController::class);
     Route::apiResource('/v1/messages', MessageController::class);
+    Route::post('/v1/reviews', [App\Http\Controllers\ReviewController::class, 'store']);
     Route::post('/v1/application/apply', [ApplicationController::class, 'apply']);
     
 
