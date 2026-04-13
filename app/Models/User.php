@@ -70,4 +70,14 @@ class User extends Authenticatable
                     ->withPivot('proficiency')
                     ->withTimestamps();
     }
+
+    public function reviewsReceived()
+    {
+        return $this->hasMany(Review::class, 'reviewed_user_id');
+    }
+
+    public function reviewsGiven()
+    {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
 }

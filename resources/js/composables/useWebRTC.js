@@ -1,9 +1,9 @@
-import { ref, onUnmounted } from 'vue';
+import { ref, shallowRef, onUnmounted } from 'vue';
 
 export function useWebRTC() {
-    const localStream = ref(null);
-    const remoteStream = ref(null);
-    const peerConnection = ref(null);
+    const localStream = shallowRef(null);
+    const remoteStream = shallowRef(null);
+    const peerConnection = shallowRef(null);
     const connectionState = ref('disconnected');
     const isMuted = ref(false);
     const isVideoOff = ref(false);
@@ -73,25 +73,45 @@ export function useWebRTC() {
         return offer;
     };
 
+    const iceCandidateQueue = [];
+
     const handleOffer = async (offer) => {
         if (!peerConnection.value) return;
         await peerConnection.value.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await peerConnection.value.createAnswer();
         await peerConnection.value.setLocalDescription(answer);
+        processIceQueue();
         return answer;
     };
 
     const handleAnswer = async (answer) => {
         if (!peerConnection.value) return;
         await peerConnection.value.setRemoteDescription(new RTCSessionDescription(answer));
+        processIceQueue();
+    };
+
+    const processIceQueue = async () => {
+        if (!peerConnection.value || !peerConnection.value.remoteDescription) return;
+        while (iceCandidateQueue.length > 0) {
+            const candidate = iceCandidateQueue.shift();
+            try {
+                await peerConnection.value.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+                console.error("Error adding queued ice candidate", e);
+            }
+        }
     };
 
     const handleIceCandidate = async (candidate) => {
         if (peerConnection.value && candidate) {
-            try {
-                await peerConnection.value.addIceCandidate(new RTCIceCandidate(candidate));
-            } catch (e) {
-                console.error("Error adding ice candidate", e);
+            if (!peerConnection.value.remoteDescription) {
+                iceCandidateQueue.push(candidate);
+            } else {
+                try {
+                    await peerConnection.value.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (e) {
+                    console.error("Error adding ice candidate", e);
+                }
             }
         }
     };

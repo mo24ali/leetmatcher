@@ -128,23 +128,22 @@ class ApplicationController extends Controller
 
         $projectId = $request->project_id;
 
-        $existingApplication = Application::where('student_id', $user->id)
-            ->where('project_id', $projectId)
-            ->first();
+        $application = Application::firstOrCreate(
+            [
+                'student_id' => $user->id,
+                'project_id' => $projectId,
+            ],
+            [
+                'status' => 'pending',
+            ]
+        );
 
-            // check if the applicant already applied to this offer, to prevent duplication
-        if ($existingApplication) {
+        if (!$application->wasRecentlyCreated) {
             return response()->json([
                 'success' => false,
                 'message' => 'You already applied to the project'
             ]);
         }
-
-        Application::create([
-            'student_id' => $user->id,
-            'project_id' => $projectId,
-            'status' => 'pending',
-        ]);
 
         return response()->json([
             'success' => true,

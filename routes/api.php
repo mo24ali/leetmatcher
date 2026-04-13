@@ -53,4 +53,5 @@ Route::middleware('auth')->group(function () {
 
     // Interviews
     Route::post('/v1/interviews/{application}/create', [InterviewController::class, 'store']);
+    Route::post('/v1/interviews/{interview}/result', [InterviewController::class, 'submitResult']);
 });
