@@ -236,6 +236,27 @@
                         </p>
 
                         <div class="space-y-8">
+                            <!-- PASS/FAIL DECISION (RECRUITER ONLY) -->
+                            <div v-if="currentUser?.role === 'recruiter'" class="p-5 bg-slate-950/50 rounded-2xl border border-white/5">
+                                <label class="block text-[0.65rem] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Interview Decision</label>
+                                <div class="flex gap-4">
+                                    <button
+                                        @click="interviewDecision = true"
+                                        class="flex-1 py-3 rounded-xl border font-bold text-sm transition-all"
+                                        :class="interviewDecision === true ? 'bg-green-500/10 border-green-500/50 text-green-500' : 'border-white/10 text-slate-400 hover:bg-slate-800'"
+                                    >
+                                        ✅ PASSED
+                                    </button>
+                                    <button
+                                        @click="interviewDecision = false"
+                                        class="flex-1 py-3 rounded-xl border font-bold text-sm transition-all"
+                                        :class="interviewDecision === false ? 'bg-red-500/10 border-red-500/50 text-red-500' : 'border-white/10 text-slate-400 hover:bg-slate-800'"
+                                    >
+                                        ❌ FAILED
+                                    </button>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-[0.65rem] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Quality Score</label>
                                 <div class="flex gap-3">
@@ -264,7 +285,7 @@
 
                             <button
                                 @click="submitReview"
-                                :disabled="isSubmittingReview || !reviewComment"
+                                :disabled="isSubmittingReview || !reviewComment || (currentUser?.role === 'recruiter' && interviewDecision === null)"
                                 class="w-full h-16 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all shadow-xl shadow-blue-600/20 active:scale-[0.98]"
                             >
                                 <span v-if="!isSubmittingReview">Submit Final Report</span>
@@ -330,6 +351,7 @@ const showReviewModal = ref(false);
 const reviewRating = ref(5);
 const reviewComment = ref("");
 const isSubmittingReview = ref(false);
+const interviewDecision = ref(null);
 
 // Computed
 const connectionStateLabel = computed(() => {
@@ -434,11 +456,22 @@ async function submitReview() {
             ? interviewData.value.application.student_id
             : interviewData.value.application.project.recruiter_id;
 
-        await axios.post("/api/v1/reviews", {
-            reviewed_user_id: reviewedUserId,
-            rating: reviewRating.value,
-            comment: reviewComment.value,
-        });
+        const promises = [
+            axios.post("/api/v1/reviews", {
+                reviewed_user_id: reviewedUserId,
+                rating: reviewRating.value,
+                comment: reviewComment.value,
+            })
+        ];
+
+        // If recruiter, also submit pass/fail decision
+        if (currentUser.value.role === 'recruiter') {
+            promises.push(axios.post(`/api/v1/interviews/${roomId}/result`, {
+                passed: interviewDecision.value
+            }));
+        }
+
+        await Promise.all(promises);
 
         router.push("/dashboard");
     } catch (err) {

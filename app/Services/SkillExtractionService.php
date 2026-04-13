@@ -65,30 +65,31 @@ class SkillExtractionService
      */
     public function extract(string $text)
     {
-        $allSkills = Skill::all();
-        $extractedSkills = collect();
+        // Avoid running queries and loading Eloquent models into memory continuously.
+        // Retrieve just ids and names map.
+        $skills = Skill::pluck('id', 'name')->toArray();
+        $extractedSkillIds = collect();
 
-        foreach ($allSkills as $skill) {
-            $skillName = strtolower($skill->name);
-            $pattern = '/(?<![a-zA-Z0-9])' . preg_quote($skillName, '/') . '(?![a-zA-Z0-9])/i';
-            
+        // Check for existing skills
+        foreach ($skills as $dbName => $id) {
+            $pattern = '/(?<![a-zA-Z0-9])' . preg_quote(strtolower($dbName), '/') . '(?![a-zA-Z0-9])/i';
             if (preg_match($pattern, $text)) {
-                $extractedSkills->push($skill);
-                continue;
+                $extractedSkillIds->push($id);
             }
+        }
 
-            foreach ($this->synonyms as $synonym => $canonical) {
-                if (strtolower($canonical) === $skillName) {
-                    $synPattern = '/(?<![a-zA-Z0-9])' . preg_quote($synonym, '/') . '(?![a-zA-Z0-9])/i';
-                    if (preg_match($synPattern, $text)) {
-                        $extractedSkills->push($skill);
-                        break;
-                    }
+        // Check for synonyms
+        foreach ($this->synonyms as $synonym => $canonical) {
+            if (isset($skills[$canonical])) { // If the canonical skill is in the DB
+                $synPattern = '/(?<![a-zA-Z0-9])' . preg_quote(strtolower($synonym), '/') . '(?![a-zA-Z0-9])/i';
+                if (preg_match($synPattern, $text)) {
+                    $extractedSkillIds->push($skills[$canonical]);
                 }
             }
         }
 
-        return $extractedSkills->unique('id');
+        // Return the Eloquent models associated with uniquely matched IDs
+        return Skill::whereIn('id', $extractedSkillIds->unique())->get();
     }
 
     /**

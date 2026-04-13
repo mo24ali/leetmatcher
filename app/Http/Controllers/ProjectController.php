@@ -206,7 +206,12 @@ class ProjectController extends Controller
                 'name' => $p->recruiter?->name,
                 'company' => $p->recruiter?->company_name ?? 'Acme Corp', // Fallback or use company_name field if it exists
                 'details' => $p->recruiter?->email, // Using email as details placeholder
-                'avatar' => $p->recruiter?->avatar_url ?? "https://i.pravatar.cc/150?u={$p->recruiter_id}"
+                'avatar' => $p->recruiter?->avatar_url ?? "https://i.pravatar.cc/150?u={$p->recruiter_id}",
+                'reviews' => $p->recruiter?->reviewsReceived->map(fn($r) => [
+                    'rating' => $r->rating,
+                    'comment' => $r->comment,
+                    'reviewer_name' => $r->reviewer?->name,
+                ])->toArray() ?? []
             ]
         ]);
 
@@ -260,6 +265,11 @@ class ProjectController extends Controller
             'skills' => $p->skills->pluck('name')->toArray(),
             'experience' => '3+ years experience', // Placeholder for experience
             'qualifications' => $p->education_level ?? 'B.S. in Computer Science',
+            'reviews' => $p->user?->reviewsReceived->map(fn($r) => [
+                'rating' => $r->rating,
+                'comment' => $r->comment,
+                'reviewer_name' => $r->reviewer?->name,
+            ])->toArray() ?? [],
             'match_score' => $p->match_score,
         ]);
 

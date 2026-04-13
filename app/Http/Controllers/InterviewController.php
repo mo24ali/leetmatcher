@@ -95,4 +95,38 @@ class InterviewController extends Controller
         $interview->delete();
         return response()->json(['message' => 'Interview deleted successfully'], 204);
     }
+
+    /**
+     * Submit interview result (pass/fail)
+     */
+    public function submitResult(Request $request, Interview $interview)
+    {
+        $request->validate([
+            'passed' => 'required|boolean'
+        ]);
+
+        // Only allow recruiter to submit result
+        $user = $request->user();
+        if ($user->role !== 'recruiter') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Update application status
+        $application = $interview->application;
+        $application->status = $request->passed ? 'accepted' : 'rejected';
+        $application->save();
+
+        // Create a notification for the student
+        \App\Models\Notification::create([
+            'user_id' => $application->student_id,
+            'title' => 'Interview Result',
+            'message' => 'You have ' . ($request->passed ? 'passed' : 'failed') . ' the interview for ' . $application->project->title,
+            'is_read' => false
+        ]);
+
+        return response()->json([
+            'message' => 'Result submitted successfully',
+            'application' => $application
+        ]);
+    }
 }
