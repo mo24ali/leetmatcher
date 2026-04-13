@@ -113,34 +113,10 @@ class ProjectController extends Controller
      */
     protected function syncManualSkills(Project $project, array $skillNames)
     {
-        $skillIds = [];
-        $userId = auth()->id();
-
-        foreach ($skillNames as $name) {
-            $name = trim($name);
-            if (empty($name)) continue;
-
-            // Find existing skill by name (case-insensitive)
-            $skill = Skill::whereRaw('LOWER(name) = ?', [strtolower($name)])->first();
-            
-            if (!$skill) {
-                $skill = Skill::create([
-                    'name' => $name,
-                    'user_id' => $userId,
-                    'proficiency' => 'intermediate'
-                ]);
-            }
-
-            $skillIds[$skill->id] = ['level' => 'intermidiate'];
-        }
-
-        // If no skills provided, fall back to extraction
-        if (empty($skillIds)) {
-            $this->skillExtractor->syncToProject($project);
-            return;
-        }
-
-        $project->skills()->sync($skillIds);
+        // Use service to handle Three-Step Pattern:
+        // 1. Ensure skills exist in canonical 'skills' table
+        // 2. Sync to 'project_skills' table
+        $this->skillExtractor->syncToProject($project, $skillNames);
     }
 
     /**

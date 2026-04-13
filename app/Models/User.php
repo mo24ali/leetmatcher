@@ -62,8 +62,12 @@ class User extends Authenticatable
         return $this->profile?->full_avatar_url;
     }
 
-    public function skills(): HasMany
+    public function skills()
     {
-        return $this->hasMany(Skill::class);
+        return $this->belongsToMany(Skill::class, 'profile_skills', 'profile_id', 'skill_id')
+                    ->join('profiles', 'profiles.id', '=', 'profile_skills.profile_id')
+                    ->where('profiles.user_id', $this->id)
+                    ->withPivot('proficiency')
+                    ->withTimestamps();
     }
 }
