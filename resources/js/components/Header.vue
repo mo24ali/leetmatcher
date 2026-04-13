@@ -127,6 +127,16 @@
         <!-- Right Side: Profile / Login -->
         <div class="flex items-center gap-3 sm:gap-4 shrink-0">
           <template v-if="auth.isAuthenticated.value">
+            <!-- Messaging Toggle -->
+            <button 
+              class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-blue-600 transition-all relative"
+              @click="chatStore.state.isPanelOpen = true"
+            >
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </button>
+
             <router-link
               to="/profile"
               class="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors no-underline"
@@ -180,10 +190,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
+import { useAuthStore } from '@/stores/authStore'
+import { useChatStore } from '@/stores/chatStore'
 import ProfileAvatar from './ProfileAvatar.vue'
 
 const auth = useAuthStore()
+const chatStore = useChatStore()
 const route = useRoute()
 const router = useRouter()
 

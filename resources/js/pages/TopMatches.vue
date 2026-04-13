@@ -151,6 +151,7 @@
           <div class="flex gap-4">
             <button
               class="w-full h-14 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-100"
+              @click="contactApplicant(currentItem)"
             >
               Contact Applicant
             </button>
@@ -180,10 +181,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '../stores/authStore'
-import ProfileAvatar from '../components/ProfileAvatar.vue'
+import { useAuthStore } from '@/stores/authStore'
+import { useChatStore } from '@/stores/chatStore'
+import ProfileAvatar from '@/components/ProfileAvatar.vue'
 
 const auth = useAuthStore()
+const chatStore = useChatStore()
 const isRecruiter = computed(() => auth.role.value === 'recruiter')
 
 const items = ref([])
@@ -236,8 +239,16 @@ async function sendApplication() {
     alert(error.message || 'Something went wrong')
   }
 }
-function contactRecruiter(){
 
+function contactApplicant(item) {
+    if (!item) return
+    // Recruiters use user_id or id (ProjectController adds user_id specifically for matches)
+    chatStore.openChat(item.user_id || item.id)
+}
+
+function contactRecruiter() {
+    if (!currentItem.value?.recruiter?.id) return
+    chatStore.openChat(currentItem.value.recruiter.id)
 }
 onMounted(() => {
   fetchMatches()

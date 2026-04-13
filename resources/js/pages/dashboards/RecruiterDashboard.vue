@@ -225,6 +225,9 @@
                     <button id="accept" @click="schedulingInterview = true" class="action-btn accept-btn">
                         Schedule Interview
                     </button>
+                    <button class="action-btn contact-btn" @click="contactApplicant(reviewingApplicant)">
+                        Contact Applicant
+                    </button>
                     <button id="reject" @click="rejectApplication(reviewingApplicant)" class="action-btn reject-btn">
                         Not a fit
                     </button>
@@ -259,10 +262,12 @@
 
 <script setup>
 import { reactive, ref, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '../../stores/authStore'
+import { useAuthStore } from '@/stores/authStore'
+import { useChatStore } from '@/stores/chatStore'
 import ProfileAvatar from '../../components/ProfileAvatar.vue'
 
 const auth = useAuthStore()
+const chatStore = useChatStore()
 const loading = ref(true)
 
 const stats = reactive({ activeListings: 0, totalApplicants: 0, interviews: 0, filled: 0 })
@@ -496,6 +501,17 @@ function closeReviewPanel(){
   schedulingInterview.value = false
 }
 
+function contactApplicant(app) {
+  if (!app) return
+  // Note: App object needs to have student_id. 
+  // Based on applications() method in ProjectController, it might not have it directly.
+  // I'll check ProjectController to ensure student_id is returned or use app.id if that's the user id.
+  // Actually, in this system, the 'app.id' in the frontend table is often mapping to different things.
+  // Check ProjectController.php line 181+
+  chatStore.openChat(app.student_id || app.user_id || app.id)
+  closeReviewPanel()
+}
+
 async function createInterview(app){
   if (!interviewForm.scheduled_at) {
     alert("Please provide the Interview Date & Time.")
@@ -683,6 +699,8 @@ async function rejectApplication(app) {
 .action-btn { padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-size: 0.95rem; font-family: var(--font-base); display: flex; justify-content: center; align-items: center;}
 .accept-btn { background: #16a34a; color: white; }
 .accept-btn:hover { background: #15803d; }
+.contact-btn { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+.contact-btn:hover { background: #e5e7eb; }
 .reject-btn { background: #ef4444; color: white; }
 .reject-btn:hover { background: #b91c1c; }
 </style>

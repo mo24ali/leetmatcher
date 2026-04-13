@@ -191,6 +191,7 @@ class ProjectController extends Controller
                 
                 return [
                     'id'           => $app->id,
+                    'student_id'   => $app->student_id,
                     'name'         => $app->student->name,
                     'email'        => $app->student->email,
                     'applied'      => $app->created_at->diffForHumans(),
@@ -279,6 +280,7 @@ class ProjectController extends Controller
         // Map to format suitable for TopMatches.vue
         $formatted = $matches->map(fn($p) => [
             'id' => $p->id,
+            'user_id' => $p->user_id,
             'name' => $p->user?->name,
             'avatar' => $p->user?->avatar_url ?? "https://i.pravatar.cc/150?u={$p->id}",
             'skills' => $p->skills->pluck('name')->toArray(),

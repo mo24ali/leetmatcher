@@ -46,7 +46,11 @@ Route::middleware('auth')->group(function () {
     Route::apiResource('/v1/projects', ProjectController::class);
     Route::apiResource('/v1/applications', ApplicationController::class);
     Route::apiResource('/v1/interviews', InterviewController::class);
-    Route::apiResource('/v1/messages', MessageController::class);
+    // Real-time Messaging
+    Route::get('/v1/conversations', [MessageController::class, 'index']);
+    Route::post('/v1/conversations/start', [MessageController::class, 'start']);
+    Route::get('/v1/conversations/{conversation}', [MessageController::class, 'show']);
+    Route::post('/v1/conversations/{conversation}/messages', [MessageController::class, 'store']);
     Route::post('/v1/application/apply', [ApplicationController::class, 'apply']);
     
 
