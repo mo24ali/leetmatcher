@@ -30,21 +30,20 @@ class CvController extends Controller
         $text = $this->extractText($file);
         $parsed = $this->extractFields($text);
 
-        // Get matching skills from database
-        $extractedSkills = $this->skillExtractor->extract($text);
-        
         $user = $request->user();
         $profile = $user->profile()->updateOrCreate(
             ['user_id' => $user->id],
             ['cv_path' => $path]
         );
 
-        // Sync skills to profile pivot
-        $syncData = [];
-        foreach ($extractedSkills as $skill) {
-            $syncData[$skill->id] = ['proficiency' => 'intermediate'];
-        }
-        $profile->skills()->sync($syncData);
+        // [Three-Step Pattern]
+        // 1. Detected from CV (parsed strings) merged with 2. Matching existing skills
+        $manualDetected = $parsed['skills'] ?? [];
+        $autoMatched = $this->skillExtractor->extract($text)->pluck('name')->toArray();
+        $allDetectedNames = array_unique(array_merge($manualDetected, $autoMatched));
+
+        // 3. Persist to 'skills' then 'profile_skills'
+        $this->skillExtractor->syncToProfile($profile, $allDetectedNames);
 
         // Calculate score
         $score = $this->scoringService->calculateScore($profile);

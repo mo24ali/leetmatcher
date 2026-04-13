@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Skill;
 use App\Models\Project;
+use App\Models\Profile;
 use Illuminate\Support\Str;
 
 class SkillExtractionService
@@ -31,34 +32,54 @@ class SkillExtractionService
     ];
 
     /**
-     * Extract skills from a given text (e.g., project description).
-     *
-     * @param string $text
-     * @return \Illuminate\Support\Collection
+     * 1. Skills Table: Ensure skills exist without duplication.
+     * This method takes raw skill names and ensures they are in the 'skills' table.
+     */
+    public function ensureSkillsExist(array $skillNames): \Illuminate\Support\Collection
+    {
+        $skillModels = collect();
+
+        foreach ($skillNames as $name) {
+            $name = trim($name);
+            if (empty($name)) continue;
+
+            // Canonicalize name check (case-insensitive)
+            $skill = Skill::whereRaw('LOWER(name) = ?', [strtolower($name)])->first();
+
+            if (!$skill) {
+                // Check synonyms before creating new
+                $canonicalName = $this->synonyms[strtolower($name)] ?? $name;
+                $skill = Skill::firstOrCreate(
+                    ['name' => $canonicalName]
+                );
+            }
+
+            $skillModels->push($skill);
+        }
+
+        return $skillModels->unique('id');
+    }
+
+    /**
+     * Extract skills from a given text by matching against ALL known skills.
      */
     public function extract(string $text)
     {
-        // Get all canonical skill names from database
         $allSkills = Skill::all();
-        $textLower = strtolower($text);
-
         $extractedSkills = collect();
 
         foreach ($allSkills as $skill) {
             $skillName = strtolower($skill->name);
-            
-            // Exact match (using word boundaries)
-            $pattern = '/\b' . preg_quote($skillName, '/') . '\b/i';
+            $pattern = '/(?<![a-zA-Z0-9])' . preg_quote($skillName, '/') . '(?![a-zA-Z0-9])/i';
             
             if (preg_match($pattern, $text)) {
                 $extractedSkills->push($skill);
                 continue;
             }
 
-            // Check synonyms
             foreach ($this->synonyms as $synonym => $canonical) {
-                if ($canonical === $skill->name) {
-                    $synPattern = '/\b' . preg_quote($synonym, '/') . '\b/i';
+                if (strtolower($canonical) === $skillName) {
+                    $synPattern = '/(?<![a-zA-Z0-9])' . preg_quote($synonym, '/') . '(?![a-zA-Z0-9])/i';
                     if (preg_match($synPattern, $text)) {
                         $extractedSkills->push($skill);
                         break;
@@ -71,18 +92,39 @@ class SkillExtractionService
     }
 
     /**
-     * Sync extracted skills to a project.
-     *
-     * @param Project $project
-     * @return void
+     * 2. Profile Skills Table: Stores relationship between user profile and extracted skills.
      */
-    public function syncToProject(Project $project)
+    public function syncToProfile(Profile $profile, array $skillNames)
     {
-        $skills = $this->extract($project->description . ' ' . $project->title);
-        
+        // Step 1: Ensure skills exist in the canonical 'skills' table
+        $skills = $this->ensureSkillsExist($skillNames);
+
+        // Step 2: Store relationship in 'profile_skills'
         $syncData = [];
         foreach ($skills as $skill) {
-            $syncData[$skill->id] = ['level' => 'intermidiate'];
+            $syncData[$skill->id] = ['proficiency' => 'intermediate'];
+        }
+
+        $profile->skills()->sync($syncData);
+    }
+
+    /**
+     * 3. Project Skills Table: Stores skills for a specific project.
+     */
+    public function syncToProject(Project $project, array $skillNames = null)
+    {
+        if ($skillNames === null) {
+            // Auto-extract if no manual skills provided
+            $skills = $this->extract($project->description . ' ' . $project->title);
+        } else {
+            // Step 1: Ensure skills exist in canonical table
+            $skills = $this->ensureSkillsExist($skillNames);
+        }
+
+        // Step 3: Store relationship in 'project_skills'
+        $syncData = [];
+        foreach ($skills as $skill) {
+            $syncData[$skill->id] = ['level' => 'intermediate'];
         }
 
         $project->skills()->sync($syncData);

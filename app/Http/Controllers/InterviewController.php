@@ -41,7 +41,7 @@ class InterviewController extends Controller
         $validatedData = $request->validate([
             'application_id' => 'required|exists:applications,id',
             'scheduled_at'   => 'required|date',
-            'meeting_link'   => 'required|url',
+            'meeting_link'   => 'nullable|string',
             'notes'          => 'nullable|string',
             'score'          => 'nullable|integer|min:0|max:100',
         ]);
@@ -73,7 +73,7 @@ class InterviewController extends Controller
 
         $validatedData = $request->validate([
             'scheduled_at' => 'sometimes|date',
-            'meeting_link' => 'sometimes|url',
+            'meeting_link' => 'nullable|string',
             'notes'        => 'sometimes|string',
             'score'        => 'sometimes|integer|min:0|max:100',
         ]);
