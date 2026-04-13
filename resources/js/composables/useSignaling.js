@@ -1,73 +1,62 @@
-/**
- *
- *
- * laravel Echo / websocket in here
- */
-
-import Echo from "laravel-echo";
-import { send } from "vite";
-let channel = null;
-channel = Echo.private();
-
-channel.listeForWhisper();
-channel.whisper();
-
-async function startCall() {
-    const offer = await peerConnection.createOffer();
-    // setLocalDescription ????
-    await peerConnection.setLocalDescription(offer);
-    channel.whisper("offer", offer);
-}
-function listenSignaling() {
-    channel.listenForWhisper("offer", async (offer) => {
-        if (!peerConnection) return;
-
-        await peerConnection.setRemoteDescription(
-            new RTCSessionDescription(offer),
-        );
-
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-
-        channel.whisper("answer", answer);
-    });
-    // answer (response offer)
-    channel.listenForWhisper("answer", async (answer) => {
-        await peerConnection.setRemoteDescription(
-            new RTCSessionDescription(answer),
-        );
-    });
-
-    // ICE stands for Interactive Connectivity Establishment
-    channel.listenForWhisper("ice", async (candidate) => {
-        try {
-            // ICECandidate is a possible address + port where sender can reach receiver
-            await peerConnection.addIceCandidate(
-                new RTCIceCandidate(candidate),
-            );
-        } catch (err) {
-            console.error("ICE error: ", err);
-        }
-    });
-}
+import { ref, onUnmounted } from 'vue';
 
 export function useSignaling(roomId) {
-    const channel = Echo.private(`interview.${roomId}`);
+    const channel = ref(null);
+    const isReady = ref(false);
 
-    function sendOffer(offer) {}
-    function sendAnswer(answer) {}
-    function sendIce(candidate) {}
+    const init = () => {
+        if (!window.Echo) {
+            console.error('Laravel Echo is not initialized. Check bootstrap.js');
+            return;
+        }
 
-    function onOffer(callback) {}
-    function onAnswer(callback) {}
-    function onIce(callback) {}
+        channel.value = window.Echo.join(`interview.${roomId}`);
+
+        channel.value.here((users) => {
+            console.log('Users currently in room:', users);
+            isReady.value = true;
+        })
+        .joining((user) => {
+            console.log('User joined:', user);
+        })
+        .leaving((user) => {
+            console.log('User left:', user);
+        })
+        .error((error) => {
+            console.error('Signaling Channel Error:', error);
+        });
+    };
+
+    const sendSignal = (event, data) => {
+        if (channel.value) {
+            channel.value.whisper(event, data);
+        }
+    };
+
+    const onSignal = (event, callback) => {
+        if (channel.value) {
+            channel.value.listenForWhisper(event, callback);
+        }
+    };
+
+    const leave = () => {
+        if (channel.value) {
+            window.Echo.leave(`interview.${roomId}`);
+            channel.value = null;
+            isReady.value = false;
+        }
+    };
+
+    onUnmounted(() => {
+        leave();
+    });
 
     return {
-        sendOffer,
-        sendAnswer,
-        sendIce,
-        onOffer,
-        onAnswer,
-        onIce,
+        init,
+        isReady,
+        channel,
+        sendSignal,
+        onSignal,
+        leave
     };
 }

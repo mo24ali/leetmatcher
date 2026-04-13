@@ -1,102 +1,152 @@
-/***
- *
- *
- * peer-to-peer connection
- */
-
-import "./useSignaling";
-let localStream = null;
-let peerConnection = null;
-
-const rtcConfig = {
-    iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-    ],
-};
-
-function createPeerConnection() {}
-
-function createOffer() {}
-
-function createAnswer() {}
+import { ref, onUnmounted } from 'vue';
 
 export function useWebRTC() {
-    let peerConnection = null;
-    let localStream = null;
+    const localStream = ref(null);
+    const remoteStream = ref(null);
+    const peerConnection = ref(null);
+    const connectionState = ref('disconnected');
+    const isMuted = ref(false);
+    const isVideoOff = ref(false);
 
-    async function init(localStream) {
+    const rtcConfig = {
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" },
+            { urls: "stun:stun2.l.google.com:19302" },
+        ],
+    };
+
+    const startLocalStream = async () => {
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({
+            const stream = await navigator.mediaDevices.getUserMedia({
                 video: true,
                 audio: true,
             });
-            if (localVideo.value) {
-                localVideo.value.srcObject = localStream;
-            }
-        } catch (err) {
-            console.error("Media Init Error:", err);
+            localStream.value = stream;
+            return stream;
+        } catch (error) {
+            console.error("Failed to get local stream:", error);
+            throw error;
         }
-    }
-    function createConnection(onIce, onTrack) {
-        if (!localStream) return;
+    };
 
-        peerConnection = new RTCPeerConnection(rtcConfig);
+    const createPeerConnection = (onIceCandidate, onTrack) => {
+        if (peerConnection.value) {
+            console.warn("Peer connection already exists. Closing old one.");
+            closeConnection();
+        }
 
-        localStream.getTracks().forEach((track) => {
-            peerConnection.addTrack(track, localStream);
-        });
+        const pc = new RTCPeerConnection(rtcConfig);
 
-        peerConnection.ontrack = (event) => {
-            if (remoteVideo.value) {
-                remoteVideo.value.srcObject = event.streams[0];
-                hasRemoteStream.value = true;
+        pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                onIceCandidate(event.candidate);
             }
         };
 
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate && channel) {
-                // Signaling logic would go here
-                // whisper ????
-                channel.whisper("ice", event.candidate);
+        pc.ontrack = (event) => {
+            if (event.streams && event.streams[0]) {
+                remoteStream.value = event.streams[0];
+                onTrack(event.streams[0]);
             }
         };
-    }
 
-    async function createOffer() {
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
+        pc.onconnectionstatechange = () => {
+            connectionState.value = pc.connectionState;
+            console.log("Connection State:", pc.connectionState);
+        };
+
+        if (localStream.value) {
+            localStream.value.getTracks().forEach((track) => {
+                pc.addTrack(track, localStream.value);
+            });
+        }
+
+        peerConnection.value = pc;
+        return pc;
+    };
+
+    const createOffer = async () => {
+        if (!peerConnection.value) return;
+        const offer = await peerConnection.value.createOffer();
+        await peerConnection.value.setLocalDescription(offer);
         return offer;
-    }
-    async function createAnswer(offer) {
-        await peerConnection.setRemoteDescription(
+    };
 
-            // RTCSessionDescription  used to create a description that contains , 
-            // the audio/video codecs, encryption keys, ICE indo , media directions
-            // codec (coder-decoder) the hardware or software that encrypt or decrypt the transfered media
-            new RTCSessionDescription(offer),
-        );
-
-        const answer = await peerConnection.createAnswer();
-
-        await peerConnection.setLocalDescription(answer);
+    const handleOffer = async (offer) => {
+        if (!peerConnection.value) return;
+        await peerConnection.value.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnection.value.createAnswer();
+        await peerConnection.value.setLocalDescription(answer);
         return answer;
-    }
-    async function setRemoteAnswer(answer) {
-        await peerConnection.setRemoteDescription(
-            new RTCSessionDescription(answer),
-        );
-    }
-    async function addIceCandidate(candidate) {
-        await peerConnection.addIceCandidate(new (candidate));
-    }
+    };
+
+    const handleAnswer = async (answer) => {
+        if (!peerConnection.value) return;
+        await peerConnection.value.setRemoteDescription(new RTCSessionDescription(answer));
+    };
+
+    const handleIceCandidate = async (candidate) => {
+        if (peerConnection.value && candidate) {
+            try {
+                await peerConnection.value.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+                console.error("Error adding ice candidate", e);
+            }
+        }
+    };
+
+    const toggleAudio = () => {
+        if (localStream.value) {
+            const audioTrack = localStream.value.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                isMuted.value = !audioTrack.enabled;
+            }
+        }
+    };
+
+    const toggleVideo = () => {
+        if (localStream.value) {
+            const videoTrack = localStream.value.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                isVideoOff.value = !videoTrack.enabled;
+            }
+        }
+    };
+
+    const closeConnection = () => {
+        if (peerConnection.value) {
+            peerConnection.value.close();
+            peerConnection.value = null;
+        }
+        if (localStream.value) {
+            localStream.value.getTracks().forEach(track => track.stop());
+            localStream.value = null;
+        }
+        remoteStream.value = null;
+        connectionState.value = 'disconnected';
+    };
+
+    onUnmounted(() => {
+        closeConnection();
+    });
 
     return {
-        init,
-        createConnection,
+        localStream,
+        remoteStream,
+        connectionState,
+        isMuted,
+        isVideoOff,
+        startLocalStream,
+        createPeerConnection,
         createOffer,
-        createAnswer,
-        setRemoteAnswer,
-        addIceCandidate,
+        handleOffer,
+        handleAnswer,
+        handleIceCandidate,
+        toggleAudio,
+        toggleVideo,
+        closeConnection
     };
 }
