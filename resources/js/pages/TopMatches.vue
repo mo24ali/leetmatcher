@@ -17,17 +17,17 @@
 
     <!-- LIST CONTAINER -->
     <div v-else-if="items.length > 0" class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div 
+      <div
         v-for="(item, i) in items" :key="i"
-        @click="openDetails(item)"
-        class="bg-white border border-gray-100 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group"
+        class="bg-white border border-gray-100 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
       >
-        <div>
+        <!-- Clickable area (everything except show-more button) -->
+        <div @click="openDetails(item)" class="cursor-pointer">
           <!-- APPLICANT HIGHLIGHT / PROJECT HIGHLIGHT -->
           <div class="flex items-center gap-4 mb-4">
-            <ProfileAvatar 
-              :url="isRecruiter ? item.avatar : item.recruiter?.avatar" 
-              :name="isRecruiter ? item.name : item.recruiter?.name" 
+            <ProfileAvatar
+              :url="isRecruiter ? item.avatar : item.recruiter?.avatar"
+              :name="isRecruiter ? item.name : item.recruiter?.name"
               size="md"
               :shape="isRecruiter ? 'circle' : 'rounded'"
             />
@@ -49,26 +49,58 @@
           <p class="text-gray-600 text-sm line-clamp-2 mb-4">
             {{ isRecruiter ? item.experience : item.description }}
           </p>
+        </div>
 
-          <!-- SKILLS PREVIEW -->
-          <div class="flex flex-wrap gap-1.5 mb-4 max-h-16 overflow-hidden">
-             <span
-                v-for="(skill, j) in item.skills?.slice(0, 3) || []"
+        <!-- SKILLS SECTION (non-clickable to allow toggle without triggering modal) -->
+        <div>
+          <!-- Collapsed view: first 3 skills -->
+          <div
+            v-if="!expandedCards.has(i)"
+            class="flex flex-wrap gap-1.5 mb-3"
+          >
+            <span
+              v-for="(skill, j) in item.skills?.slice(0, 3) || []"
+              :key="j"
+              class="px-2 py-0.5 text-[0.65rem] bg-gray-100 text-gray-600 rounded-md font-medium uppercase"
+            >
+              {{ skill }}
+            </span>
+          </div>
+
+          <!-- Expanded view: all skills -->
+          <transition name="skills-expand">
+            <div
+              v-if="expandedCards.has(i)"
+              class="flex flex-wrap gap-1.5 mb-3"
+            >
+              <span
+                v-for="(skill, j) in item.skills || []"
                 :key="j"
-                class="px-2 py-0.5 text-[0.65rem] bg-gray-100 text-gray-600 rounded-md font-medium uppercase"
+                class="px-2 py-0.5 text-[0.65rem] bg-blue-50 text-blue-700 border border-blue-100 rounded-md font-semibold uppercase"
               >
                 {{ skill }}
               </span>
-              <span v-if="item.skills?.length > 3" class="px-2 py-0.5 text-[0.65rem] bg-gray-50 text-gray-400 rounded-md font-medium uppercase">
-                +{{ item.skills.length - 3 }} more
-              </span>
-          </div>
-        </div>
+            </div>
+          </transition>
 
-        <div class="mt-2 text-right">
-          <span class="text-sm font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-            View Details →
-          </span>
+          <!-- Show More / Show Less toggle -->
+          <div v-if="item.skills?.length > 3" class="flex items-center gap-2 mb-3">
+            <button
+              @click.stop="toggleExpand(i)"
+              class="text-xs font-bold px-2.5 py-1 rounded-lg border transition-all"
+              :class="expandedCards.has(i)
+                ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'"
+            >
+              {{ expandedCards.has(i) ? '− Show Less' : `+ ${item.skills.length - 3} more skills` }}
+            </button>
+          </div>
+
+          <div class="mt-2 text-right cursor-pointer" @click="openDetails(item)">
+            <span class="text-sm font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+              View Details →
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -241,6 +273,19 @@ const loading = ref(true)
 const showModal = ref(false)
 const currentItem = ref(null)
 
+// Per-card expand/collapse state (tracks expanded card indices)
+const expandedCards = ref(new Set())
+
+function toggleExpand(index) {
+  const s = new Set(expandedCards.value)
+  if (s.has(index)) {
+    s.delete(index)
+  } else {
+    s.add(index)
+  }
+  expandedCards.value = s
+}
+
 async function fetchMatches() {
   loading.value = true
   try {
@@ -318,5 +363,21 @@ onMounted(() => {
 }
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Skills expand transition */
+.skills-expand-enter-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.skills-expand-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.skills-expand-enter-from {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.skills-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
