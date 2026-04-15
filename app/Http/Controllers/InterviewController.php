@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Interview;
 use Illuminate\Http\Request;
-
+use App\Models\Notification;
 class InterviewController extends Controller
 {
     /**
@@ -47,6 +47,7 @@ class InterviewController extends Controller
         ]);
 
         $interview = Interview::create($validatedData);
+        $interview->load(['application.project.recruiter', 'application.student']);
 
         return response()->json([
             'message'   => 'Interview scheduled successfully',
@@ -79,6 +80,7 @@ class InterviewController extends Controller
         ]);
 
         $interview->update($validatedData);
+        $interview->refresh()->load(['application.project.recruiter', 'application.student']);
 
         return response()->json([
             'message'   => 'Interview updated successfully',
@@ -93,7 +95,7 @@ class InterviewController extends Controller
     {
         $this->authorize('delete', $interview);
         $interview->delete();
-        return response()->json(['message' => 'Interview deleted successfully'], 204);
+        return response()->noContent(); // 204 – no body
     }
 
     /**
@@ -117,7 +119,7 @@ class InterviewController extends Controller
         $application->save();
 
         // Create a notification for the student
-        \App\Models\Notification::create([
+        Notification::create([
             'user_id' => $application->student_id,
             'title' => 'Interview Result',
             'message' => 'You have ' . ($request->passed ? 'passed' : 'failed') . ' the interview for ' . $application->project->title,
