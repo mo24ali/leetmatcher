@@ -126,12 +126,15 @@ class InterviewController extends Controller
             'is_read' => false
         ]);
 
-        // Delete the interview record as it's now completed
-        $interview->delete();
+        // Transition the interview to a completed state instead of deleting
+        $interview->status = 'completed';
+        $interview->completed_at = now();
+        $interview->save();
 
         return response()->json([
             'message' => 'Result submitted successfully and interview closed',
-            'application' => $application
+            'application' => $application,
+            'interview' => $interview
         ]);
     }
 }

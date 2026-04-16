@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Application;
 use App\Models\ModerationAction;
 use App\Models\AuditLog;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -123,6 +124,13 @@ class AdminController extends Controller
                 'action_type' => $request->type,
                 'escalation' => $action->level
             ]
+        ]);
+
+        Notification::create([
+            'user_id' => $user->id,
+            'type' => 'warning',
+            'message' => "You have received a warning from the admin. Reason: " . $request->reason,
+            'is_read' => false,
         ]);
 
         return response()->json(['message' => "Warning issued to {$user->name}.", 'action' => $action]);

@@ -127,6 +127,7 @@
         <!-- Right Side: Profile / Login -->
         <div class="flex items-center gap-3 sm:gap-4 shrink-0">
           <template v-if="auth.isAuthenticated.value">
+            <NotificationDropdown />
             <router-link
               to="/profile"
               class="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors no-underline"
@@ -182,6 +183,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import ProfileAvatar from './ProfileAvatar.vue'
+import NotificationDropdown from './NotificationDropdown.vue'
 
 const auth = useAuthStore()
 const route = useRoute()

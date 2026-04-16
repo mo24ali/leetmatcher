@@ -116,18 +116,18 @@
         <!-- Card Footer: Actions -->
         <div class="p-5 border-t border-gray-100 flex flex-col gap-2">
           <router-link
-            :to="isJoinable(interview.scheduled_at) ? '/interview-room/' + interview.id : ''"
+            :to="isJoinable(interview) ? '/interview-room/' + interview.id : ''"
             class="block w-full text-center py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm focus:ring-2 focus:ring-offset-1 focus:ring-blue-600 no-underline"
-            :class="isJoinable(interview.scheduled_at)
+            :class="isJoinable(interview)
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-200 text-gray-500 pointer-events-none'"
           >
-            {{ isJoinable(interview.scheduled_at) ? 'Join Interview Room' : 'Not time yet' }}
+            {{ joinButtonText(interview) }}
           </router-link>
 
           <!-- Recruiter: finalize outcome after interview -->
           <div
-            v-if="auth.role.value === 'recruiter' && isPast(interview.scheduled_at) && interview.application?.status === 'in_progress'"
+            v-if="auth.role.value === 'recruiter' && isPast(interview.scheduled_at) && interview.status !== 'completed'"
             class="flex gap-2"
           >
             <button
@@ -146,7 +146,7 @@
 
           <!-- Recruiter: delete interview -->
           <button
-            v-if="auth.role.value === 'recruiter'"
+            v-if="auth.role.value === 'recruiter' && interview.status !== 'completed'"
             @click="deleteInterview(interview)"
             :disabled="deletingId === interview.id"
             class="w-full py-2 rounded-lg text-xs font-bold border border-red-200 text-red-600 hover:bg-red-50 transition disabled:opacity-50"
@@ -235,9 +235,19 @@ function getCountdown(datetime) {
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
-function isJoinable(datetime) {
-  const target = new Date(datetime).getTime()
+function isJoinable(interview) {
+  if (interview.status === 'completed') return false
+  if (isPast(interview.scheduled_at)) return false
+  const target = new Date(interview.scheduled_at).getTime()
   return now.value >= (target - 15 * 60 * 1000)
+}
+
+function joinButtonText(interview) {
+  if (interview.status === 'completed') return 'Interview Completed'
+  if (isPast(interview.scheduled_at)) return 'Interview Ended'
+  const target = new Date(interview.scheduled_at).getTime()
+  if (now.value >= (target - 15 * 60 * 1000)) return 'Join Interview Room'
+  return 'Not time yet'
 }
 
 function isPast(datetime) {
@@ -246,6 +256,11 @@ function isPast(datetime) {
 }
 
 function statusClass(interview) {
+  if (interview.status === 'completed') {
+    if (interview.application?.status === 'accepted') return 'bg-green-100 text-green-700'
+    if (interview.application?.status === 'rejected') return 'bg-red-100 text-red-700'
+    return 'bg-gray-200 text-gray-700'
+  }
   const target = new Date(interview.scheduled_at).getTime()
   if (now.value > target + 60 * 60 * 1000)     return 'bg-gray-100 text-gray-700'   // Past
   if (now.value >= target - 15 * 60 * 1000)    return 'bg-green-100 text-green-700' // Ongoing
@@ -253,6 +268,11 @@ function statusClass(interview) {
 }
 
 function statusText(interview) {
+  if (interview.status === 'completed') {
+    if (interview.application?.status === 'accepted') return 'Passed'
+    if (interview.application?.status === 'rejected') return 'Failed'
+    return 'Completed'
+  }
   const target = new Date(interview.scheduled_at).getTime()
   if (now.value > target + 60 * 60 * 1000)    return 'Past'
   if (now.value >= target - 15 * 60 * 1000)   return 'Ongoing'
@@ -328,6 +348,7 @@ async function finalizeApplication(interview, finalStatus) {
       body: JSON.stringify({ status: finalStatus }),
     })
     if (interview.application) interview.application.status = finalStatus
+    interview.status = 'completed' // update local state
     showToast(`Candidate successfully ${finalStatus === 'accepted' ? 'passed' : 'rejected'}.`)
   } catch (err) {
     showToast(err.message || 'Failed to finalize application.', 'error')
