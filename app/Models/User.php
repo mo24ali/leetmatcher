@@ -80,4 +80,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class, 'reviewer_id');
     }
+
+    public function moderationActions()
+    {
+        return $this->hasMany(ModerationAction::class);
+    }
 }
