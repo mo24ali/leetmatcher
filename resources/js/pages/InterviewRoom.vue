@@ -1,102 +1,108 @@
 <template>
-  <div class="room-root" :class="{ 'chat-open': isChatOpen }">
-
+  <div class="h-screen w-full bg-[#07080d] text-[#e8eaf0] font-syne antialiased overflow-hidden flex flex-col relative">
+    
     <!-- ═══════════════════════ HEADER ═══════════════════════ -->
-    <header class="room-header">
-      <div class="header-left">
-        <div class="logo-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <header class="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-20 shrink-0">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M15 10l5-5v14l-5-5v-4z"/>
             <rect x="2" y="3" width="11" height="18" rx="3"/>
           </svg>
         </div>
-        <div class="header-title">
-          <span class="room-label">Room #{{ roomId }}</span>
-          <span class="conn-state" :class="connStateClass">{{ connStateLabel }}</span>
+        <div class="flex flex-col">
+          <span class="text-[0.65rem] font-bold font-mono tracking-widest text-blue-400 uppercase">Room #{{ roomId }}</span>
+          <span class="text-[0.7rem] font-bold tracking-wider uppercase opacity-60" :class="connectionState === 'connected' ? 'text-green-400' : 'text-neutral-400'">
+            {{ connStateLabel }}
+          </span>
         </div>
       </div>
 
-      <div class="header-right">
-        <!-- Status badge -->
-        <div id="connectionStatus" class="status-badge" :class="statusBadgeClass">
-          <span class="status-dot"></span>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border text-[0.65rem] font-bold font-mono tracking-wider transition-all duration-500" :class="statusBadgeClassTailwind">
+          <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
           {{ statusText }}
         </div>
 
-        <div class="divider-v"></div>
+        <div class="w-px h-8 bg-white/10"></div>
 
-        <!-- Chat toggle -->
-        <button class="icon-btn" @click="toggleChat" title="Chat">
-          <svg viewBox="0 0 20 20" fill="currentColor">
+        <button @click="toggleChat" class="relative p-2.5 rounded-xl hover:bg-white/10 text-neutral-400 hover:text-white transition-all">
+          <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd"/>
           </svg>
-          <span v-if="unreadCount > 0" class="chat-badge">{{ unreadCount }}</span>
+          <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 min-w-[1.1rem] h-4.5 bg-red-500 text-white text-[0.6rem] font-black rounded-full border-2 border-[#07080d] flex items-center justify-center px-1">
+            {{ unreadCount }}
+          </span>
         </button>
       </div>
     </header>
 
     <!-- ═══════════════════════ VIDEO GRID ═══════════════════════ -->
-    <main class="video-grid">
-
-      <!-- Local stream -->
-      <div class="video-card video-card--local" :class="{ 'cam-off': isVideoOff }">
-        <video ref="localVideo" autoplay playsinline muted class="video-el mirror"></video>
-
+    <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 lg:p-6 bg-gradient-to-b from-neutral-900/50 to-[#07080d] overflow-hidden transition-all duration-500" :class="{ 'pr-[22rem]': isChatOpen }">
+      
+      <!-- Local Stream Wrapper -->
+      <div class="relative group aspect-video bg-neutral-950 rounded-3xl border border-white/5 overflow-hidden shadow-2xl transition-all duration-300 hover:border-blue-500/30">
+        <video ref="localVideo" autoplay playsinline muted class="w-full h-full object-cover scale-x-[-1]"></video>
+        
         <transition name="fade-scale">
-          <div v-if="isVideoOff" class="cam-placeholder">
-            <div class="avatar-ring">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <div v-if="isVideoOff" class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-neutral-950">
+            <div class="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center text-neutral-600">
+              <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M16 16v1a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h2m5.66 0H14a2 2 0 012 2v3.34l1 1L23 7v10"/>
                 <line x1="1" y1="1" x2="23" y2="23"/>
               </svg>
             </div>
-            <p>Camera off</p>
+            <span class="text-[0.65rem] font-black tracking-widest text-neutral-500 uppercase">Camera Off</span>
           </div>
         </transition>
 
-        <div class="video-label video-label--you">
-          <span class="dot dot--blue"></span>
+        <div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-xl border border-white/10 text-[0.65rem] font-black tracking-widest uppercase z-20">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
           You · {{ roleLabel }}
         </div>
       </div>
 
-      <!-- Remote stream -->
-      <div class="video-card video-card--remote">
-        <video ref="remoteVideo" autoplay playsinline class="video-el"></video>
-
+      <!-- Remote Stream Wrapper -->
+      <div class="relative group aspect-video bg-neutral-950 rounded-3xl border border-white/5 overflow-hidden shadow-2xl transition-all duration-300 hover:border-indigo-500/30">
+        <video ref="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+        
         <transition name="fade-scale">
-          <div v-if="!hasRemoteStream" class="cam-placeholder">
-            <div class="avatar-ring avatar-ring--pulse">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
+          <div v-if="!hasRemoteStream" class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-neutral-950">
+            <div class="relative">
+              <div class="absolute inset-[-8px] rounded-full border border-blue-500/30 animate-ping"></div>
+              <div class="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center text-neutral-400">
+                <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
             </div>
-            <p>{{ isReady ? 'Establishing connection…' : 'Awaiting participant…' }}</p>
-            <span class="sub-label">Secure peer-to-peer tunnel</span>
+            <div class="text-center">
+              <p class="text-[0.7rem] font-black tracking-widest text-neutral-400 uppercase">{{ isReady ? 'Connecting...' : 'Awaiting Participant...' }}</p>
+              <p class="text-[0.6rem] font-bold tracking-[0.2em] text-neutral-600 mt-2 uppercase italic">E2EE Secured Tunnel</p>
+            </div>
           </div>
         </transition>
 
-        <div class="video-label video-label--peer">
-          <span class="dot dot--indigo"></span>
+        <div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-xl border border-white/10 text-[0.65rem] font-black tracking-widest uppercase z-20">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]"></span>
           {{ peerRoleLabel }}
         </div>
       </div>
     </main>
 
     <!-- ═══════════════════════ CONTROLS ═══════════════════════ -->
-    <footer class="controls">
-      <div class="controls-inner">
-
-        <!-- Mute -->
-        <button class="ctrl-btn" :class="{ 'ctrl-btn--off': isMuted }" @click="toggleAudio" title="Toggle mic">
-          <svg v-if="!isMuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <footer class="h-24 flex items-center justify-center bg-black/40 backdrop-blur-3xl border-t border-white/10 shrink-0 z-20">
+      <div class="flex items-center gap-3">
+        <!-- Audio Toggle -->
+        <button @click="toggleAudio" class="w-12 h-12 flex items-center justify-center rounded-2xl border transition-all duration-200" :class="isMuted ? 'bg-red-500/10 border-red-500/40 text-red-500 hover:bg-red-500/20' : 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700 hover:scale-110'">
+          <svg v-if="!isMuted" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
             <path d="M19 10v2a7 7 0 01-14 0v-2"/>
             <line x1="12" y1="19" x2="12" y2="23"/>
             <line x1="8" y1="23" x2="16" y2="23"/>
           </svg>
-          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-else class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="1" y1="1" x2="23" y2="23"/>
             <path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/>
             <path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/>
@@ -104,36 +110,35 @@
           </svg>
         </button>
 
-        <!-- Camera -->
-        <button class="ctrl-btn" :class="{ 'ctrl-btn--off': isVideoOff }" @click="toggleVideo" title="Toggle camera">
-          <svg v-if="!isVideoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <!-- Video Toggle -->
+        <button @click="toggleVideo" class="w-12 h-12 flex items-center justify-center rounded-2xl border transition-all duration-200" :class="isVideoOff ? 'bg-red-500/10 border-red-500/40 text-red-500 hover:bg-red-500/20' : 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700 hover:scale-110'">
+          <svg v-if="!isVideoOff" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 7l-7 5 7 5V7z"/>
             <rect x="1" y="5" width="15" height="14" rx="2"/>
           </svg>
-          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-else class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 16v1a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h2m5.66 0H14a2 2 0 012 2v3.34l1 1L23 7v10"/>
             <line x1="1" y1="1" x2="23" y2="23"/>
           </svg>
         </button>
 
-        <div class="divider-v divider-v--short"></div>
+        <div class="w-px h-10 bg-white/10 mx-2"></div>
 
-        <!-- Manual call (if ready but no stream) -->
+        <!-- Start Call (Recruiter Only) -->
         <button
           v-if="isReady && !hasRemoteStream && currentUser?.role === 'recruiter'"
-          class="ctrl-btn ctrl-btn--call"
           @click="initiateManualCall"
-          title="Start call"
+          class="h-12 flex items-center gap-3 px-6 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[0.7rem] font-black tracking-widest uppercase transition-all shadow-lg shadow-blue-500/20"
         >
-          <svg viewBox="0 0 24 24" fill="currentColor">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 15.5c-1.2 0-2.5-.2-3.6-.6-.3-.1-.7 0-.9.2l-2.2 2.2c-2.8-1.5-5.1-3.8-6.6-6.6l2.2-2.2c.2-.2.3-.6.2-.9-.4-1.1-.6-2.4-.6-3.6C8.5 3.4 8 3 7.5 3H4C3.4 3 3 3.4 3 4c0 9.4 7.6 17 17 17 .6 0 1-.4 1-1v-3.5c0-.5-.4-1-1-1z"/>
           </svg>
           Start Call
         </button>
 
-        <!-- Hang up -->
-        <button class="ctrl-btn ctrl-btn--hangup" @click="handleLeave" title="Leave">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <!-- Leave Button -->
+        <button @click="handleLeave" class="h-12 flex items-center gap-3 px-6 bg-red-500/10 border border-red-500/40 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl text-[0.7rem] font-black tracking-widest uppercase transition-all">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M18.36 6.64a9 9 0 10-12.73 0"/>
             <line x1="12" y1="2" x2="12" y2="12"/>
           </svg>
@@ -143,112 +148,94 @@
     </footer>
 
     <!-- ═══════════════════════ CHAT SIDEBAR ═══════════════════════ -->
-    <aside class="chat-sidebar" :class="{ 'chat-sidebar--open': isChatOpen }">
-      <div class="chat-header">
-        <span>Live Chat</span>
-        <button class="icon-btn" @click="closeChat">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
+    <aside class="absolute top-0 right-0 w-[22rem] h-full bg-[#0a0b10] border-l border-white/5 shadow-2xl z-20 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" :class="isChatOpen ? 'translate-x-0' : 'translate-x-full'">
+      <div class="h-16 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
+        <span class="text-sm font-black tracking-widest uppercase">Live Chat</span>
+        <button @click="closeChat" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </div>
 
-      <div ref="chatMessages" class="chat-messages">
-        <p class="chat-notice">Messages are not saved after this session.</p>
-        <div
-          v-for="(msg, i) in messages"
-          :key="i"
-          class="chat-bubble-wrap"
-          :class="msg.isMe ? 'chat-bubble-wrap--me' : 'chat-bubble-wrap--them'"
-        >
-          <div class="chat-bubble" :class="msg.isMe ? 'chat-bubble--me' : 'chat-bubble--them'">
+      <div ref="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        <p class="text-[0.6rem] text-center text-neutral-500 font-bold tracking-widest uppercase mb-4">Messages are volatile (session-only)</p>
+        <div v-for="(msg, i) in messages" :key="i" class="flex" :class="msg.isMe ? 'justify-end' : 'justify-start'">
+          <div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-[0.85rem] leading-relaxed shadow-sm" :class="msg.isMe ? 'bg-blue-600 text-white rounded-br-md' : 'bg-neutral-800 text-neutral-200 rounded-bl-md'">
             {{ msg.text }}
           </div>
         </div>
       </div>
 
-      <div class="chat-input-row">
-        <input
-          v-model="chatDraft"
-          placeholder="Write a message…"
-          class="chat-input"
-          @keyup.enter="sendMessage"
-        />
-        <button class="chat-send" @click="sendMessage">
-          <svg viewBox="0 0 20 20" fill="currentColor" style="transform:rotate(90deg)">
-            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
-          </svg>
-        </button>
+      <div class="p-4 border-t border-white/5 bg-black/20">
+        <div class="flex gap-2">
+          <input v-model="chatDraft" placeholder="Type message..." @keyup.enter="sendMessage" class="flex-1 bg-neutral-900 border border-white/5 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500/50 transition-colors" />
+          <button @click="sendMessage" class="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl hover:bg-blue-500 active:scale-95 transition-all">
+            <svg class="w-4 h-4 rotate-90" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </aside>
 
     <!-- ═══════════════════════ REVIEW MODAL ═══════════════════════ -->
     <transition name="modal">
-      <div v-if="showReviewModal" class="modal-backdrop">
-        <div class="modal-card">
-          <div class="modal-glow"></div>
-
-          <div class="modal-icon">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div v-if="showReviewModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+        <div class="relative w-full max-w-lg bg-[#0f1117] border border-white/10 rounded-[2.5rem] p-10 overflow-hidden shadow-[0_32px_100px_rgba(0,0,0,0.8)]">
+          <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+          
+          <div class="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-500 mb-8">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
 
-          <h2>Session Ended</h2>
-          <p class="modal-sub">Please leave feedback about the other participant.</p>
+          <h2 class="text-3xl font-black tracking-tight mb-2">Session Ended</h2>
+          <p class="text-neutral-500 mb-8 text-sm">Please leave feedback to help improve the matching quality.</p>
 
-          <!-- Pass/Fail (recruiter only) -->
-          <div v-if="currentUser?.role === 'recruiter'" class="modal-section">
-            <label class="field-label">Decision</label>
-            <div class="decision-row">
-              <button
-                class="decision-btn"
-                :class="{ 'decision-btn--pass': interviewDecision === true }"
-                @click="interviewDecision = true"
-              >✅ Passed</button>
-              <button
-                class="decision-btn"
-                :class="{ 'decision-btn--fail': interviewDecision === false }"
-                @click="interviewDecision = false"
-              >❌ Failed</button>
+          <!-- Decisions (Recruiter Only) -->
+          <div v-if="currentUser?.role === 'recruiter'" class="mb-8">
+            <span class="block text-[0.6rem] font-black tracking-[0.2em] text-neutral-500 uppercase mb-4">Official Decision</span>
+            <div class="flex gap-4">
+              <button @click="interviewDecision = true" class="flex-1 py-4 px-6 rounded-2xl border transition-all font-bold" :class="interviewDecision === true ? 'bg-green-500 border-transparent text-white shadow-lg shadow-green-500/20' : 'bg-green-500/5 border-green-500/20 text-green-500 hover:bg-green-500/10'">
+                ✅ Pass
+              </button>
+              <button @click="interviewDecision = false" class="flex-1 py-4 px-6 rounded-2xl border transition-all font-bold" :class="interviewDecision === false ? 'bg-red-500 border-transparent text-white shadow-lg shadow-red-500/20' : 'bg-red-500/5 border-red-500/20 text-red-500 hover:bg-red-500/10'">
+                ❌ Fail
+              </button>
             </div>
           </div>
 
-          <!-- Stars -->
-          <div class="modal-section">
-            <label class="field-label">Rating</label>
-            <div class="stars">
-              <button
-                v-for="i in 5"
-                :key="i"
-                class="star-btn"
-                :class="{ 'star-btn--on': reviewRating >= i }"
-                @click="reviewRating = i"
-              >★</button>
+          <!-- Rating -->
+          <div class="mb-8">
+            <span class="block text-[0.6rem] font-black tracking-[0.2em] text-neutral-500 uppercase mb-4">Session Rating</span>
+            <div class="flex justify-between gap-2">
+              <button v-for="i in 5" :key="i" @click="reviewRating = i" class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl transition-all" :class="reviewRating >= i ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/30 scale-110' : 'bg-neutral-800 text-neutral-500 hover:bg-neutral-700'">
+                ★
+              </button>
             </div>
           </div>
 
-          <!-- Comment -->
-          <div class="modal-section">
-            <label class="field-label">Notes</label>
-            <textarea
-              v-model="reviewComment"
-              class="modal-textarea"
-              placeholder="Describe the session…"
-            ></textarea>
+          <!-- Notes -->
+          <div class="mb-10">
+            <span class="block text-[0.6rem] font-black tracking-[0.2em] text-neutral-500 uppercase mb-4">Detailed Feedback</span>
+            <textarea v-model="reviewComment" placeholder="Write your thoughts..." class="w-full bg-neutral-900 border border-white/5 rounded-2xl p-5 text-[0.9rem] min-h-[10rem] focus:outline-none focus:border-blue-500 transition-colors"></textarea>
           </div>
 
           <button
-            class="submit-btn"
-            :disabled="isSubmittingReview || !reviewComment || (currentUser?.role === 'recruiter' && interviewDecision === null)"
             @click="submitReview"
+            :disabled="isSubmittingReview || !reviewComment || (currentUser?.role === 'recruiter' && interviewDecision === null)"
+            class="w-full h-16 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[0.7rem] font-black tracking-[0.2em] uppercase rounded-2xl shadow-2xl shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
           >
-            <span v-if="!isSubmittingReview">Submit Report</span>
-            <span v-else class="spinner-row">
-              <svg class="spin" viewBox="0 0 24 24"><circle class="spin-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="spin-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-              Processing…
-            </span>
+            <span v-if="!isSubmittingReview">Submit Final Report</span>
+            <template v-else>
+              <svg class="animate-spin h-5 w-5 text-current" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </template>
           </button>
         </div>
       </div>
@@ -276,17 +263,17 @@ const chatMessages = ref(null);
 const currentUser      = ref(null);
 const interviewData    = ref(null);
 
-// ─── WebRTC state (ported from Blade) ───────────────────────────────────────
+// ─── WebRTC state ───────────────────────────────────────
 let localStream       = null;
 let peerConnection    = null;
 let callStarted       = false;
 let queuedCandidates  = [];
 
 const hasRemoteStream  = ref(false);
-const connectionState  = ref("new");   // new | connecting | connected | disconnected | failed | closed
+const connectionState  = ref("new");
 const isMuted          = ref(false);
 const isVideoOff       = ref(false);
-const isReady          = ref(false);   // true when peer is in the room
+const isReady          = ref(false);
 
 // ─── Chat state ─────────────────────────────────────────────────────────────
 const isChatOpen   = ref(false);
@@ -310,30 +297,25 @@ const peerRoleLabel = computed(() =>
 );
 
 const connStateLabel = computed(() => ({
-  new:          "Initializing…",
-  connecting:   "Connecting…",
-  connected:    "Encrypted Connection",
+  new:          "Initializing...",
+  connecting:   "Connecting...",
+  connected:    "Secured Connection",
   disconnected: "Peer Disconnected",
-  failed:       "Connection Error",
+  failed:       "Connection Err",
   closed:       "Session Closed",
 }[connectionState.value] ?? "Ready"));
 
-const connStateClass = computed(() => ({
-  connected: "state--ok",
-  failed:    "state--err",
-}[connectionState.value] ?? ""));
-
 const statusText = computed(() => {
-  if (connectionState.value === "connected") return "En ligne ❤️";
-  if (connectionState.value === "failed" || connectionState.value === "disconnected") return "Connexion perdue…";
-  if (!isReady.value) return "En attente de l'autre participant…";
-  return "Connexion au serveur…";
+  if (connectionState.value === "connected") return "Online";
+  if (connectionState.value === "failed" || connectionState.value === "disconnected") return "Disconnected";
+  if (!isReady.value) return "Awaiting peer...";
+  return "Negotiating...";
 });
 
-const statusBadgeClass = computed(() => {
-  if (connectionState.value === "connected") return "badge--green";
-  if (connectionState.value === "failed")    return "badge--red";
-  return "badge--yellow";
+const statusBadgeClassTailwind = computed(() => {
+  if (connectionState.value === "connected") return "bg-green-500/10 border-green-500/20 text-green-500";
+  if (connectionState.value === "failed")    return "bg-red-500/10 border-red-500/20 text-red-500";
+  return "bg-amber-500/10 border-amber-500/20 text-amber-500";
 });
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
@@ -346,46 +328,38 @@ onMounted(async () => {
     currentUser.value   = userRes.data;
     interviewData.value = interviewRes.data;
   } catch (err) {
-    console.error("Could not fetch user / interview data:", err);
+    console.error("Fetch failure (interview likely closed):", err);
+    router.push('/');
   }
 
-  // ── 1. Get local media ───────────────────────────────────────────────────
+  // Media initialization
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    localVideo.value.srcObject = localStream;
+    if (localVideo.value) localVideo.value.srcObject = localStream;
   } catch (err) {
-    console.warn("Camera/mic unavailable:", err);
+    console.warn("Media blocked:", err);
     connectionState.value = "failed";
   }
 
-  // ── 2. Echo connection monitoring ────────────────────────────────────────
+  // Echo monitoring
   window.Echo.connector.pusher.connection.bind("state_change", ({ current }) => {
     if (current === "connecting")   connectionState.value = "connecting";
     if (current === "unavailable")  connectionState.value = "failed";
   });
 
-  // ── 3. Join presence channel ─────────────────────────────────────────────
   const channel = window.Echo.join(`interview.${roomId}`);
 
-  // ── 4. Presence events (ported from Blade) ───────────────────────────────
   channel.here((users) => {
-    console.log(`${users.length} user(s) in room.`);
     if (users.length > 1) {
       isReady.value = true;
-      if (!callStarted && currentUser.value?.role === 'recruiter') {
-        startCall(channel);
-      }
+      if (!callStarted && currentUser.value?.role === 'recruiter') startCall(channel);
     }
   })
-  .joining((user) => {
-    console.log(`${user.name} joined — ready to receive offer.`);
+  .joining(() => {
     isReady.value = true;
-    if (!callStarted && currentUser.value?.role === 'recruiter') {
-      startCall(channel);
-    }
+    if (!callStarted && currentUser.value?.role === 'recruiter') startCall(channel);
   })
-  .leaving((user) => {
-    console.log(`${user.name} left.`);
+  .leaving(() => {
     isReady.value      = false;
     hasRemoteStream.value = false;
     connectionState.value = "disconnected";
@@ -398,28 +372,20 @@ onMounted(async () => {
     queuedCandidates = [];
   });
 
-  // ── 5. Chat whisper ───────────────────────────────────────────────────────
   channel.listenForWhisper("ChatMessage", (data) => {
     messages.value.push({ text: data.text, isMe: false });
     if (!isChatOpen.value) unreadCount.value++;
     scrollChat();
   });
 
-  // ── 6. WebRTC signaling whisper (ported from Blade) ───────────────────────
   channel.listenForWhisper("WebRTCSignal", async (data) => {
-    console.log("Signal received:", data.type);
-
-    // Peer refreshed — reset and re-answer
     if (data.type === "offer" && peerConnection) {
-      console.log("New offer received (peer refreshed). Resetting…");
       peerConnection.close();
       peerConnection    = null;
       callStarted       = false;
       queuedCandidates  = [];
     }
-
     if (!peerConnection) createPeerConnection(channel);
-
     try {
       if (data.type === "offer") {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
@@ -427,25 +393,17 @@ onMounted(async () => {
         await peerConnection.setLocalDescription(answer);
         channel.whisper("WebRTCSignal", { type: "answer", sdp: answer });
         await drainCandidateQueue();
-
       } else if (data.type === "answer") {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
         await drainCandidateQueue();
-
       } else if (data.type === "candidate") {
         const candidate = new RTCIceCandidate(data.candidate);
-        if (peerConnection.remoteDescription) {
-          await peerConnection.addIceCandidate(candidate);
-        } else {
-          queuedCandidates.push(candidate);
-        }
+        if (peerConnection.remoteDescription) await peerConnection.addIceCandidate(candidate);
+        else queuedCandidates.push(candidate);
       }
-    } catch (err) {
-      console.error("WebRTC error:", err);
-    }
+    } catch (err) { console.error("WebRTC Signaling Error:", err); }
   });
 
-  // Store channel on window for manual call trigger (keep Blade parity)
   window.__echoChannel = channel;
 });
 
@@ -454,18 +412,10 @@ const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 function createPeerConnection(channel) {
   peerConnection = new RTCPeerConnection(rtcConfig);
-
   if (localStream) {
-    localStream.getTracks().forEach((track) =>
-      peerConnection.addTrack(track, localStream)
-    );
-  } else {
-    peerConnection.addTransceiver("audio", { direction: "recvonly" });
-    peerConnection.addTransceiver("video", { direction: "recvonly" });
+    localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
   }
-
   peerConnection.ontrack = (event) => {
-    console.log("Remote stream received!");
     if (event.streams && event.streams[0]) {
       remoteVideo.value.srcObject = event.streams[0];
     } else {
@@ -474,35 +424,22 @@ function createPeerConnection(channel) {
       remoteVideo.value.srcObject = inboundStream;
     }
     hasRemoteStream.value = true;
-
-    // Explicitly trigger play to override strict browser autoplay restrictions
     nextTick(() => {
-      if (remoteVideo.value) {
-        remoteVideo.value.play().catch(e => console.warn("Autoplay block (interaction needed):", e));
-      }
+      remoteVideo.value?.play().catch(e => console.warn("Autoplay block:", e));
     });
   };
-
   peerConnection.onconnectionstatechange = () => {
-    const state = peerConnection.connectionState;
-    connectionState.value = state;
-    console.log("Connection state:", state);
-    if (state === 'failed' || state === 'disconnected') {
-      hasRemoteStream.value = false;
-    }
+    connectionState.value = peerConnection.connectionState;
+    if (['failed', 'disconnected'].includes(peerConnection.connectionState)) hasRemoteStream.value = false;
   };
-
   peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      channel.whisper("WebRTCSignal", { type: "candidate", candidate: event.candidate });
-    }
+    if (event.candidate) channel.whisper("WebRTCSignal", { type: "candidate", candidate: event.candidate });
   };
 }
 
 async function startCall(channel) {
   if (callStarted) return;
   callStarted = true;
-  console.log("Initiating call…");
   createPeerConnection(channel);
   const offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
@@ -510,42 +447,25 @@ async function startCall(channel) {
 }
 
 async function drainCandidateQueue() {
-  while (queuedCandidates.length > 0) {
-    await peerConnection.addIceCandidate(queuedCandidates.shift());
-  }
+  while (queuedCandidates.length > 0) await peerConnection.addIceCandidate(queuedCandidates.shift());
 }
 
-function initiateManualCall() {
-  if (window.__echoChannel) {
-    startCall(window.__echoChannel);
-  }
-}
+function initiateManualCall() { if (window.__echoChannel) startCall(window.__echoChannel); }
 
-// ─── Media controls ──────────────────────────────────────────────────────────
 function toggleAudio() {
   if (!localStream) return;
   const track = localStream.getAudioTracks()[0];
-  if (!track) return;
-  track.enabled = !track.enabled;
-  isMuted.value = !track.enabled;
+  if (track) { track.enabled = !track.enabled; isMuted.value = !track.enabled; }
 }
 
 function toggleVideo() {
   if (!localStream) return;
   const track = localStream.getVideoTracks()[0];
-  if (!track) return;
-  track.enabled = !track.enabled;
-  isVideoOff.value = !track.enabled;
+  if (track) { track.enabled = !track.enabled; isVideoOff.value = !track.enabled; }
 }
 
-// ─── Chat helpers ────────────────────────────────────────────────────────────
-function toggleChat() {
-  isChatOpen.value  = !isChatOpen.value;
-  if (isChatOpen.value) unreadCount.value = 0;
-}
-function closeChat() {
-  isChatOpen.value = false;
-}
+function toggleChat() { isChatOpen.value = !isChatOpen.value; if (isChatOpen.value) unreadCount.value = 0; }
+function closeChat() { isChatOpen.value = false; }
 function sendMessage() {
   const text = chatDraft.value.trim();
   if (!text || !window.__echoChannel) return;
@@ -556,26 +476,35 @@ function sendMessage() {
 }
 async function scrollChat() {
   await nextTick();
-  if (chatMessages.value)
-    chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
+  if (chatMessages.value) chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
 }
 
-// ─── Leave / review ──────────────────────────────────────────────────────────
 function handleLeave() {
-  if (window.__echoChannel)
-    window.__echoChannel.whisper("WebRTCSignal", { type: "peer-left" });
+  if (window.__echoChannel) window.__echoChannel.whisper("WebRTCSignal", { type: "peer-left" });
   if (peerConnection) peerConnection.close();
-  if (localStream)    localStream.getTracks().forEach((t) => t.stop());
+  if (localStream) localStream.getTracks().forEach((t) => t.stop());
   window.Echo.leave(`interview.${roomId}`);
   showReviewModal.value = true;
 }
 
 async function submitReview() {
+  if (isSubmittingReview.value) return;
+  
+  // Basic defensive checks
+  if (!currentUser.value || !interviewData.value) {
+    console.warn("State lost during submission. Redirecting...");
+    router.push('/');
+    return;
+  }
+
   isSubmittingReview.value = true;
   try {
-    const reviewedUserId = currentUser.value.role === "recruiter"
-      ? interviewData.value.application.student_id
-      : interviewData.value.application.project.recruiter_id;
+    const isRecruiter = currentUser.value.role === "recruiter";
+    const reviewedUserId = isRecruiter
+      ? interviewData.value.application?.student_id
+      : interviewData.value.application?.project?.recruiter_id;
+
+    if (!reviewedUserId) throw new Error("Could not determine peer ID");
 
     const promises = [
       axios.post("/api/v1/reviews", {
@@ -585,7 +514,7 @@ async function submitReview() {
       }),
     ];
 
-    if (currentUser.value.role === "recruiter") {
+    if (isRecruiter) {
       promises.push(
         axios.post(`/api/v1/interviews/${roomId}/result`, {
           passed: interviewDecision.value,
@@ -594,10 +523,13 @@ async function submitReview() {
     }
 
     await Promise.all(promises);
-    router.push("/dashboard");
+    
+    // Redirect to the correct role-based dashboard
+    const dest = isRecruiter ? '/dashboard/recruiter' : '/dashboard/applicant';
+    router.push(dest);
   } catch (err) {
-    console.error("Review submit failed:", err);
-    router.push("/dashboard");
+    console.error("Submit failure:", err);
+    router.push('/');
   } finally {
     isSubmittingReview.value = false;
   }
@@ -605,481 +537,22 @@ async function submitReview() {
 </script>
 
 <style scoped>
-/* ── Fonts ─────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap');
 
-/* ── Tokens ─────────────────────────────────────────────────────────────────── */
-:root {
-  --bg:         #07080d;
-  --surface:    #0f1117;
-  --surface2:   #161820;
-  --border:     rgba(255,255,255,0.06);
-  --text:       #e8eaf0;
-  --muted:      #4a4f6a;
-  --accent:     #3b82f6;
-  --accent2:    #6366f1;
-  --red:        #ef4444;
-  --green:      #22c55e;
-  --yellow:     #eab308;
-  --radius-xl:  1.75rem;
-  --radius-lg:  1rem;
-  --radius-md:  0.6rem;
-  --chat-w:     22rem;
-  --header-h:   4rem;
-  --footer-h:   6rem;
-  --font-sans:  'Syne', sans-serif;
-  --font-mono:  'JetBrains Mono', monospace;
-}
+.font-syne { font-family: 'Syne', sans-serif; }
 
-/* ── Reset / Base ───────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-button { cursor: pointer; background: none; border: none; color: inherit; font: inherit; }
-input, textarea { font: inherit; }
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 20px; }
 
-/* ── Root shell ─────────────────────────────────────────────────────────────── */
-.room-root {
-  font-family: var(--font-sans);
-  background: var(--bg);
-  color: var(--text);
-  height: 100dvh;
-  display: grid;
-  grid-template-rows: var(--header-h) 1fr var(--footer-h);
-  grid-template-columns: 1fr;
-  overflow: hidden;
-  position: relative;
-  /* subtle radial glow */
-  background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,0.06) 0%, transparent 70%);
-}
-
-/* ── Header ─────────────────────────────────────────────────────────────────── */
-.room-header {
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid var(--border);
-  background: rgba(7,8,13,0.85);
-  backdrop-filter: blur(20px);
-  z-index: 20;
-}
-
-.header-left { display: flex; align-items: center; gap: 0.75rem; }
-
-.logo-pill {
-  width: 2.2rem; height: 2.2rem;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 0.55rem;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 20px rgba(59,130,246,0.25);
-}
-.logo-pill svg { width: 1rem; height: 1rem; color: #fff; }
-
-.header-title { display: flex; flex-direction: column; gap: 0.15rem; }
-.room-label {
-  font-family: var(--font-mono);
-  font-size: 0.6rem; font-weight: 700;
-  letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--accent);
-}
-.conn-state { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.state--ok  { color: var(--green) !important; }
-.state--err { color: var(--red)   !important; }
-
-.header-right { display: flex; align-items: center; gap: 0.75rem; }
-
-.status-badge {
-  display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.3rem 0.8rem;
-  border-radius: 999px;
-  font-family: var(--font-mono);
-  font-size: 0.6rem; font-weight: 700;
-  letter-spacing: 0.1em;
-  border: 1px solid;
-  transition: all 0.4s;
-}
-.status-dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: currentColor; animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-.badge--yellow { background: rgba(234,179,8,.12); color: var(--yellow); border-color: rgba(234,179,8,.25); }
-.badge--green  { background: rgba(34,197,94,.12);  color: var(--green);  border-color: rgba(34,197,94,.25); }
-.badge--red    { background: rgba(239,68,68,.12);   color: var(--red);    border-color: rgba(239,68,68,.25); }
-
-.divider-v { width: 1px; height: 2rem; background: var(--border); }
-.divider-v--short { height: 2.5rem; }
-
-.icon-btn {
-  width: 2.2rem; height: 2.2rem;
-  border-radius: 0.5rem;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--muted);
-  transition: background 0.2s, color 0.2s;
-  position: relative;
-}
-.icon-btn:hover { background: var(--surface2); color: var(--text); }
-.icon-btn svg { width: 1.1rem; height: 1.1rem; }
-
-.chat-badge {
-  position: absolute; top: -0.15rem; right: -0.15rem;
-  background: var(--red); color: #fff;
-  font-size: 0.5rem; font-weight: 800;
-  min-width: 1rem; height: 1rem;
-  border-radius: 999px; border: 2px solid var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 0.2rem;
-}
-
-/* ── Video grid ─────────────────────────────────────────────────────────────── */
-.video-grid {
-  grid-row: 2;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  padding: 1rem;
-  background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(15,17,23,0.5) 0%, var(--bg) 100%);
-  overflow: hidden;
-  transition: padding-right 0.35s ease;
-}
-
-.room-root.chat-open .video-grid { padding-right: calc(var(--chat-w) + 1rem); }
-
-.video-card {
-  position: relative;
-  background: var(--surface);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-  transition: border-color 0.3s;
-}
-.video-card--local:hover  { border-color: rgba(59,130,246,0.3); }
-.video-card--remote:hover { border-color: rgba(99,102,241,0.3); }
-
-.video-el {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.mirror { transform: scaleX(-1); }
-
-/* camera-off overlay */
-.cam-placeholder {
-  position: absolute; inset: 0;
-  background: var(--surface);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1rem;
-  z-index: 2;
-}
-.cam-placeholder p {
-  font-size: 0.65rem; font-weight: 800;
-  letter-spacing: 0.25em; text-transform: uppercase;
-  color: var(--muted);
-}
-.sub-label {
-  font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
-  color: rgba(74,79,106,0.6);
-}
-.avatar-ring {
-  width: 5rem; height: 5rem;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--muted);
-  position: relative;
-}
-.avatar-ring svg { width: 2.2rem; height: 2.2rem; }
-.avatar-ring--pulse::before {
-  content: '';
-  position: absolute; inset: -4px;
-  border-radius: 50%;
-  border: 1px solid rgba(59,130,246,0.3);
-  animation: ring-ping 2s infinite;
-}
-@keyframes ring-ping { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.4)} }
-
-/* video labels */
-.video-label {
-  position: absolute; bottom: 1rem; left: 1rem;
-  display: flex; align-items: center; gap: 0.4rem;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--radius-md);
-  padding: 0.35rem 0.7rem;
-  font-size: 0.62rem; font-weight: 800;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  z-index: 5;
-}
-.dot { width: 0.4rem; height: 0.4rem; border-radius: 50%; }
-.dot--blue   { background: var(--accent); box-shadow: 0 0 6px rgba(59,130,246,0.6); }
-.dot--indigo { background: var(--accent2); box-shadow: 0 0 6px rgba(99,102,241,0.6); }
-
-/* ── Controls ────────────────────────────────────────────────────────────────── */
-.controls {
-  grid-row: 3;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(7,8,13,0.9);
-  backdrop-filter: blur(30px);
-  border-top: 1px solid var(--border);
-}
-
-.controls-inner { display: flex; align-items: center; gap: 0.75rem; }
-
-.ctrl-btn {
-  width: 3.2rem; height: 3.2rem;
-  border-radius: var(--radius-md);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text);
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-}
-.ctrl-btn:hover { background: #1e2030; transform: scale(1.07); }
-.ctrl-btn:active { transform: scale(0.96); }
-.ctrl-btn svg { width: 1.2rem; height: 1.2rem; }
-.ctrl-btn--off { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); color: var(--red); }
-.ctrl-btn--off:hover { background: rgba(239,68,68,0.25); }
-
-.ctrl-btn--call {
-  display: flex; align-items: center; gap: 0.5rem;
-  width: auto; padding: 0 1.2rem;
-  background: var(--accent);
-  border-color: transparent;
-  font-size: 0.65rem; font-weight: 800;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  box-shadow: 0 4px 20px rgba(59,130,246,0.3);
-}
-.ctrl-btn--call:hover { background: #2563eb; }
-
-.ctrl-btn--hangup {
-  display: flex; align-items: center; gap: 0.5rem;
-  width: auto; padding: 0 1.2rem;
-  background: rgba(239,68,68,0.1);
-  border-color: rgba(239,68,68,0.3);
-  color: var(--red);
-  font-size: 0.65rem; font-weight: 800;
-  letter-spacing: 0.15em; text-transform: uppercase;
-}
-.ctrl-btn--hangup:hover { background: var(--red); color: #fff; }
-
-/* ── Chat sidebar ────────────────────────────────────────────────────────────── */
-.chat-sidebar {
-  position: absolute; top: 0; right: 0;
-  width: var(--chat-w);
-  height: 100%;
-  background: rgba(15,17,23,0.96);
-  backdrop-filter: blur(24px);
-  border-left: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  z-index: 30;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.chat-sidebar--open { transform: translateX(0); }
-
-.chat-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  font-weight: 800; font-size: 0.85rem; letter-spacing: 0.05em;
-  flex-shrink: 0;
-}
-
-.chat-messages {
-  flex: 1; overflow-y: auto;
-  padding: 1rem;
-  display: flex; flex-direction: column; gap: 0.5rem;
-}
-.chat-messages::-webkit-scrollbar { width: 4px; }
-.chat-messages::-webkit-scrollbar-track { background: transparent; }
-.chat-messages::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
-
-.chat-notice {
-  text-align: center; font-size: 0.6rem;
-  color: var(--muted); letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-
-.chat-bubble-wrap { display: flex; }
-.chat-bubble-wrap--me   { justify-content: flex-end; }
-.chat-bubble-wrap--them { justify-content: flex-start; }
-
-.chat-bubble {
-  max-width: 82%;
-  font-size: 0.8rem; line-height: 1.45;
-  padding: 0.5rem 0.75rem;
-  border-radius: 1rem;
-}
-.chat-bubble--me   { background: var(--accent); color: #fff; border-bottom-right-radius: 0.2rem; }
-.chat-bubble--them { background: var(--surface2); color: var(--text); border-bottom-left-radius: 0.2rem; }
-
-.chat-input-row {
-  display: flex; gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.chat-input {
-  flex: 1;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8rem; color: var(--text);
-  outline: none;
-  transition: border-color 0.2s;
-}
-.chat-input:focus { border-color: var(--accent); }
-.chat-input::placeholder { color: var(--muted); }
-
-.chat-send {
-  width: 2.4rem; height: 2.4rem;
-  background: var(--accent);
-  border-radius: var(--radius-md);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-.chat-send:hover { background: #2563eb; }
-.chat-send svg { width: 0.9rem; height: 0.9rem; }
-
-/* ── Review modal ────────────────────────────────────────────────────────────── */
-.modal-backdrop {
-  position: fixed; inset: 0;
-  z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  padding: 1.5rem;
-  background: rgba(7,8,13,0.88);
-  backdrop-filter: blur(20px);
-}
-
-.modal-card {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--radius-xl);
-  padding: 2.5rem;
-  width: 100%; max-width: 28rem;
-  box-shadow: 0 32px 64px rgba(0,0,0,0.5);
-  overflow: hidden;
-}
-.modal-glow {
-  position: absolute; top: 0; right: 0;
-  width: 16rem; height: 16rem;
-  background: rgba(59,130,246,0.07);
-  filter: blur(80px);
-  border-radius: 50%;
-  transform: translate(30%, -40%);
-  pointer-events: none;
-}
-
-.modal-icon {
-  width: 3.5rem; height: 3.5rem;
-  background: rgba(59,130,246,0.1);
-  border-radius: 0.9rem;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent);
-  margin-bottom: 1.5rem;
-}
-.modal-icon svg { width: 1.8rem; height: 1.8rem; }
-
-.modal-card h2 {
-  font-size: 1.6rem; font-weight: 800;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.5rem;
-}
-.modal-sub {
-  font-size: 0.8rem; color: var(--muted);
-  line-height: 1.6; margin-bottom: 1.75rem;
-}
-
-.modal-section { margin-bottom: 1.5rem; }
-.field-label {
-  display: block;
-  font-size: 0.58rem; font-weight: 800;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 0.6rem;
-}
-
-.decision-row { display: flex; gap: 0.75rem; }
-.decision-btn {
-  flex: 1; padding: 0.65rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  font-size: 0.75rem; font-weight: 700;
-  color: var(--muted);
-  transition: all 0.2s;
-}
-.decision-btn:hover  { background: var(--surface2); color: var(--text); }
-.decision-btn--pass  { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.4); color: var(--green); }
-.decision-btn--fail  { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.4); color: var(--red); }
-
-.stars { display: flex; gap: 0.4rem; }
-.star-btn {
-  width: 2.8rem; height: 2.8rem;
-  border-radius: var(--radius-md);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  font-size: 1.3rem; color: var(--muted);
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
-}
-.star-btn:hover { background: var(--surface); color: var(--text); }
-.star-btn--on {
-  background: var(--accent);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 2px 12px rgba(59,130,246,0.35);
-  transform: scale(1.08);
-}
-
-.modal-textarea {
-  width: 100%;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1rem;
-  font-size: 0.8rem; color: var(--text);
-  resize: none; min-height: 7rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.modal-textarea:focus  { border-color: rgba(59,130,246,0.5); }
-.modal-textarea::placeholder { color: var(--muted); }
-
-.submit-btn {
-  width: 100%; height: 3.4rem;
-  background: var(--accent);
-  border-radius: var(--radius-md);
-  font-size: 0.68rem; font-weight: 800;
-  letter-spacing: 0.18em; text-transform: uppercase;
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(59,130,246,0.3);
-  transition: background 0.2s, opacity 0.2s, transform 0.15s;
-}
-.submit-btn:hover:not(:disabled) { background: #2563eb; }
-.submit-btn:active:not(:disabled) { transform: scale(0.98); }
-.submit-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-.spinner-row { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-.spin { width: 1rem; height: 1rem; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.spin-track { opacity: 0.25; fill: none; }
-.spin-path  { opacity: 0.75; }
-
-/* ── Transitions ────────────────────────────────────────────────────────────── */
 .fade-scale-enter-active, .fade-scale-leave-active {
-  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22,1,.36,1);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.96); }
+.fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.95); }
 
 .modal-enter-active, .modal-leave-active {
-  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,.36,1);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.modal-enter-from { opacity: 0; transform: translateY(16px); }
-.modal-leave-to   { opacity: 0; transform: scale(0.95); }
+.modal-enter-from { opacity: 0; transform: translateY(30px); }
+.modal-leave-to { opacity: 0; transform: scale(0.95); }
 </style>
