@@ -1,6 +1,21 @@
 <template>
   <div class="h-screen w-full bg-[#07080d] text-[#e8eaf0] font-syne antialiased overflow-hidden flex flex-col relative">
     
+    <div v-if="isBlocked" class="absolute inset-0 z-[200] flex flex-col items-center justify-center p-6 bg-[#07080d]">
+      <div class="relative w-full max-w-lg bg-[#0f1117] border border-white/10 rounded-[2.5rem] p-10 overflow-hidden shadow-[0_32px_100px_rgba(0,0,0,0.8)] text-center">
+        <div class="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center text-red-500 mx-auto mb-8">
+          <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-black tracking-tight mb-4 text-white">Access Denied</h2>
+        <p class="text-neutral-400 mb-8 max-w-sm mx-auto leading-relaxed">{{ blockReason }}</p>
+        <button @click="router.back()" class="inline-flex h-12 items-center justify-center px-8 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold tracking-widest uppercase transition-all">
+          Go Back
+        </button>
+      </div>
+    </div>
+
     <header class="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-20 shrink-0">
       <div class="flex items-center gap-4">
         <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -277,6 +292,9 @@ const reviewComment      = ref("");
 const isSubmittingReview = ref(false);
 const interviewDecision  = ref(null);
 
+const isBlocked   = ref(false);
+const blockReason = ref("");
+
 const roleLabel = computed(() =>
   currentUser.value?.role === "recruiter" ? "Interviewer" : "Candidate"
 );
@@ -314,9 +332,23 @@ onMounted(async () => {
     ]);
     currentUser.value   = userRes.data;
     interviewData.value = interviewRes.data;
+    
+    if (interviewData.value.status === 'completed') {
+      isBlocked.value = true;
+      blockReason.value = 'This interview has been evaluated and is now closed.';
+      return;
+    }
+    
+    const scheduledTime = new Date(interviewData.value.scheduled_at).getTime();
+    if (new Date().getTime() > scheduledTime + 60 * 60 * 1000) {
+      isBlocked.value = true;
+      blockReason.value = 'This interview session has ended.';
+      return;
+    }
   } catch (err) {
-    console.error("Fetch failure (interview likely closed):", err);
+    console.error("Fetch failure:", err);
     router.push('/');
+    return;
   }
 
   // Media initialization
