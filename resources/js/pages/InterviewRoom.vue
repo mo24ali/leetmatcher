@@ -249,21 +249,17 @@ import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 
-// ─── Router ────────────────────────────────────────────────────────────────
 const router = useRouter();
 const route  = useRoute();
 const roomId = route.params.id;
 
-// ─── Template refs ──────────────────────────────────────────────────────────
 const localVideo   = ref(null);
 const remoteVideo  = ref(null);
 const chatMessages = ref(null);
 
-// ─── App state ──────────────────────────────────────────────────────────────
 const currentUser      = ref(null);
 const interviewData    = ref(null);
 
-// ─── WebRTC state ───────────────────────────────────────
 let localStream       = null;
 let peerConnection    = null;
 let callStarted       = false;
@@ -275,20 +271,17 @@ const isMuted          = ref(false);
 const isVideoOff       = ref(false);
 const isReady          = ref(false);
 
-// ─── Chat state ─────────────────────────────────────────────────────────────
 const isChatOpen   = ref(false);
 const chatDraft    = ref("");
 const messages     = ref([]);
 const unreadCount  = ref(0);
 
-// ─── Review state ────────────────────────────────────────────────────────────
 const showReviewModal    = ref(false);
 const reviewRating       = ref(5);
 const reviewComment      = ref("");
 const isSubmittingReview = ref(false);
 const interviewDecision  = ref(null);
 
-// ─── Computed labels ─────────────────────────────────────────────────────────
 const roleLabel = computed(() =>
   currentUser.value?.role === "recruiter" ? "Interviewer" : "Candidate"
 );
@@ -318,7 +311,6 @@ const statusBadgeClassTailwind = computed(() => {
   return "bg-amber-500/10 border-amber-500/20 text-amber-500";
 });
 
-// ─── Lifecycle ───────────────────────────────────────────────────────────────
 onMounted(async () => {
   try {
     const [userRes, interviewRes] = await Promise.all([
@@ -337,8 +329,15 @@ onMounted(async () => {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     if (localVideo.value) localVideo.value.srcObject = localStream;
   } catch (err) {
-    console.warn("Media blocked:", err);
-    connectionState.value = "failed";
+    console.warn("Video access failed, falling back to audio only:", err);
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+      isVideoOff.value = true;
+      if (localVideo.value) localVideo.value.srcObject = localStream;
+    } catch (fallbackErr) {
+      console.warn("Media completely blocked:", fallbackErr);
+      connectionState.value = "failed";
+    }
   }
 
   // Echo monitoring
@@ -407,7 +406,6 @@ onMounted(async () => {
   window.__echoChannel = channel;
 });
 
-// ─── WebRTC helpers ──────────────────────────────────────────────────────────
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 function createPeerConnection(channel) {
