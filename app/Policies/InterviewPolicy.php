@@ -23,7 +23,7 @@ class InterviewPolicy
     {
         return $user->role === 'admin' || 
                ($user->role === 'recruiter' && $user->id === $interview->application->project->recruiter_id) || 
-               ($user->role === 'student' && $user->id === $interview->application->student_id);
+               (in_array($user->role, ['applicant']) && $user->id === $interview->application->student_id);
     }
 
     /**
@@ -41,7 +41,7 @@ class InterviewPolicy
     {
         return $user->role === 'admin' || 
                ($user->role === 'recruiter' && $user->id === $interview->application->project->recruiter_id) ||
-               (in_array($user->role, ['student', 'applicant']) && $user->id === $interview->application->student_id);
+               (in_array($user->role, ['applicant']) && $user->id === $interview->application->student_id);
     }
 
     /**
