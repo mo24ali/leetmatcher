@@ -17,6 +17,8 @@ class Interview extends Model
         'meeting_link',
         'notes',
         'score',
+        'status',
+        'completed_at',
     ];
 
     public function application(): BelongsTo
