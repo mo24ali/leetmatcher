@@ -11,7 +11,8 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\InterviewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\AdminController;
+use App\Http\Middleware\AdminOnly;
 Route::post('/v1/register', [AuthController::class , 'register']);
 Route::post('/v1/login', [AuthController::class , 'login']);
 
@@ -54,4 +55,16 @@ Route::middleware('auth')->group(function () {
     // Interviews
     Route::post('/v1/interviews/{application}/create', [InterviewController::class, 'store']);
     Route::post('/v1/interviews/{interview}/result', [InterviewController::class, 'submitResult']);
+
+    // Admin Routes
+    Route::middleware([AdminOnly::class])->prefix('v1/admin')->group(function () {
+        Route::get('/stats', [AdminController::class, 'stats']);
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+        Route::post('/users/{id}/warn', [AdminController::class, 'warnUser']);
+        Route::get('/projects', [AdminController::class, 'projects']);
+        Route::delete('/projects/{id}', [AdminController::class, 'deleteUser']);
+        Route::get('/activity', [AdminController::class, 'activity']);
+        Route::get('/logs', [AdminController::class, 'logs']);
+    });
 });
