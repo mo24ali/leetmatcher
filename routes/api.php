@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Middleware\AdminOnly;
+use App\Http\Controllers\NotificationController;
 Route::post('/v1/register', [AuthController::class , 'register']);
 Route::post('/v1/login', [AuthController::class , 'login']);
 
@@ -67,4 +68,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity', [AdminController::class, 'activity']);
         Route::get('/logs', [AdminController::class, 'logs']);
     });
+
+    // Notifications
+    Route::get('/v1/notifications', [NotificationController::class, 'index']);
+    Route::get('/v1/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/v1/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/v1/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 });
