@@ -1,7 +1,6 @@
 <template>
   <div class="h-screen w-full bg-[#07080d] text-[#e8eaf0] font-syne antialiased overflow-hidden flex flex-col relative">
     
-    <!-- ═══════════════════════ HEADER ═══════════════════════ -->
     <header class="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-20 shrink-0">
       <div class="flex items-center gap-4">
         <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -37,7 +36,6 @@
       </div>
     </header>
 
-    <!-- ═══════════════════════ VIDEO GRID ═══════════════════════ -->
     <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 lg:p-6 bg-gradient-to-b from-neutral-900/50 to-[#07080d] overflow-hidden transition-all duration-500" :class="{ 'pr-[22rem]': isChatOpen }">
       
       <!-- Local Stream Wrapper -->
@@ -91,7 +89,6 @@
       </div>
     </main>
 
-    <!-- ═══════════════════════ CONTROLS ═══════════════════════ -->
     <footer class="h-24 flex items-center justify-center bg-black/40 backdrop-blur-3xl border-t border-white/10 shrink-0 z-20">
       <div class="flex items-center gap-3">
         <!-- Audio Toggle -->
@@ -147,7 +144,6 @@
       </div>
     </footer>
 
-    <!-- ═══════════════════════ CHAT SIDEBAR ═══════════════════════ -->
     <aside class="absolute top-0 right-0 w-[22rem] h-full bg-[#0a0b10] border-l border-white/5 shadow-2xl z-20 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" :class="isChatOpen ? 'translate-x-0' : 'translate-x-full'">
       <div class="h-16 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
         <span class="text-sm font-black tracking-widest uppercase">Live Chat</span>
@@ -179,7 +175,6 @@
       </div>
     </aside>
 
-    <!-- ═══════════════════════ REVIEW MODAL ═══════════════════════ -->
     <transition name="modal">
       <div v-if="showReviewModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
         <div class="relative w-full max-w-lg bg-[#0f1117] border border-white/10 rounded-[2.5rem] p-10 overflow-hidden shadow-[0_32px_100px_rgba(0,0,0,0.8)]">
@@ -230,7 +225,7 @@
           >
             <span v-if="!isSubmittingReview">Submit Final Report</span>
             <template v-else>
-              <svg class="animate-spin h-5 w-5 text-current" viewBox="0 0 24 24">
+              <svg class="animate-spin h-5 w-5 text-rcurrent" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -488,7 +483,6 @@ function handleLeave() {
 async function submitReview() {
   if (isSubmittingReview.value) return;
   
-  // Basic defensive checks
   if (!currentUser.value || !interviewData.value) {
     console.warn("State lost during submission. Redirecting...");
     router.push('/');
