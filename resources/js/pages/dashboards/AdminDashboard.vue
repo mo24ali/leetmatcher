@@ -158,6 +158,39 @@
           </tbody>
         </table>
       </section>
+
+      <!-- Module 5: Blog Moderation -->
+      <section class="dash-card" id="blogs">
+        <div class="dash-card-header flex-header">
+          <div>
+            <h2 class="dash-card-title">Blog Moderation</h2>
+            <p class="dash-card-subtitle">Manage community posts and visibility</p>
+          </div>
+        </div>
+        <div class="blog-list">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Post Title</th><th>Author</th><th>Status</th><th>Visibility</th><th>Date</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="post in blogPosts" :key="post.id">
+                <td><span class="font-bold">{{ post.title }}</span></td>
+                <td>{{ post.author?.name }} ({{ post.author?.role }})</td>
+                <td><span :class="['role-chip', post.moderation_status]">{{ post.moderation_status }}</span></td>
+                <td><span :class="['listing-status', post.visibility]">{{ post.visibility }}</span></td>
+                <td>{{ new Date(post.created_at).toLocaleDateString() }}</td>
+                <td>
+                  <div class="action-btns">
+                    <button @click="openBlogModeration(post)" class="admin-btn">Moderate</button>
+                    <button @click="deleteBlogPost(post.id)" class="admin-btn danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-if="blogPosts.length === 0" class="empty-hint">No blog posts found.</p>
+        </div>
+      </section>
     </div>
 
     <!-- Modals -->
@@ -209,6 +242,44 @@
       </div>
     </transition>
 
+    <!-- Blog Moderation Modal -->
+    <transition name="fade">
+      <div v-if="modals.blog" class="modal-overlay" @click.self="modals.blog = false">
+        <div class="admin-modal">
+          <h3>Moderate Post: {{ selectedPost?.title }}</h3>
+          <p class="modal-hint">Review and adjust post status or visibility.</p>
+          
+          <div class="modal-form">
+            <div class="form-group">
+              <label>Moderation Status</label>
+              <select v-model="forms.blog.moderation_status">
+                <option value="approved">Approved</option>
+                <option value="pending">Pending Review</option>
+                <option value="rejected">Rejected / Hidden</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Visibility</label>
+              <select v-model="forms.blog.visibility">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Reason for Action</label>
+              <textarea v-model="forms.blog.reason" placeholder="Explain the moderation decision..."></textarea>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button class="admin-btn" @click="modals.blog = false">Cancel</button>
+            <button class="admin-btn success-btn" @click="submitBlogModeration">Apply Changes</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- Generic Confirm & Detail Modals can follow similar pattern -->
   </div>
 </template>
@@ -235,28 +306,33 @@ const stats = reactive({
 
 const users    = ref([])
 const allJobs  = ref([])
+const blogPosts = ref([])
 const auditLogs = ref([])
 
-const modals = reactive({ moderation: false, logs: false, confirm: false })
+const modals = reactive({ moderation: false, logs: false, confirm: false, blog: false })
 const selectedUser = ref(null)
+const selectedPost = ref(null)
 
 const forms = reactive({
-  moderation: { type: 'behavior', reason: '', level: 1 }
+  moderation: { type: 'behavior', reason: '', level: 1 },
+  blog: { moderation_status: 'approved', visibility: 'public', reason: '' }
 })
 
 async function loadDashboardData() {
   loading.value = true
   try {
-     const [sData, uData, jData, lData] = await Promise.all([
+     const [sData, uData, jData, lData, bData] = await Promise.all([
        auth.apiFetch('/v1/admin/stats'),
        auth.apiFetch('/v1/admin/users'),
        auth.apiFetch('/v1/admin/projects'),
-       auth.apiFetch('/v1/admin/logs')
+       auth.apiFetch('/v1/admin/logs'),
+       auth.apiFetch('/v1/admin/blog-posts')
      ])
      Object.assign(stats, sData)
      users.value    = uData
      allJobs.value  = jData
      auditLogs.value = lData
+     blogPosts.value = bData.data || bData
   } catch (err) {
     console.error('Admin Load Error:', err)
   } finally {
@@ -335,6 +411,40 @@ async function confirmDeleteUser(user) {
 function viewLogDetails(log) {
     alert(JSON.stringify(log.metadata, null, 2))
 }
+
+// Blog Moderation Actions
+function openBlogModeration(post) {
+  selectedPost.value = post
+  forms.blog = { 
+    moderation_status: post.moderation_status, 
+    visibility: post.visibility, 
+    reason: '' 
+  }
+  modals.blog = true
+}
+
+async function submitBlogModeration() {
+  try {
+    await auth.apiFetch(`/v1/admin/blog-posts/${selectedPost.value.id}/moderate`, {
+      method: 'PATCH',
+      body: JSON.stringify(forms.blog)
+    })
+    modals.blog = false
+    loadDashboardData()
+  } catch (err) {
+    alert('Failed to moderate blog post')
+  }
+}
+
+async function deleteBlogPost(id) {
+  if (!confirm('Are you sure you want to delete this blog post?')) return
+  try {
+    await auth.apiFetch(`/v1/admin/blog-posts/${id}`, { method: 'DELETE' })
+    blogPosts.value = blogPosts.value.filter(p => p.id !== id)
+  } catch (err) {
+    alert('Failed to delete blog post')
+  }
+}
 </script>
 
 <style scoped>
@@ -373,6 +483,8 @@ function viewLogDetails(log) {
 .admin-btn:hover { background: #f8fafc; }
 .admin-btn.danger { color: #dc2626; border-color: #fecaca; }
 .admin-btn.danger:hover { background: #ef4444; color: white; border-color: #ef4444; }
+.success-btn { background: #16a34a; color: white; border: none; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.75rem; cursor: pointer; transition: 0.2s; }
+.success-btn:hover { background: #15803d; }
 
 /* Log Viewer */
 .log-viewer { max-height: 500px; overflow-y: auto; border-radius: 1rem; border: 1px solid #f1f5f9; }
