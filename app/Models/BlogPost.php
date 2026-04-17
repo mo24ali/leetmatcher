@@ -14,7 +14,17 @@ class BlogPost extends Model
     protected $fillable = [
         'author_id',
         'title',
+        'body',
         'status',
+        'visibility',
+        'tags',
+        'moderation_status',
+        'modification_history',
+    ];
+
+    protected $casts = [
+        'tags' => 'array',
+        'modification_history' => 'array',
     ];
 
     public function author(): BelongsTo

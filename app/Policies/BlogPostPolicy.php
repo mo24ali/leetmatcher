@@ -6,14 +6,14 @@ use App\Models\BlogPost;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class BlogPolicy
+class BlogPostPolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true; // Everyone can view blog list
+        return true;
     }
 
     /**
@@ -21,7 +21,8 @@ class BlogPolicy
      */
     public function view(User $user, BlogPost $blogPost): bool
     {
-        return true; // Everyone can view post
+        if ($blogPost->visibility === 'public' && $blogPost->moderation_status === 'approved') return true;
+        return $user->id === $blogPost->author_id;
     }
 
     /**
@@ -29,7 +30,7 @@ class BlogPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === 'admin';
+        return true;
     }
 
     /**
@@ -37,7 +38,7 @@ class BlogPolicy
      */
     public function update(User $user, BlogPost $blogPost): bool
     {
-        return $user->role === 'admin';
+        return $user->id === $blogPost->author_id;
     }
 
     /**
@@ -45,6 +46,16 @@ class BlogPolicy
      */
     public function delete(User $user, BlogPost $blogPost): bool
     {
-        return $user->role === 'admin';
+        return $user->id === $blogPost->author_id;
+    }
+
+    public function restore(User $user, BlogPost $blogPost): bool
+    {
+        return false;
+    }
+
+    public function forceDelete(User $user, BlogPost $blogPost): bool
+    {
+        return false;
     }
 }

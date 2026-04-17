@@ -200,23 +200,27 @@ const tabs = computed(() => {
   const roles = {
     guest: [
       { path: '/', label: 'Home' },
+      { path: '/blogs', label: 'Blog' },
       { path: '/about', label: 'About' },
     ],
     applicant: [
       { path: '/dashboard/applicant', label: 'Dashboard' },
       { path: '/jobs', label: 'Browse Jobs' },
+      { path: '/blogs', label: 'Blog' },
       { path: '/profile', label: 'Profile' },
       { path: '/top-matches', label: 'Top Matches'},
       { path: '/interviews', label: 'Interviews'},
     ],
     recruiter: [
       { path: '/dashboard/recruiter', label: 'Dashboard' },
+      { path: '/blogs', label: 'Blog' },
       { path: '/profile', label: 'Profile' },
       { path: '/top-matches', label: 'Top Matches'},
       { path: '/interviews', label: 'Interviews'},
     ],
     admin: [
       { path: '/dashboard/admin', label: 'Control Center' },
+      { path: '/blogs', label: 'Moderation' },
       { path: '/profile', label: 'Profile' },
     ],
   }

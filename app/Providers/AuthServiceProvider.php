@@ -8,7 +8,7 @@ use App\Models\Interview;
 use App\Models\Project;
 use App\Models\User;
 use App\Policies\ApplicationPolicy;
-use App\Policies\BlogPolicy;
+use App\Policies\BlogPostPolicy;
 use App\Policies\InterviewPolicy;
 use App\Policies\ProjectPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -25,7 +25,7 @@ class AuthServiceProvider extends ServiceProvider
         Project::class => ProjectPolicy::class,
         Application::class => ApplicationPolicy::class,
         Interview::class => InterviewPolicy::class,
-        BlogPost::class => BlogPolicy::class,
+        BlogPost::class => BlogPostPolicy::class,
     ];
 
     /**
