@@ -7,31 +7,45 @@ use Illuminate\Http\Request;
 
 class BlogPostController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', BlogPost::class);
-        return response()->json(BlogPost::with('author')->where('status', 'published')->paginate(10));
+        $query = BlogPost::with('author');
+
+        if ($request->boolean('mine')) {
+            $query->where('author_id', '=', $request->user()->id);
+        } else {
+            $query->where('visibility', '=', 'public')
+                  ->where('moderation_status', '=', 'approved');
+        }
+
+        return response()->json($query->latest()->paginate(10));
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $this->authorize('create', BlogPost::class);
 
         $validatedData = $request->validate([
-            'title'  => 'required|string|max:255',
-            'status' => 'required|in:draft,published',
+            'title'      => 'required|string|max:255',
+            'body'       => 'nullable|string',
+            'visibility' => 'required|in:public,private,draft',
+            'tags'       => 'nullable|array',
+            'status'     => 'sometimes|in:draft,published', // backwards compat
         ]);
+
+        if (empty($validatedData['visibility']) && isset($validatedData['status'])) {
+            $validatedData['visibility'] = $validatedData['status'] === 'draft' ? 'draft' : 'public';
+        }
+
+        if (empty($validatedData['status']) && isset($validatedData['visibility'])) {
+            $validatedData['status'] = $validatedData['visibility'] === 'draft' ? 'draft' : 'published';
+        }
 
         $blogPost = BlogPost::create([
             ...$validatedData,
             'author_id' => $request->user()->id,
+            'moderation_status' => 'approved', 
         ]);
 
         return response()->json([
@@ -40,27 +54,39 @@ class BlogPostController extends Controller
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(BlogPost $blogPost)
     {
         $this->authorize('view', $blogPost);
         return response()->json($blogPost->load('author'));
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, BlogPost $blogPost)
     {
         $this->authorize('update', $blogPost);
 
         $validatedData = $request->validate([
-            'title'  => 'sometimes|string|max:255',
-            'status' => 'sometimes|in:draft,published',
+            'title'      => 'sometimes|string|max:255',
+            'body'       => 'sometimes|nullable|string',
+            'visibility' => 'sometimes|in:public,private,draft',
+            'tags'       => 'sometimes|nullable|array',
+            'status'     => 'sometimes|in:draft,published',
         ]);
+
+        if (isset($validatedData['status']) && !isset($validatedData['visibility'])) {
+            $validatedData['visibility'] = $validatedData['status'] === 'draft' ? 'draft' : 'public';
+        }
+
+        if (isset($validatedData['visibility']) && !isset($validatedData['status'])) {
+            $validatedData['status'] = $validatedData['visibility'] === 'draft' ? 'draft' : 'published';
+        }
+
+        // Add history for modification
+        $history = $blogPost->modification_history ?? [];
+        $history[] = [
+            'type' => 'user_edit',
+            'timestamp' => now()->toIso8601String(),
+        ];
+        $validatedData['modification_history'] = $history;
 
         $blogPost->update($validatedData);
 
@@ -70,9 +96,6 @@ class BlogPostController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(BlogPost $blogPost)
     {
         $this->authorize('delete', $blogPost);
