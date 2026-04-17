@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Middleware\AdminOnly;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\AdminBlogPostController;
+use App\Http\Controllers\BlogPostController;
 Route::post('/v1/register', [AuthController::class , 'register']);
 Route::post('/v1/login', [AuthController::class , 'login']);
 
@@ -49,7 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::apiResource('/v1/applications', ApplicationController::class);
     Route::apiResource('/v1/interviews', InterviewController::class);
     Route::apiResource('/v1/messages', MessageController::class);
-    Route::post('/v1/reviews', [App\Http\Controllers\ReviewController::class, 'store']);
+    Route::post('/v1/reviews', [ReviewController::class, 'store']);
     Route::post('/v1/application/apply', [ApplicationController::class, 'apply']);
     
 
@@ -57,8 +60,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/v1/interviews/{application}/create', [InterviewController::class, 'store']);
     Route::post('/v1/interviews/{interview}/result', [InterviewController::class, 'submitResult']);
 
+    // Blogs
+    Route::apiResource('/v1/blog-posts', BlogPostController::class);
     // Admin Routes
     Route::middleware([AdminOnly::class])->prefix('v1/admin')->group(function () {
+        Route::get('/blog-posts', [AdminBlogPostController::class, 'index']);
+        Route::patch('/blog-posts/{blogPost}/moderate', [AdminBlogPostController::class, 'moderate']);
+        Route::delete('/blog-posts/{blogPost}', [AdminBlogPostController::class, 'destroy']);
+
         Route::get('/stats', [AdminController::class, 'stats']);
         Route::get('/users', [AdminController::class, 'users']);
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
