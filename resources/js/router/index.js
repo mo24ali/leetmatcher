@@ -10,6 +10,9 @@ import RegisterRecruiter from '../pages/Register-recruiter.vue'
 import Login             from '../pages/Login.vue'
 import Profile           from '../pages/Profile.vue'
 import TopMatches from '../pages/TopMatches.vue'
+import Blogs             from '../pages/Blogs.vue'
+import BlogDetail        from '../pages/BlogDetail.vue'
+import BlogEditor        from '../pages/BlogEditor.vue'
 
 // Lazy-loaded pages
 const ApplicantDashboard = () => import('../pages/dashboards/ApplicantDashboard.vue')
@@ -29,6 +32,10 @@ const routes = [
     { path: '/register-recruiter',  name: 'Register-recruiter',component: RegisterRecruiter },
     { path: '/login',   name: 'Login',             component: Login },
     { path: '/profile', name: 'Profile',           component: Profile, meta: { requiresAuth: true } },
+    { path: '/blogs',   name: 'Blogs',             component: Blogs, meta: { requiresAuth: true } },
+    { path: '/blogs/create', name: 'BlogCreate',   component: BlogEditor, meta: { requiresAuth: true } },
+    { path: '/blogs/:id', name: 'BlogDetail',      component: BlogDetail, meta: { requiresAuth: true } },
+    { path: '/blogs/:id/edit', name: 'BlogEdit',   component: BlogEditor, meta: { requiresAuth: true } },
     { path: '/403',     name: 'Forbidden',         component: Forbidden },
 
     // Protected — role-gated dashboards
