@@ -328,68 +328,108 @@
 
           <!-- ══════════════════════════════════════════════ PASSWORD ══ -->
           <div v-if="activeTab === 'password'" class="animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-xl">
-             <section class="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
-               <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/30">
-                 <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                   <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3L15.5 7.5z"/></svg>
-                   Security Settings
-                 </h3>
-               </div>
+            <section class="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+              <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/30">
+                <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3L15.5 7.5z"/></svg>
+                  Security Settings
+                </h3>
+              </div>
 
-               <div class="p-8">
-                 <form @submit.prevent="submitPasswordChange" class="space-y-6">
+              <div class="p-8">
+                <form @submit.prevent="submitPasswordChange" class="space-y-6">
+                  <div class="space-y-2">
+                    <label class="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest">Current Password</label>
+                    <input
+                      v-model="pwForm.current"
+                      type="password"
+                      placeholder="••••••••"
+                      class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:bg-white transition-all text-sm"
+                      :class="{'border-red-300': pwErrors.current}"
+                    />
+                    <p v-if="pwErrors.current" class="text-[0.7rem] font-bold text-red-500">{{ pwErrors.current }}</p>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                      <label class="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest">Current Password</label>
+                      <label class="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest">New Password</label>
                       <input
-                        v-model="pwForm.current"
+                        v-model="pwForm.password"
                         type="password"
                         placeholder="••••••••"
-                        class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:bg-white transition-all text-sm"
-                        :class="{'border-red-300': pwErrors.current}"
+                        class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-slate-900 focus:bg-white transition-all text-sm"
+                        :class="{'border-red-300': pwErrors.password}"
                       />
-                      <p v-if="pwErrors.current" class="text-[0.7rem] font-bold text-red-500">{{ pwErrors.current }}</p>
+                      <p v-if="pwErrors.password" class="text-[0.7rem] font-bold text-red-500">{{ pwErrors.password }}</p>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div class="space-y-2">
-                        <label class="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest">New Password</label>
-                        <input
-                          v-model="pwForm.password"
-                          type="password"
-                          placeholder="••••••••"
-                          class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-slate-900 focus:bg-white transition-all text-sm"
-                          :class="{'border-red-300': pwErrors.password}"
-                        />
-                         <p v-if="pwErrors.password" class="text-[0.7rem] font-bold text-red-500">{{ pwErrors.password }}</p>
-                      </div>
-                      <div class="space-y-2">
-                        <label class="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest">Confirm Password</label>
-                        <input
-                          v-model="pwForm.confirm"
-                          type="password"
-                          placeholder="••••••••"
-                          class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-slate-900 focus:bg-white transition-all text-sm"
-                           :class="{'border-red-300': pwErrors.confirm}"
-                        />
-                         <p v-if="pwErrors.confirm" class="text-[0.7rem] font-bold text-red-500">{{ pwErrors.confirm }}</p>
-                      </div>
+                    <div class="space-y-2">
+                      <label class="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest">Confirm Password</label>
+                      <input
+                        v-model="pwForm.confirm"
+                        type="password"
+                        placeholder="••••••••"
+                        class="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-slate-900 focus:bg-white transition-all text-sm"
+                        :class="{'border-red-300': pwErrors.confirm}"
+                      />
+                      <p v-if="pwErrors.confirm" class="text-[0.7rem] font-bold text-red-500">{{ pwErrors.confirm }}</p>
                     </div>
+                  </div>
 
-                    <div v-if="pwSuccess" class="p-4 bg-green-50 rounded-2xl border border-green-200 text-green-700 text-sm font-bold flex items-center gap-3">
-                       <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                       Password updated effectively.
+                  <div v-if="pwSuccess" class="p-4 bg-green-50 rounded-2xl border border-green-200 text-green-700 text-sm font-bold flex items-center gap-3">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Password updated effectively.
+                  </div>
+
+                  <div class="pt-8 border-t border-slate-100">
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest">Two-Factor Authentication (OTP)</label>
+                      <span 
+                        class="px-2 py-0.5 rounded text-[0.6rem] font-black uppercase tracking-widest"
+                        :class="auth.state.user?.otp_enabled ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'"
+                      >
+                        {{ auth.state.user?.otp_enabled ? 'Enabled' : 'Disabled' }}
+                      </span>
                     </div>
-
+                    <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+                      When enabled, a 6-digit one-time password will be required during login for enhanced security.
+                    </p>
+                    
                     <button
-                      type="submit"
-                      class="bg-slate-900 text-white text-xs font-black px-10 py-4 rounded-2xl hover:bg-slate-800 transition shadow-xl shadow-slate-100 disabled:opacity-50"
-                      :disabled="changingPw"
+                      type="button"
+                      @click="handleToggleOtp"
+                      :disabled="togglingOtp"
+                      class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-white border border-slate-200 rounded-2xl transition-all group"
                     >
-                      {{ changingPw ? 'Processing…' : 'Update Security' }}
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
+                          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">
+                          {{ auth.state.user?.otp_enabled ? 'Disable OTP Protection' : 'Enable OTP Protection' }}
+                        </span>
+                      </div>
+                      <div 
+                        class="w-12 h-6 rounded-full relative transition-colors duration-300 pointer-events-none"
+                        :class="auth.state.user?.otp_enabled ? 'bg-blue-600' : 'bg-slate-300'"
+                      >
+                        <div 
+                          class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm"
+                          :style="{ left: auth.state.user?.otp_enabled ? '1.75rem' : '0.25rem' }"
+                        ></div>
+                      </div>
                     </button>
-                 </form>
-               </div>
-             </section>
+                  </div>
+
+                  <button
+                    type="submit"
+                    class="bg-slate-900 text-white text-xs font-black px-10 py-4 rounded-2xl hover:bg-slate-800 transition shadow-xl shadow-slate-100 disabled:opacity-50"
+                    :disabled="changingPw"
+                  >
+                    {{ changingPw ? 'Processing…' : 'Update Security' }}
+                  </button>
+                </form>
+              </div>
+            </section>
           </div>
 
         </div>
@@ -584,6 +624,20 @@ async function submitPasswordChange() {
     if (!pwErrors.current && !pwErrors.password) pwErrors.current = err.message
   } finally {
     changingPw.value = false
+  }
+}
+
+const togglingOtp = ref(false)
+async function handleToggleOtp() {
+  togglingOtp.value = true
+  const newState = !auth.state.user?.otp_enabled
+  try {
+    await auth.toggleOtp(newState)
+    showToast(newState ? 'OTP protection enabled.' : 'OTP protection disabled.')
+  } catch (err) {
+    showToast('Failed to update OTP status.')
+  } finally {
+    togglingOtp.value = false
   }
 }
 

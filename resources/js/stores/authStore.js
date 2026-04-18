@@ -59,6 +59,30 @@ async function apiFetch(endpoint, options = {}) {
     return data
 }
 
+async function verifyOtp(email, otp) {
+    const data = await apiFetch('/v1/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+    })
+    if (data.user) {
+        state.user = data.user
+        persist()
+    }
+    return data
+}
+
+async function toggleOtp(enabled) {
+    const data = await apiFetch('/v1/profile/toggle-otp', {
+        method: 'POST',
+        body: JSON.stringify({ enabled }),
+    })
+    if (state.user) {
+        state.user.otp_enabled = data.otp_enabled
+        persist()
+    }
+    return data
+}
+
 
 async function login(email, password) {
     const data = await apiFetch('/v1/login', {
@@ -223,6 +247,8 @@ export function useAuthStore() {
         fetchSkills,
         addSkill,
         removeSkill,
+        verifyOtp,
+        toggleOtp,
         apiFetch,
     }
 }

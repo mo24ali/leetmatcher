@@ -25,18 +25,7 @@ class AuthController extends Controller
             'role'     => $validatedData['role'],
         ]);
 
-        /* OTP AUTHENTICATION (Commented for future use)
-        $otp = rand(100000, 999999);
-        $user->update(['otp_code' => $otp]);
-        \Illuminate\Support\Facades\Log::info("OTP for newly registered user {$user->email}: {$otp}");
-        return response()->json([
-            'message'      => 'User created successfully. Please verify your account with the OTP sent to your email.',
-            'requires_otp' => true,
-            'email'        => $user->email,
-        ], 201);
-        */
-
-        // Direct login if OTP is disabled
+        // Direct login after registration (consistent with existing pattern)
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -68,17 +57,26 @@ class AuthController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        /* OTP AUTHENTICATION (Commented for future use)
-        $otp = rand(100000, 999999);
-        $user->update(['otp_code' => $otp]);
-        \Illuminate\Support\Facades\Log::info("OTP for {$user->email}: {$otp}");
-        Auth::logout();
-        return response()->json([
-            'message'      => 'Login successful. Please verify the OTP sent to your email.',
-            'requires_otp' => true,
-            'email'        => $user->email,
-        ]);
-        */
+        // Check if OTP is enabled for this user
+        if ($user->otp_enabled) {
+            $otp = rand(100000, 999999);
+            $user->update([
+                'otp_code' => $otp,
+                'otp_expires_at' => now()->addMinutes(10)
+            ]);
+            
+            \Illuminate\Support\Facades\Log::info("OTP for {$user->email}: {$otp}");
+            
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return response()->json([
+                'message'      => 'Login successful. Please verify the OTP sent to your email.',
+                'requires_otp' => true,
+                'email'        => $user->email,
+            ]);
+        }
 
         // Direct login success if OTP is disabled
         $request->session()->regenerate();
@@ -95,7 +93,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /* OTP AUTHENTICATION (Commented for future use)
     public function verifyOtp(Request $request)
     {
         $validatedData = $request->validate([
@@ -105,6 +102,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $validatedData['email'])
                     ->where('otp_code', $validatedData['otp'])
+                    ->where('otp_expires_at', '>', now())
                     ->first();
 
         if (!$user) {
@@ -113,7 +111,11 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user->update(['otp_code' => null]);
+        $user->update([
+            'otp_code' => null,
+            'otp_expires_at' => null
+        ]);
+
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -128,7 +130,6 @@ class AuthController extends Controller
             ],
         ]);
     }
-    */
 
     public function logout(Request $request)
     {

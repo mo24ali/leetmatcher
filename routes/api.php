@@ -19,6 +19,7 @@ use App\Http\Controllers\AdminBlogPostController;
 use App\Http\Controllers\BlogPostController;
 Route::post('/v1/register', [AuthController::class , 'register']);
 Route::post('/v1/login', [AuthController::class , 'login']);
+Route::post('/v1/verify-otp', [AuthController::class, 'verifyOtp']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/user', fn(Request $r) => $r->user());
@@ -36,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/v1/profile/avatar', [ProfileApiController::class , 'uploadAvatar']);
     Route::post('/v1/profile/skills', [ProfileApiController::class , 'addSkill']);
     Route::delete('/v1/profile/skills/{skill}', [ProfileApiController::class , 'removeSkill']);
+    Route::post('/v1/profile/toggle-otp', [ProfileApiController::class, 'toggleOtp']);
 
     // Dashboard & Stats
     Route::get('/v1/recruiter/stats', [ProjectController::class , 'recruiterStats']);
