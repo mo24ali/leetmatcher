@@ -202,6 +202,8 @@ class ProjectController extends Controller
             'title' => $p->title,
             'description' => $p->description,
             'skills' => $p->skills->pluck('name')->toArray(),
+            'match' => $p->match_score,
+            'company' => $p->recruiter?->company_name ?? 'Acme Corp',
             'recruiter' => [
                 'name' => $p->recruiter?->name,
                 'company' => $p->recruiter?->company_name ?? 'Acme Corp', // Fallback or use company_name field if it exists
