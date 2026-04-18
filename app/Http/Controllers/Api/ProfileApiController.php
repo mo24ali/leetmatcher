@@ -34,6 +34,7 @@ class ProfileApiController extends Controller
                 'email'      => $user->email,
                 'role'       => $user->role,
                 'avatar_url' => $user->avatar_url,
+                'otp_enabled' => $user->otp_enabled,
             ],
             'profile' => [
                 'bio'      => $profile->bio,
@@ -169,5 +170,23 @@ class ProfileApiController extends Controller
         }
 
         return response()->json(['message' => 'Skill removed.']);
+    }
+
+    /**
+     * Toggle OTP authentication status.
+     */
+    public function toggleOtp(Request $request)
+    {
+        $request->validate([
+            'enabled' => 'required|boolean',
+        ]);
+
+        $user = $request->user();
+        $user->update(['otp_enabled' => $request->enabled]);
+
+        return response()->json([
+            'message'     => 'OTP status updated successfully.',
+            'otp_enabled' => $user->otp_enabled,
+        ]);
     }
 }
