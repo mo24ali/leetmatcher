@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use Illuminate\Support\Facades\Storage;
 class Profile extends Model
 {
     protected $appends = ['full_avatar_url'];
@@ -25,7 +25,7 @@ class Profile extends Model
      */
     public function getFullAvatarUrlAttribute()
     {
-        return $this->avatar_url ? \Illuminate\Support\Facades\Storage::url($this->avatar_url) : null;
+        return $this->avatar_url ? Storage::url($this->avatar_url) : null;
     }
 
     public function user(): BelongsTo

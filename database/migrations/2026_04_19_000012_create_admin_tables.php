@@ -6,26 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('moderation_actions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('admin_id')->constrained('users')->onDelete('cascade');
-            $table->string('type'); // warning, flag, restriction
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('admin_id')->constrained('users')->cascadeOnDelete();
+            $table->string('type');   // e.g. 'warning', 'ban', 'shadow_ban'
             $table->text('reason');
-            $table->integer('level')->default(1); // escalation level
+            $table->string('level')->default('info'); // info, warning, critical
             $table->timestamps();
         });
 
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('event_type'); // user_deletion, system_update, etc
-            $table->string('severity'); // info, warning, error
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('event_type');
+            $table->string('severity')->default('info');
             $table->json('metadata')->nullable();
             $table->timestamps();
         });
