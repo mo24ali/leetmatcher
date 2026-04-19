@@ -6,24 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->string('type');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('type');         // e.g. 'interview_result', 'admin_warning'
             $table->text('message');
-            $table->boolean('is_read');
+            $table->boolean('is_read')->default(false); // Fixed: explicit default prevents NULL inserts
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('notifications');

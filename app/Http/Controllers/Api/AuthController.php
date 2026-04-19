@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-
+use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     public function register(Request $request)
@@ -65,7 +65,7 @@ class AuthController extends Controller
                 'otp_expires_at' => now()->addMinutes(10)
             ]);
             
-            \Illuminate\Support\Facades\Log::info("OTP for {$user->email}: {$otp}");
+            Log::info("OTP for {$user->email}: {$otp}");
             
             Auth::logout();
             $request->session()->invalidate();
