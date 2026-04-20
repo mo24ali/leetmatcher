@@ -6,6 +6,7 @@ use App\Models\Application;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Notification;
 class ApplicationController extends Controller
 {
     /**
@@ -45,6 +46,13 @@ class ApplicationController extends Controller
             ...$validatedData,
             'student_id' => $request->user()->id,
             'status'     => 'pending',
+        ]);
+
+        $project = Project::find($validatedData['project_id']);
+        Notification::create([
+            'user_id' => $project->recruiter_id,
+            'type'    => 'new_application',
+            'message' => "New application for '{$project->title}'"
         ]);
 
         return response()->json([
@@ -144,6 +152,13 @@ class ApplicationController extends Controller
                 'message' => 'You already applied to the project'
             ]);
         }
+
+        $project = Project::find($projectId);
+        Notification::create([
+            'user_id' => $project->recruiter_id,
+            'type'    => 'new_application',
+            'message' => "A new candidate applied for '{$project->title}'"
+        ]);
 
         return response()->json([
             'success' => true,

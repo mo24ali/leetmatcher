@@ -62,7 +62,7 @@
             >
               <div
                 v-if="appsOpen"
-                class="absolute right-0 mt-2 w-full sm:w-[340px] max-w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden"
+                class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[400px] md:w-[450px] lg:w-[500px] max-w-[95vw] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden z-50 transform-gpu"
               >
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
                   <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Matched Jobs</p>

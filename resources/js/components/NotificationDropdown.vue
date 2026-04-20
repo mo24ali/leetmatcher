@@ -22,7 +22,7 @@
       <!-- Responsive: Changed w-80 to 'w-full sm:w-80 max-w-full' to prevent horizontal scroll on small devices -->
       <div
         v-if="isOpen"
-        class="absolute right-0 mt-2 w-full sm:w-80 max-w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-50"
+        class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[380px] md:w-[420px] lg:w-[480px] max-w-[95vw] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden z-50 transform-gpu"
       >
         <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
           <p class="text-xs font-bold uppercase tracking-wider text-gray-500">Notifications</p>
@@ -43,7 +43,7 @@
               @click="markAsRead(notification)"
             >
               <div class="flex items-start gap-3">
-                <div class="mt-0.5 text-orange-500" v-if="notification.type === 'warning'">
+                <div class="mt-0.5 texxt-orange-500" v-if="notification.type === 'warning'">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>

@@ -203,12 +203,11 @@ class ProjectController extends Controller
             'description' => $p->description,
             'skills' => $p->skills->pluck('name')->toArray(),
             'match' => $p->match_score,
-            'company' => $p->recruiter?->company_name ?? 'Acme Corp',
             'recruiter' => [
                 'name' => $p->recruiter?->name,
-                'company' => $p->recruiter?->company_name ?? 'Acme Corp', // Fallback or use company_name field if it exists
-                'details' => $p->recruiter?->email, // Using email as details placeholder
-                'avatar' => $p->recruiter?->avatar_url ?? "https://i.pravatar.cc/150?u={$p->recruiter_id}",
+                'company' => $p->recruiter?->profile?->bio ? substr($p->recruiter->profile->bio, 0, 30) : 'Independent Recruiter',
+                'details' => $p->recruiter?->email,
+                'avatar' => $p->recruiter?->avatar_url,
                 'reviews' => $p->recruiter?->reviewsReceived->map(fn($r) => [
                     'rating' => $r->rating,
                     'comment' => $r->comment,
@@ -245,12 +244,15 @@ class ProjectController extends Controller
         ->get()
         ->map(fn($s) => ['name' => $s->name, 'count' => $s->projects_count]);
 
+        $filledPositions = Project::where('recruiter_id', $user->id)->where('status', 'closed')->count();
+
         return response()->json([
             'stats' => [
                 'total_projects'      => $totalProjects,
                 'total_applications'  => $totalApplications,
                 'pending_reviews'     => $pendingReviews,
                 'scheduled_interviews' => $scheduledInterviews,
+                'filled_positions'     => $filledPositions,
             ],
             'skills_distribution' => $skillsDistribution,
         ]);
@@ -263,10 +265,10 @@ class ProjectController extends Controller
         $formatted = $matches->map(fn($p) => [
             'id' => $p->id,
             'name' => $p->user?->name,
-            'avatar' => $p->user?->avatar_url ?? "https://i.pravatar.cc/150?u={$p->id}",
+            'avatar' => $p->user?->avatar_url,
             'skills' => $p->skills->pluck('name')->toArray(),
-            'experience' => '3+ years experience', // Placeholder for experience
-            'qualifications' => $p->education_level ?? 'B.S. in Computer Science',
+            'experience' => ($p->cv_score ?? '0') . '% match strength',
+            'qualifications' => $p->education_level ?? 'No qualifications listed',
             'reviews' => $p->user?->reviewsReceived->map(fn($r) => [
                 'rating' => $r->rating,
                 'comment' => $r->comment,

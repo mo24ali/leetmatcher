@@ -49,6 +49,12 @@ class InterviewController extends Controller
         $interview = Interview::create($validatedData);
         $interview->load(['application.project.recruiter', 'application.student']);
 
+        Notification::create([
+            'user_id' => $interview->application->student_id,
+            'type'    => 'interview_scheduled',
+            'message' => "An interview has been scheduled for " . $interview->application->project->title
+        ]);
+
         return response()->json([
             'message'   => 'Interview scheduled successfully',
             'interview' => $interview,
@@ -121,7 +127,7 @@ class InterviewController extends Controller
         // Create a notification for the student
         Notification::create([
             'user_id' => $application->student_id,
-            'title' => 'Interview Result',
+            'type' => 'interview_result',
             'message' => 'You have ' . ($request->passed ? 'passed' : 'failed') . ' the interview for ' . $application->project->title,
             'is_read' => false
         ]);

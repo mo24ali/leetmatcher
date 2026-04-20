@@ -35,7 +35,7 @@ class MatchingService
     {
         // This is a simplified recommendation engine
         $projects = Project::where('status', 'open')
-            ->with(['skills', 'recruiter.reviewsReceived.reviewer'])
+            ->with(['skills', 'recruiter.profile', 'recruiter.reviewsReceived.reviewer'])
             ->get();
 
         $recommendations = $projects->map(function ($project) use ($profile) {
