@@ -462,6 +462,12 @@ function formatBytes(bytes) {
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
+/* Responsive: Refactored hardcoded 2 columns to 1 column on mobile to prevent text overflow */
+@media (max-width: 480px) {
+  .parsed-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .parsed-field label {
   display: block;
   font-size: 0.72rem;

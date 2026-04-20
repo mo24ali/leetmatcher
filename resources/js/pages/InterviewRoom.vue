@@ -159,7 +159,8 @@
       </div>
     </footer>
 
-    <aside class="absolute top-0 right-0 w-[22rem] h-full bg-[#0a0b10] border-l border-white/5 shadow-2xl z-20 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" :class="isChatOpen ? 'translate-x-0' : 'translate-x-full'">
+    <!-- Responsive: Replaced w-[22rem] with 'w-full sm:w-[22rem] max-w-[100vw]' to ensure the chat drawer doesn't overflow mobile viewports -->
+    <aside class="absolute top-0 right-0 w-full sm:w-[22rem] max-w-[100vw] h-full bg-[#0a0b10] border-l border-white/5 shadow-2xl z-20 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" :class="isChatOpen ? 'translate-x-0' : 'translate-x-full'">
       <div class="h-16 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
         <span class="text-sm font-black tracking-widest uppercase">Live Chat</span>
         <button @click="closeChat" class="p-2 hover:bg-white/10 rounded-lg transition-colors">

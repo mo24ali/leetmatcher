@@ -11,8 +11,11 @@
           <span class="text-lg sm:text-xl font-medium tracking-tight text-gray-400">MATCHER</span>
         </router-link>
 
-        <!-- Centered Navigation links (Desktop) -->
-        <div class="hidden md:flex items-center gap-1">
+        <!-- Centered Navigation links (Adaptive) -->
+        <div :class="[
+          mobileMenuOpen ? 'flex flex-col absolute top-full left-0 w-full bg-white/95 backdrop-blur-md shadow-xl p-4 border-b border-gray-200 z-50' : 'hidden', 
+          'md:flex md:flex-row md:relative md:top-auto md:left-auto md:w-auto md:bg-transparent md:shadow-none md:border-none md:p-0 items-center gap-1'
+        ]">
           <template v-for="link in filteredLinks" :key="link.path">
             <router-link
               :to="link.path"
@@ -59,7 +62,7 @@
             >
               <div
                 v-if="appsOpen"
-                class="absolute right-0 mt-2 w-[340px] bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden"
+                class="absolute right-0 mt-2 w-full sm:w-[340px] max-w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden"
               >
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
                   <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Matched Jobs</p>
@@ -168,9 +171,19 @@
             </router-link>
           </template>
 
-          <!-- Mobile Menu Button (Hamburger - Placeholder) -->
-          <button class="md:hidden p-2 text-gray-600">
-             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          <!-- Mobile Menu Button (Hamburger) -->
+          <button 
+            class="md:hidden p-3 text-gray-600 transition-colors hover:bg-gray-100 rounded-lg"
+            @click="mobileMenuOpen = !mobileMenuOpen"
+          >
+            <svg 
+              class="w-6 h-6 transition-transform duration-200" 
+              :class="{ 'rotate-90': mobileMenuOpen }" 
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            >
+              <path v-if="!mobileMenuOpen" d="M3 12h18M3 6h18M3 18h18"/>
+              <path v-else d="M18 6L6 18M6 6l12 12"/>
+            </svg>
           </button>
         </div>
       </nav>
@@ -192,6 +205,7 @@ const router = useRouter()
 const scrolled = ref(false)
 const loggingOut = ref(false)
 const appsOpen = ref(false)
+const mobileMenuOpen = ref(false)
 const appsMenuRef = ref(null)
 const loadingJobs = ref(false)
 const matchedJobs = ref([])
@@ -285,6 +299,7 @@ function handleClickOutside(event) {
 // Watch route path to close dropdown
 watch(() => route.path, () => {
   appsOpen.value = false
+  mobileMenuOpen.value = false
 })
 
 onMounted(() => {
