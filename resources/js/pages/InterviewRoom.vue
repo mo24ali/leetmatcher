@@ -554,7 +554,8 @@ async function submitReview() {
     router.push(dest);
   } catch (err) {
     console.error("Submit failure:", err);
-    router.push('/');
+    const dest = currentUser.value?.role === "recruiter" ? '/dashboard/recruiter' : '/dashboard/applicant';
+    router.push(dest);
   } finally {
     isSubmittingReview.value = false;
   }

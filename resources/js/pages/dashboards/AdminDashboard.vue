@@ -4,7 +4,7 @@
     
     <section class="dash-hero">
       <div class="dash-hero-inner">
-        <div>
+        <div class="hero-text-content">
           <p class="dash-welcome">Admin Control Panel</p>
           <h1 class="dash-title">{{ auth.state.user?.name }}</h1>
           <p class="dash-subtitle">Real-time platform oversight and moderation.</p>
@@ -56,26 +56,26 @@
             </div>
           </div>
 
-          <div class="user-list">
+          <div class="table-responsive">
             <table class="admin-table">
               <thead>
                 <tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 <tr v-for="user in users" :key="user.id">
-                  <td>
+                  <td data-label="User">
                     <div class="user-cell">
                       <span class="u-name">{{ user.name }}</span>
                       <span class="u-email">{{ user.email }}</span>
                     </div>
                   </td>
-                  <td><span class="role-chip" :class="user.role">{{ user.role }}</span></td>
-                  <td>
+                  <td data-label="Role"><span class="role-chip" :class="user.role">{{ user.role }}</span></td>
+                  <td data-label="Status">
                     <span v-if="user.warnings > 0" class="warn-badge">{{ user.warnings }} Warnings</span>
                     <span v-else class="status-ok">Active</span>
                   </td>
-                  <td>{{ user.joined }}</td>
-                  <td>
+                  <td data-label="Joined">{{ user.joined }}</td>
+                  <td data-label="Actions">
                     <div class="action-btns">
                       <button @click="openModeration(user)" class="admin-btn">Warn</button>
                       <button @click="confirmDeleteUser(user)" class="admin-btn danger">Delete</button>
@@ -94,7 +94,7 @@
             <p class="dash-card-subtitle">User distribution by role</p>
           </div>
           <div class="role-breakdown">
-            <div style="height: 250px; display: flex; justify-content: center; align-items: center;">
+            <div class="chart-container">
               <Pie v-if="chartData.datasets && chartData.datasets.length" :data="chartData" :options="chartOptions" />
               <p v-else class="empty-hint">Loading Demographics...</p>
             </div>
@@ -113,18 +113,18 @@
             <input v-model="logSearch" placeholder="Filter logs..." class="admin-input" />
           </div>
         </div>
-        <div class="log-viewer">
+        <div class="table-responsive log-viewer">
           <table class="admin-table sticky-header">
             <thead>
               <tr><th>Admin</th><th>Event</th><th>Severity</th><th>Timestamp</th><th>Details</th></tr>
             </thead>
             <tbody>
               <tr v-for="log in filteredLogs" :key="log.id" :class="'severity-' + log.severity">
-                <td class="font-bold">{{ log.admin }}</td>
-                <td><span class="log-event">{{ log.event }}</span></td>
-                <td><span class="sev-chip" :class="log.severity">{{ log.severity }}</span></td>
-                <td class="text-gray-500">{{ log.time }}</td>
-                <td>
+                <td data-label="Admin" class="font-bold">{{ log.admin }}</td>
+                <td data-label="Event"><span class="log-event">{{ log.event }}</span></td>
+                <td data-label="Severity"><span class="sev-chip" :class="log.severity">{{ log.severity }}</span></td>
+                <td data-label="Timestamp" class="text-gray-500">{{ log.time }}</td>
+                <td data-label="Details">
                    <button @click="viewLogDetails(log)" class="text-btn">View JSON</button>
                 </td>
               </tr>
@@ -140,23 +140,25 @@
           <h2 class="dash-card-title">Job Postings Overwatch</h2>
           <p class="dash-card-subtitle">Platform-wide listing management</p>
         </div>
-        <table class="admin-table">
-          <thead>
-            <tr><th>Title</th><th>Recruiter</th><th>Reach</th><th>Status</th><th>Deadline</th><th>Action</th></tr>
-          </thead>
-          <tbody>
-            <tr v-for="job in allJobs" :key="job.id">
-              <td><span class="font-bold">{{ job.title }}</span></td>
-              <td>{{ job.recruiter }}</td>
-              <td>{{ job.applicants }} candidates</td>
-              <td><span class="listing-status" :class="job.status">{{ job.status }}</span></td>
-              <td>{{ job.deadline }}</td>
-              <td>
-                <button class="admin-btn danger" @click="confirmDeleteJob(job)">Remove</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Title</th><th>Recruiter</th><th>Reach</th><th>Status</th><th>Deadline</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="job in allJobs" :key="job.id">
+                <td data-label="Title"><span class="font-bold">{{ job.title }}</span></td>
+                <td data-label="Recruiter">{{ job.recruiter }}</td>
+                <td data-label="Reach">{{ job.applicants }} candidates</td>
+                <td data-label="Status"><span class="listing-status" :class="job.status">{{ job.status }}</span></td>
+                <td data-label="Deadline">{{ job.deadline }}</td>
+                <td data-label="Action">
+                  <button class="admin-btn danger" @click="confirmDeleteJob(job)">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <!-- Module 5: Blog Moderation -->
@@ -167,19 +169,19 @@
             <p class="dash-card-subtitle">Manage community posts and visibility</p>
           </div>
         </div>
-        <div class="blog-list">
+        <div class="table-responsive">
           <table class="admin-table">
             <thead>
               <tr><th>Post Title</th><th>Author</th><th>Status</th><th>Visibility</th><th>Date</th><th>Actions</th></tr>
             </thead>
             <tbody>
               <tr v-for="post in blogPosts" :key="post.id">
-                <td><span class="font-bold">{{ post.title }}</span></td>
-                <td>{{ post.author?.name }} ({{ post.author?.role }})</td>
-                <td><span :class="['role-chip', post.moderation_status]">{{ post.moderation_status }}</span></td>
-                <td><span :class="['listing-status', post.visibility]">{{ post.visibility }}</span></td>
-                <td>{{ new Date(post.created_at).toLocaleDateString() }}</td>
-                <td>
+                <td data-label="Post Title"><span class="font-bold">{{ post.title }}</span></td>
+                <td data-label="Author">{{ post.author?.name }} ({{ post.author?.role }})</td>
+                <td data-label="Status"><span :class="['role-chip', post.moderation_status]">{{ post.moderation_status }}</span></td>
+                <td data-label="Visibility"><span :class="['listing-status', post.visibility]">{{ post.visibility }}</span></td>
+                <td data-label="Date">{{ new Date(post.created_at).toLocaleDateString() }}</td>
+                <td data-label="Actions">
                   <div class="action-btns">
                     <button @click="openBlogModeration(post)" class="admin-btn">Moderate</button>
                     <button @click="deleteBlogPost(post.id)" class="admin-btn danger">Delete</button>
@@ -458,16 +460,43 @@ async function deleteBlogPost(id) {
 .dash-subtitle { color: #94a3b8; font-size: 1rem; }
 .hero-badge { background: #fef3c7; color: #b45309; padding: 0.4rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; }
 
+@media (max-width: 768px) {
+  .dash-hero { padding: 2rem 0; }
+  .dash-hero-inner { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .dash-title { font-size: 1.75rem; }
+  .dash-subtitle { font-size: 0.9rem; }
+}
+
 /* Layout */
 .dash-content { max-width: 1300px; margin: 0 auto; padding: 2rem; display: flex; flex-direction: column; gap: 2rem; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .dash-content { padding: 1rem; gap: 1rem; }
+}
+
 .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; }
 .stat-icon-box { width: 3.5rem; height: 3.5rem; background: #f1f5f9; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
 
 /* Table Overrides */
-.admin-table { width: 100%; border-collapse: collapse; }
+.table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 1rem; border: 1px solid #f1f5f9; }
+.admin-table { width: 100%; border-collapse: collapse; min-width: 600px; }
 .admin-table th { text-align: left; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #64748b; padding: 1rem; border-bottom: 2px solid #f1f5f9; }
 .admin-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+
+@media (max-width: 768px) {
+  .admin-table { min-width: 100%; }
+  .admin-table thead { display: none; }
+  .admin-table tr { display: block; border-bottom: 2px solid #f1f5f9; padding: 1rem 0; }
+  .admin-table td { display: flex; justify-content: space-between; align-items: center; border-bottom: none; padding: 0.5rem 1rem; text-align: right; }
+  .admin-table td::before { content: attr(data-label); font-weight: 800; text-transform: uppercase; font-size: 0.65rem; color: #64748b; text-align: left; }
+  .user-cell { align-items: flex-end; }
+  .action-btns { justify-content: flex-end; }
+}
 
 .user-cell { display: flex; flex-direction: column; }
 .u-name { font-weight: 700; color: #0f172a; }
@@ -479,7 +508,8 @@ async function deleteBlogPost(id) {
 .role-chip.admin { background: #fef3c7; color: #92400e; }
 
 /* Buttons */
-.admin-btn { padding: 0.5rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; background: white; font-weight: 700; font-size: 0.75rem; transition: 0.2s; cursor: pointer; }
+.action-btns { display: flex; gap: 0.5rem; }
+.admin-btn { padding: 0.5rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; background: white; font-weight: 700; font-size: 0.75rem; transition: 0.2s; cursor: pointer; white-space: nowrap; }
 .admin-btn:hover { background: #f8fafc; }
 .admin-btn.danger { color: #dc2626; border-color: #fecaca; }
 .admin-btn.danger:hover { background: #ef4444; color: white; border-color: #ef4444; }
@@ -487,7 +517,8 @@ async function deleteBlogPost(id) {
 .success-btn:hover { background: #15803d; }
 
 /* Log Viewer */
-.log-viewer { max-height: 500px; overflow-y: auto; border-radius: 1rem; border: 1px solid #f1f5f9; }
+.log-viewer { max-height: 500px; overflow-y: auto; }
+.sticky-header thead th { position: sticky; top: 0; background: white; z-index: 10; }
 .severity-warning { background: #fffbeb; }
 .severity-error { background: #fef2f2; }
 .sev-chip { padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; }
@@ -496,8 +527,14 @@ async function deleteBlogPost(id) {
 .sev-chip.error { background: #fee2e2; color: #991b1b; }
 
 /* Modals */
-.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-.admin-modal { background: white; border-radius: 2rem; width: 100%; max-width: 500px; padding: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.admin-modal { background: white; border-radius: 2rem; width: 100%; max-width: 500px; padding: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow-y: auto; max-height: calc(100vh - 2rem); }
+
+@media (max-width: 480px) {
+  .admin-modal { padding: 1.5rem; border-radius: 1.5rem; }
+  .modal-form { gap: 1rem; margin: 1.5rem 0; }
+}
+
 .modal-form { display: flex; flex-direction: column; gap: 1.5rem; margin: 2rem 0; }
 .form-group label { display: block; font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; }
 .form-group select, .form-group textarea, .form-group input { width: 100%; padding: 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; font-family: inherit; }
@@ -516,10 +553,27 @@ async function deleteBlogPost(id) {
 .warn-badge { background: #fee2e2; color: #dc2626; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 800; }
 
 .dash-card { background: white; border: 1px solid #e2e8f0; border-radius: 1.5rem; padding: 2rem; }
-.flex-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+
+.chart-container { height: 250px; display: flex; justify-content: center; align-items: center; position: relative; }
+@media (max-width: 480px) {
+  .chart-container { height: 200px; }
+  .dash-card { padding: 1.5rem; }
+}
+
+.flex-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1rem; }
+
+@media (max-width: 640px) {
+  .flex-header { flex-direction: column; align-items: flex-start; }
+  .admin-input { width: 100%; }
+}
+
 .admin-input { padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; width: 250px; }
 
 .dash-two-col { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+
+@media (max-width: 1024px) {
+  .dash-two-col { grid-template-columns: 1fr; }
+}
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

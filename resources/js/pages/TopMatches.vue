@@ -29,7 +29,7 @@
               :url="isRecruiter ? item.avatar : item.recruiter?.avatar"
               :name="isRecruiter ? item.name : item.recruiter?.name"
               size="md"
-              :shape="isRecruiter ? 'circle' : 'rounded'"
+              shape="circle"
             />
             <div class="flex-1">
               <p class="text-lg font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
@@ -131,7 +131,7 @@
                <ProfileAvatar 
                 :url="currentItem.recruiter?.avatar" 
                 :name="currentItem.recruiter?.name" 
-                size="lg" shape="rounded"
+                size="lg" shape="circle"
               />
               <div class="flex-1">
                 <p class="text-xl font-bold text-gray-900 leading-tight">{{ currentItem.recruiter?.name }}</p>

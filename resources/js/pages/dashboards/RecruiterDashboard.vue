@@ -292,7 +292,7 @@ async function loadRecruiterData(quiet = false) {
       stats.activeListings = sData.stats.total_projects || 0
       stats.totalApplicants = sData.stats.total_applications || 0
       stats.interviews = sData.stats.scheduled_interviews || 0
-      stats.filled = 0 
+      stats.filled = sData.stats.filled_positions || 0 
     }
     
     if (Array.isArray(lData)) {
