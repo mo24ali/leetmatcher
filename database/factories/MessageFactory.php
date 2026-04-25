@@ -17,7 +17,10 @@ class MessageFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'sender_id' => \App\Models\User::factory(),
+            'receiver_id' => \App\Models\User::factory(),
+            'content' => fake()->sentence(),
+            'read_at' => fake()->optional()->dateTime(),
         ];
     }
 }

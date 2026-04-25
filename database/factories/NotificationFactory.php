@@ -17,7 +17,10 @@ class NotificationFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => \App\Models\User::factory(),
+            'type' => fake()->randomElement(['info', 'warning', 'success', 'application']),
+            'message' => fake()->sentence(),
+            'is_read' => fake()->boolean(),
         ];
     }
 }

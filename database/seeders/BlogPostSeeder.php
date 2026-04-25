@@ -12,6 +12,14 @@ class BlogPostSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $users = \App\Models\User::all();
+
+        if ($users->isEmpty()) {
+            return;
+        }
+
+        \App\Models\BlogPost::factory()->count(12)->create([
+            'author_id' => fn() => $users->random()->id
+        ]);
     }
 }

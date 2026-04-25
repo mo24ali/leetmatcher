@@ -17,7 +17,11 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'recruiter_id' => \App\Models\User::factory()->recruiter(),
+            'title' => fake()->jobTitle(),
+            'description' => fake()->paragraphs(3, true),
+            'deadline' => fake()->dateTimeBetween('+1 week', '+2 months'),
+            'status' => fake()->randomElement(['open', 'closed']),
         ];
     }
 }

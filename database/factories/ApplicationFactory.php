@@ -17,7 +17,10 @@ class ApplicationFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'student_id' => \App\Models\User::factory()->applicant(),
+            'project_id' => \App\Models\Project::factory(),
+            'cover_letter' => fake()->paragraphs(2, true),
+            'status' => fake()->randomElement(['pending', 'in_progress', 'accepted', 'rejected']),
         ];
     }
 }

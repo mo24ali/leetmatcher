@@ -85,6 +85,12 @@ class User extends Authenticatable
         return $this->hasMany(Review::class, 'reviewer_id');
     }
 
+
+    public function applications(){
+        return $this->hasMany(Application::class, 'student_id');
+    }
+
+    // admin only
     public function moderationActions()
     {
         return $this->hasMany(ModerationAction::class);

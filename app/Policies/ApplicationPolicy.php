@@ -13,7 +13,9 @@ class ApplicationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === 'admin' || $user->role === 'recruiter' || $user->role === 'applicant';
+        return  $user->role === 'admin' || 
+                $user->role === 'recruiter' || 
+                $user->role === 'applicant';
     }
 
     /**
@@ -40,6 +42,8 @@ class ApplicationPolicy
     public function update(User $user, Application $application): bool
     {
         // Recruiters update status, applicants might update cover letter
+        // Not implemented yet
+
         if ($user->role === 'admin') return true;
         if ($user->role === 'recruiter') {
             return $user->id === $application->project->recruiter_id;
@@ -53,6 +57,7 @@ class ApplicationPolicy
     /**
      * Determine whether the user can delete the model.
      */
+    
     public function delete(User $user, Application $application): bool
     {
         return $user->role === 'admin' || 

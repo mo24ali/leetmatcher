@@ -17,7 +17,10 @@ class ReviewFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'reviewer_id' => \App\Models\User::factory(),
+            'reviewed_user_id' => \App\Models\User::factory(),
+            'rating' => fake()->numberBetween(1, 5),
+            'comment' => fake()->sentence(),
         ];
     }
 }

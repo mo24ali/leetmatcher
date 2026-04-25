@@ -118,11 +118,11 @@ class SkillExtractionService
             // Auto-extract if no manual skills provided
             $skills = $this->extract($project->description . ' ' . $project->title);
         } else {
-            // Step 1: Ensure skills exist in canonical table
+            // Step1 Ensure skills exist in canonical table
             $skills = $this->ensureSkillsExist($skillNames);
         }
 
-        // Step 3: Store relationship in 'project_skills'
+        // Step2 Store relationship in 'project_skills'
         $syncData = [];
         foreach ($skills as $skill) {
             $syncData[$skill->id] = ['level' => 'intermediate'];
