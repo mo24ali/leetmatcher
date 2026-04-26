@@ -1,9 +1,7 @@
 import { reactive, computed } from 'vue'
 
-const BASE_URL = 'http://127.0.0.1:8000/api'
+const BASE_URL = typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://127.0.0.1:8000/api'
 
-// ─── Persisted state ─────────────────────────────────────────────────────────
-// ─── Persisted state ─────────────────────────────────────────────────────────
 function loadStoredAuth() {
     try {
         const raw = localStorage.getItem('lm_auth')
@@ -17,52 +15,85 @@ function loadStoredAuth() {
 const stored = loadStoredAuth()
 
 const state = reactive({
-    user:  stored.user,
+    user: stored.user,
 })
 
 function persist() {
     localStorage.setItem('lm_auth', JSON.stringify({ user: state.user }))
 }
 
-// ─── Computed helpers ─────────────────────────────────────────────────────────
-const isAuthenticated = computed(() => !!state.user)
-const role            = computed(() => state.user?.role ?? 'guest')
+const isAuthenticated = computed(() => !!state.user) // if the user exists from th session true, else false
+const role            = computed(() => state.user?.role ?? 'guest') // if the user role exists( admin/ applicant/ recruiter), else it guest 
 
-// ─── API helper ───────────────────────────────────────────────────────────────
+
+// globalised customized apiFetch function with unified header to optimize the codebase
 async function apiFetch(endpoint, options = {}) {
+    // keep the csrf toker ( cross-site request forgery) 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
 
     const headers = {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        // using the spread operator , to keep the replacement of the token and option dynamic while fetching 
         ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
         ...(options.headers ?? {}),
     }
-    const res = await fetch(`${BASE_URL}${endpoint}`, { 
-        ...options, 
-        headers, 
-        credentials: 'include' 
+
+
+    // BASE_URL already defined up endpoint changes depending on the request exp /login of /user/1/applications
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+        credentials: 'include',
     })
 
     const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
+
+    if (!res.ok) { // not 200 
         const err = new Error(data.message ?? `HTTP ${res.status}`)
         err.errors = data.errors ?? {}
         err.status = res.status
         throw err
     }
+
     return data
 }
 
-// ─── Actions ──────────────────────────────────────────────────────────────────
+async function verifyOtp(email, otp) {
+    const data = await apiFetch('/v1/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+    })
+    if (data.user) {
+        state.user = data.user
+        persist()
+    }
+    return data
+}
+
+async function toggleOtp(enabled) {
+    const data = await apiFetch('/v1/profile/toggle-otp', {
+        method: 'POST',
+        body: JSON.stringify({ enabled }),
+    })
+    if (state.user) {
+        state.user.otp_enabled = data.otp_enabled
+        persist()
+    }
+    return data
+}
+
+
 async function login(email, password) {
     const data = await apiFetch('/v1/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     })
-    state.user  = data.user
-    persist()
-    return data.user
+    if (data.user) {
+        state.user = data.user
+        persist()
+    }
+    return data
 }
 
 async function register(payload) {
@@ -70,16 +101,18 @@ async function register(payload) {
         method: 'POST',
         body: JSON.stringify(payload),
     })
-    state.user  = data.user
-    persist()
-    return data.user
+    if (data.user) {
+        state.user = data.user
+        persist()
+    }
+    return data
 }
 
 async function logout() {
     try {
         await apiFetch('/v1/logout', { method: 'POST' })
     } catch { /* best-effort */ }
-    state.user  = null
+    state.user = null
     persist()
 }
 
@@ -90,17 +123,19 @@ async function fetchMe() {
         persist()
         return data
     } catch {
-        state.user  = null
+        state.user = null
         persist()
         return null
     }
 }
 
+//  CV Upload 
+
 async function uploadCv(file) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
     const formData = new FormData()
     formData.append('cv', file)
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
     const res = await fetch(`${BASE_URL}/v1/cv/upload`, {
         method: 'POST',
         headers: {
@@ -110,16 +145,91 @@ async function uploadCv(file) {
         credentials: 'include',
         body: formData,
     })
+
     const data = await res.json().catch(() => ({}))
+
     if (!res.ok) {
         const err = new Error(data.message ?? `HTTP ${res.status}`)
         err.errors = data.errors ?? {}
         throw err
     }
+
     return data
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+//  Profile 
+
+async function fetchProfile() {
+    return await apiFetch('/v1/profile')
+}
+
+async function updateProfile(payload) {
+    const data = await apiFetch('/v1/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+    })
+    if (data.user) {
+        state.user = { ...state.user, ...data.user }
+        persist()
+    }
+    return data
+}
+
+async function changePassword(currentPassword, password, passwordConfirmation) {
+    return await apiFetch('/v1/profile/password', {
+        method: 'POST',
+        body: JSON.stringify({
+            current_password:      currentPassword,
+            password:              password,
+            password_confirmation: passwordConfirmation,
+        }),
+    })
+}
+
+async function uploadAvatar(file) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    const res = await fetch(`${BASE_URL}/v1/profile/avatar`, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: formData,
+    })
+
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+        const err = new Error(data.message ?? `HTTP ${res.status}`)
+        err.errors = data.errors ?? {}
+        throw err
+    }
+
+    return data
+}
+
+//  Skills 
+
+async function fetchSkills() {
+    return await apiFetch('/v1/profile/skills')
+}
+
+async function addSkill(name, proficiency = 'intermediate') {
+    return await apiFetch('/v1/profile/skills', {
+        method: 'POST',
+        body: JSON.stringify({ name, proficiency }),
+    })
+}
+
+async function removeSkill(skillId) {
+    return await apiFetch(`/v1/profile/skills/${skillId}`, { method: 'DELETE' })
+}
+
+// Make these function and variable accessible outside this file
 export function useAuthStore() {
     return {
         state,
@@ -130,5 +240,15 @@ export function useAuthStore() {
         logout,
         fetchMe,
         uploadCv,
+        fetchProfile,
+        updateProfile,
+        changePassword,
+        uploadAvatar,
+        fetchSkills,
+        addSkill,
+        removeSkill,
+        verifyOtp,
+        toggleOtp,
+        apiFetch,
     }
 }

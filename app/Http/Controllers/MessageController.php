@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Message;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 class MessageController extends Controller
 {
     /**
@@ -12,15 +12,16 @@ class MessageController extends Controller
      */
     public function index()
     {
-        //
-    }
+        $user = Auth::user();
+        if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $messages = Message::where('sender_id', $user->id)
+            ->orWhere('receiver_id', $user->id)
+            ->with(['sender', 'receiver'])
+            ->latest()
+            ->get();
+
+        return response()->json($messages);
     }
 
     /**
@@ -28,7 +29,24 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $user = Auth::user();
+        if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
+
+        $validatedData = $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'content'     => 'required|string',
+        ]);
+
+        $message = Message::create([
+            'sender_id'   => $user->id,
+            'receiver_id' => $validatedData['receiver_id'],
+            'content'     => $validatedData['content'],
+        ]);
+
+        return response()->json([
+            'message' => 'Message sent successfully',
+            'data'    => $message->load(['sender', 'receiver']),
+        ], 201);
     }
 
     /**
@@ -36,23 +54,8 @@ class MessageController extends Controller
      */
     public function show(Message $message)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Message $message)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Message $message)
-    {
-        //
+        $this->authorize('view', $message);
+        return response()->json($message->load(['sender', 'receiver']));
     }
 
     /**
@@ -60,6 +63,8 @@ class MessageController extends Controller
      */
     public function destroy(Message $message)
     {
-        //
+        $this->authorize('delete', $message);
+        $message->delete();
+        return response()->json(['message' => 'Message deleted successfully'], 204);
     }
 }

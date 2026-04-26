@@ -12,6 +12,14 @@ class NotificationSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $users = \App\Models\User::all();
+
+        if ($users->isEmpty()) {
+            return;
+        }
+
+        \App\Models\Notification::factory()->count(20)->create([
+            'user_id' => fn() => $users->random()->id
+        ]);
     }
 }

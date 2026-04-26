@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
-// ─── Page imports ─────────────────────────────────────────────────────────────
 import Home              from '../pages/Home.vue'
 import About             from '../pages/About.vue'
 import Welcome           from '../pages/Welcome.vue'
@@ -9,14 +8,20 @@ import Register          from '../pages/Register.vue'
 import RegisterStudent   from '../pages/Register-student.vue'
 import RegisterRecruiter from '../pages/Register-recruiter.vue'
 import Login             from '../pages/Login.vue'
+import Profile           from '../pages/Profile.vue'
+import TopMatches from '../pages/TopMatches.vue'
+import Blogs             from '../pages/Blogs.vue'
+import BlogDetail        from '../pages/BlogDetail.vue'
+import BlogEditor        from '../pages/BlogEditor.vue'
 
-// Dashboards (lazy-loaded)
+// Lazy-loaded pages
 const ApplicantDashboard = () => import('../pages/dashboards/ApplicantDashboard.vue')
 const RecruiterDashboard = () => import('../pages/dashboards/RecruiterDashboard.vue')
 const AdminDashboard     = () => import('../pages/dashboards/AdminDashboard.vue')
+const BrowseJobs         = () => import('../pages/BrowseJobs.vue')
 const Forbidden          = () => import('../pages/Forbidden.vue')
 
-// ─── Route definitions ────────────────────────────────────────────────────────
+
 const routes = [
     // Public
     { path: '/',        name: 'Home',              component: Home },
@@ -26,6 +31,11 @@ const routes = [
     { path: '/register-student',    name: 'Register-student',  component: RegisterStudent },
     { path: '/register-recruiter',  name: 'Register-recruiter',component: RegisterRecruiter },
     { path: '/login',   name: 'Login',             component: Login },
+    { path: '/profile', name: 'Profile',           component: Profile, meta: { requiresAuth: true } },
+    { path: '/blogs',   name: 'Blogs',             component: Blogs, meta: { requiresAuth: true } },
+    { path: '/blogs/create', name: 'BlogCreate',   component: BlogEditor, meta: { requiresAuth: true } },
+    { path: '/blogs/:id', name: 'BlogDetail',      component: BlogDetail, meta: { requiresAuth: true } },
+    { path: '/blogs/:id/edit', name: 'BlogEdit',   component: BlogEditor, meta: { requiresAuth: true } },
     { path: '/403',     name: 'Forbidden',         component: Forbidden },
 
     // Protected — role-gated dashboards
@@ -47,7 +57,30 @@ const routes = [
         component: AdminDashboard,
         meta: { requiresAuth: true, role: 'admin' },
     },
-
+    {
+        path: '/jobs',
+        name: 'BrowseJobs',
+        component: BrowseJobs,
+        meta: { requiresAuth: true, role: 'applicant' },
+    },
+    {
+        path: '/top-matches',
+        name: 'TopMatches',
+        component: TopMatches,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/interviews',
+        name: 'Interviews',
+        component: () => import('../pages/Interviews.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/interview-room/:id',
+        name: 'InterviewRoom',
+        component: () => import('../pages/InterviewRoom.vue'),
+        meta: { requiresAuth: true }
+    },
     // Catch-all
     { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
@@ -57,7 +90,6 @@ const router = createRouter({
     routes,
 })
 
-// ─── Global navigation guard ──────────────────────────────────────────────────
 router.beforeEach((to, _from, next) => {
     const auth = useAuthStore()
 
@@ -78,7 +110,7 @@ router.beforeEach((to, _from, next) => {
 
 export default router
 
-// ─── Helper: redirect to the correct dashboard for the current user ───────────
+
 export function dashboardRouteForRole(role) {
     const map = {
         applicant: '/dashboard/applicant',

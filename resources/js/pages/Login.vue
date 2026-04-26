@@ -15,16 +15,40 @@ const form = reactive({
 
 const error   = ref('')
 const loading = ref(false)
+const requiresOtp = ref(false)
+const otpCode = ref('')
 
 async function login() {
     error.value   = ''
     loading.value = true
     try {
-        const user = await auth.login(form.email, form.password)
-        const redirect = route.query.redirect || dashboardRouteForRole(user.role)
-        router.push(redirect)
+        const res = await auth.login(form.email, form.password)
+        if (requiresOtp.value || res.requires_otp) {
+            requiresOtp.value = true
+            return
+        }
+        if (res.user) {
+            const redirect = route.query.redirect || dashboardRouteForRole(res.user.role)
+            router.push(redirect)
+        }
     } catch (e) {
-        error.value = e.message || 'Login failed. Please try again.'
+        error.value = e.message || 'Login failed. Please check your credentials.'
+    } finally {
+        loading.value = false
+    }
+}
+
+async function handleVerifyOtp() {
+    error.value   = ''
+    loading.value = true
+    try {
+        const res = await auth.verifyOtp(form.email, otpCode.value)
+        if (res.user) {
+            const redirect = route.query.redirect || dashboardRouteForRole(res.user.role)
+            router.push(redirect)
+        }
+    } catch (e) {
+        error.value = e.message || 'Invalid or expired OTP.'
     } finally {
         loading.value = false
     }
@@ -32,77 +56,104 @@ async function login() {
 </script>
 
 <template>
-    <div class="page-centered">
-        <div class="register-card">
-            <div class="header">
-                <h2 class="cta-title">Welcome Back</h2>
-                <p class="cta-subtitle">Enter your credentials to access your account</p>
-            </div>
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-sans">
+    <div class="max-w-[420px] w-full bg-white rounded-3xl border border-gray-200 p-8 sm:p-10 shadow-sm">
+      
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-900">{{ requiresOtp ? 'Verification Required' : 'Welcome Back' }}</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          {{ requiresOtp ? 'Please enter the 6-digit code sent to your email' : 'Access your account to continue matching' }}
+        </p>
+      </div>
 
-            <div v-if="error" class="form-error-banner" role="alert">
-                {{ error }}
-            </div>
+      <div
+        v-if="error"
+        class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-sm text-red-800 animate-in fade-in slide-in-from-left-2"
+        role="alert"
+      >
+        {{ error }}
+      </div>
 
-            <form @submit.prevent="login" class="register-form">
-                <div class="form-group">
-                    <label for="email" class="field-label">Email address</label>
-                    <input
-                        id="email"
-                        type="email"
-                        placeholder="john@example.com"
-                        v-model="form.email"
-                        class="form-input"
-                        required
-                        autocomplete="email"
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="password" class="field-label">Password</label>
-                    <input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        v-model="form.password"
-                        class="form-input"
-                        required
-                        autocomplete="current-password"
-                    />
-                </div>
-
-                <button type="submit" class="submit-btn" :disabled="loading">
-                    <span v-if="loading" class="btn-spinner"></span>
-                    <span>{{ loading ? 'Signing in…' : 'Sign In' }}</span>
-                </button>
-
-                <p class="footer-text">
-                    Don't have an account?
-                    <router-link to="/register" class="login-link">Register</router-link>
-                </p>
-            </form>
+      <form v-if="!requiresOtp" @submit.prevent="login" class="flex flex-col gap-5">
+        <div>
+          <label for="email" class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="john@example.com"
+            v-model="form.email"
+            required
+            autocomplete="email"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
+                   outline-none focus:bg-white focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all duration-200"
+          />
         </div>
-    </div>
-</template>
 
-<style scoped>
-.form-error-banner {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-left: 3px solid #ef4444;
-    color: #b91c1c;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    margin-bottom: 1.25rem;
-}
-.submit-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-spinner {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.4);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
+        <div class="relative">
+          <label for="password" class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Password</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            v-model="form.password"
+            required
+            autocomplete="current-password"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
+                   outline-none focus:bg-white focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all duration-200"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="w-full h-12 bg-gray-900 text-white rounded-xl font-bold tracking-widest uppercase text-sm
+                 hover:bg-gray-800 transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-50
+                 shadow-lg hover:shadow-xl active:scale-95 mt-2"
+          :disabled="loading"
+        >
+          <div v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <span>{{ loading ? 'Signing in…' : 'Sign In' }}</span>
+        </button>
+
+        <p class="text-center text-sm text-gray-500 mt-4">
+          Don't have an account?
+          <router-link to="/register" class="text-gray-900 font-bold hover:underline">Register</router-link>
+        </p>
+      </form>
+
+      <form v-else @submit.prevent="handleVerifyOtp" class="flex flex-col gap-5">
+        <div>
+          <label for="otp" class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">OTP Code</label>
+          <input
+            id="otp"
+            type="text"
+            placeholder="123456"
+            v-model="otpCode"
+            required
+            maxlength="6"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-widest text-gray-900
+                   outline-none focus:bg-white focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all duration-200"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="w-full h-12 bg-gray-900 text-white rounded-xl font-bold tracking-widest uppercase text-sm
+                 hover:bg-gray-800 transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-50
+                 shadow-lg hover:shadow-xl active:scale-95 mt-2"
+          :disabled="loading"
+        >
+          <div v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <span>{{ loading ? 'Verifying…' : 'Verify & Sign In' }}</span>
+        </button>
+
+        <button
+          type="button"
+          @click="requiresOtp = false; otpCode = ''"
+          class="text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          &larr; Back to login
+        </button>
+      </form>
+    </div>
+  </div>
+</template>

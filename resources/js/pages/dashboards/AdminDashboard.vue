@@ -1,87 +1,85 @@
 <template>
   <div class="dashboard-page">
-    <!-- Hero -->
+    <!-- Navigation Sidebar/Overlay could be added, but following current style -->
+    
     <section class="dash-hero">
       <div class="dash-hero-inner">
-        <div>
+        <div class="hero-text-content">
           <p class="dash-welcome">Admin Control Panel</p>
-          <h1 class="dash-title">{{ auth.state.user?.name }} 👋</h1>
-          <p class="dash-subtitle">Platform overview and management tools.</p>
+          <h1 class="dash-title">{{ auth.state.user?.name }}</h1>
+          <p class="dash-subtitle">Real-time platform oversight and moderation.</p>
         </div>
-        <div class="hero-badge admin">Admin</div>
+        <div class="hero-badge admin">System Administrator</div>
       </div>
     </section>
 
     <div class="dash-content">
-      <!-- Platform stats -->
+      <!-- Top Stats Section -->
       <section class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon">👥</div>
+          <div class="stat-icon-box"><span>&#128101;</span></div>
           <div class="stat-body">
             <p class="stat-label">Total Users</p>
             <p class="stat-number">{{ stats.users }}</p>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">💼</div>
+          <div class="stat-icon-box"><span>&#9646;</span></div>
           <div class="stat-body">
             <p class="stat-label">Total Jobs</p>
             <p class="stat-number">{{ stats.jobs }}</p>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📋</div>
+          <div class="stat-icon-box"><span>&#9998;</span></div>
           <div class="stat-body">
             <p class="stat-label">Applications</p>
             <p class="stat-number">{{ stats.applications }}</p>
           </div>
         </div>
         <div class="stat-card positive">
-          <div class="stat-icon">📈</div>
+          <div class="stat-icon-box success"><span>&#8593;</span></div>
           <div class="stat-body">
-            <p class="stat-label">Monthly Growth</p>
+            <p class="stat-label">Growth (MoM)</p>
             <p class="stat-number">+{{ stats.growth }}%</p>
           </div>
         </div>
       </section>
 
-      <!-- Charts row -->
       <div class="dash-two-col">
-        <!-- Role breakdown -->
+        <!-- Module 1: User Management & Moderation -->
         <section class="dash-card" id="users">
-          <div class="dash-card-header">
-            <h2 class="dash-card-title">👥 User Management</h2>
-            <p class="dash-card-subtitle">Platform user breakdown by role</p>
-          </div>
-
-          <div class="role-breakdown">
-            <div v-for="r in roleBreakdown" :key="r.role" class="role-row">
-              <div class="role-info">
-                <span class="role-dot" :class="r.role"></span>
-                <span class="role-name">{{ r.label }}</span>
-              </div>
-              <div class="role-bar-wrap">
-                <div class="role-bar">
-                  <div class="role-bar-fill" :class="r.role" :style="{ width: r.pct + '%' }"></div>
-                </div>
-                <span class="role-count">{{ r.count }}</span>
-              </div>
+          <div class="dash-card-header flex-header">
+            <div>
+              <h2 class="dash-card-title">User Management</h2>
+              <p class="dash-card-subtitle">Moderation and account operations</p>
             </div>
           </div>
 
-          <div class="user-list">
+          <div class="table-responsive">
             <table class="admin-table">
               <thead>
-                <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Action</th></tr>
+                <tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 <tr v-for="user in users" :key="user.id">
-                  <td>{{ user.name }}</td>
-                  <td>{{ user.email }}</td>
-                  <td><span class="role-chip" :class="user.role">{{ user.role }}</span></td>
-                  <td>{{ user.joined }}</td>
-                  <td>
-                    <button class="admin-btn danger" @click="removeUser(user)">Remove</button>
+                  <td data-label="User">
+                    <div class="user-cell">
+                      <span class="u-name">{{ user.name }}</span>
+                      <span class="u-email">{{ user.email }}</span>
+                    </div>
+                  </td>
+                  <td data-label="Role"><span class="role-chip" :class="user.role">{{ user.role }}</span></td>
+                  <td data-label="Status">
+                    <span v-if="user.warnings > 0" class="warn-badge">{{ user.warnings }} Warnings</span>
+                    <span v-else class="status-ok">Active</span>
+                  </td>
+                  <td data-label="Joined">{{ user.joined }}</td>
+                  <td data-label="Actions">
+                    <div class="action-btns">
+                      <button @click="openModeration(user)" class="admin-btn">Warn</button>
+                      <button @click="confirmDeleteUser(user)" class="admin-btn danger">Delete</button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -89,226 +87,494 @@
           </div>
         </section>
 
-        <!-- Recent activity -->
+        <!-- Module 2: Statistics & Analytics (Role Breakdown) -->
         <section class="dash-card">
-          <div class="dash-card-header">
-            <h2 class="dash-card-title">🕐 Recent Activity</h2>
-            <p class="dash-card-subtitle">Latest platform events</p>
+           <div class="dash-card-header">
+            <h2 class="dash-card-title">Platform Demographics</h2>
+            <p class="dash-card-subtitle">User distribution by role</p>
           </div>
-
-          <div class="activity-feed">
-            <div v-for="event in activity" :key="event.id" class="activity-item">
-              <div class="activity-dot" :class="event.type"></div>
-              <div class="activity-body">
-                <p class="activity-text">{{ event.text }}</p>
-                <p class="activity-time">{{ event.time }}</p>
-              </div>
+          <div class="role-breakdown">
+            <div class="chart-container">
+              <Pie v-if="chartData.datasets && chartData.datasets.length" :data="chartData" :options="chartOptions" />
+              <p v-else class="empty-hint">Loading Demographics...</p>
             </div>
           </div>
         </section>
       </div>
 
-      <!-- Listings management -->
-      <section class="dash-card" id="listings">
-        <div class="dash-card-header">
-          <h2 class="dash-card-title">💼 Manage Job Listings</h2>
-          <p class="dash-card-subtitle">All jobs posted across the platform</p>
+      <!-- Module 3: System Logs Monitoring -->
+      <section class="dash-card" id="logs">
+        <div class="dash-card-header flex-header">
+          <div>
+            <h2 class="dash-card-title">System Audit Logs</h2>
+            <p class="dash-card-subtitle">Complete traceability of platform operations</p>
+          </div>
+          <div class="header-actions">
+            <input v-model="logSearch" placeholder="Filter logs..." class="admin-input" />
+          </div>
         </div>
-
-        <table class="admin-table">
-          <thead>
-            <tr><th>Title</th><th>Recruiter</th><th>Applicants</th><th>Status</th><th>Deadline</th><th>Action</th></tr>
-          </thead>
-          <tbody>
-            <tr v-for="job in allJobs" :key="job.id">
-              <td>{{ job.title }}</td>
-              <td>{{ job.recruiter }}</td>
-              <td>{{ job.applicants }}</td>
-              <td><span class="listing-status" :class="job.status">{{ job.status }}</span></td>
-              <td>{{ job.deadline }}</td>
-              <td>
-                <button class="admin-btn danger" @click="removeJob(job)">Remove</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-responsive log-viewer">
+          <table class="admin-table sticky-header">
+            <thead>
+              <tr><th>Admin</th><th>Event</th><th>Severity</th><th>Timestamp</th><th>Details</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="log in filteredLogs" :key="log.id" :class="'severity-' + log.severity">
+                <td data-label="Admin" class="font-bold">{{ log.admin }}</td>
+                <td data-label="Event"><span class="log-event">{{ log.event }}</span></td>
+                <td data-label="Severity"><span class="sev-chip" :class="log.severity">{{ log.severity }}</span></td>
+                <td data-label="Timestamp" class="text-gray-500">{{ log.time }}</td>
+                <td data-label="Details">
+                   <button @click="viewLogDetails(log)" class="text-btn">View JSON</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-if="filteredLogs.length === 0" class="empty-hint">No logs matching criteria.</p>
+        </div>
       </section>
 
-      <!-- Site settings -->
-      <section class="dash-card settings-card" id="settings">
+      <!-- Module 4: Job Listings Overwatch -->
+      <section class="dash-card" id="listings">
         <div class="dash-card-header">
-          <h2 class="dash-card-title">⚙️ Site Settings</h2>
-          <p class="dash-card-subtitle">Platform-level configuration</p>
+          <h2 class="dash-card-title">Job Postings Overwatch</h2>
+          <p class="dash-card-subtitle">Platform-wide listing management</p>
         </div>
-        <div class="settings-grid">
-          <div v-for="setting in settings" :key="setting.key" class="setting-row">
-            <div class="setting-info">
-              <p class="setting-label">{{ setting.label }}</p>
-              <p class="setting-desc">{{ setting.desc }}</p>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" v-model="setting.enabled" />
-              <span class="toggle-slider"></span>
-            </label>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Title</th><th>Recruiter</th><th>Reach</th><th>Status</th><th>Deadline</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="job in allJobs" :key="job.id">
+                <td data-label="Title"><span class="font-bold">{{ job.title }}</span></td>
+                <td data-label="Recruiter">{{ job.recruiter }}</td>
+                <td data-label="Reach">{{ job.applicants }} candidates</td>
+                <td data-label="Status"><span class="listing-status" :class="job.status">{{ job.status }}</span></td>
+                <td data-label="Deadline">{{ job.deadline }}</td>
+                <td data-label="Action">
+                  <button class="admin-btn danger" @click="confirmDeleteJob(job)">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Module 5: Blog Moderation -->
+      <section class="dash-card" id="blogs">
+        <div class="dash-card-header flex-header">
+          <div>
+            <h2 class="dash-card-title">Blog Moderation</h2>
+            <p class="dash-card-subtitle">Manage community posts and visibility</p>
           </div>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Post Title</th><th>Author</th><th>Status</th><th>Visibility</th><th>Date</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="post in blogPosts" :key="post.id">
+                <td data-label="Post Title"><span class="font-bold">{{ post.title }}</span></td>
+                <td data-label="Author">{{ post.author?.name }} ({{ post.author?.role }})</td>
+                <td data-label="Status"><span :class="['role-chip', post.moderation_status]">{{ post.moderation_status }}</span></td>
+                <td data-label="Visibility"><span :class="['listing-status', post.visibility]">{{ post.visibility }}</span></td>
+                <td data-label="Date">{{ new Date(post.created_at).toLocaleDateString() }}</td>
+                <td data-label="Actions">
+                  <div class="action-btns">
+                    <button @click="openBlogModeration(post)" class="admin-btn">Moderate</button>
+                    <button @click="deleteBlogPost(post.id)" class="admin-btn danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-if="blogPosts.length === 0" class="empty-hint">No blog posts found.</p>
         </div>
       </section>
     </div>
+
+    <!-- Modals -->
+    <transition name="fade">
+      <div v-if="modals.moderation" class="modal-overlay" @click.self="modals.moderation = false">
+        <div class="admin-modal">
+          <h3>Modulate User: {{ selectedUser?.name }}</h3>
+          <p class="modal-hint">Review history and issue system warnings or flags.</p>
+          
+          <div class="user-history" v-if="selectedUser?.history && selectedUser.history.length > 0">
+            <h4 class="history-title">Warning History</h4>
+            <ul class="history-list">
+              <li v-for="(warn, idx) in selectedUser.history" :key="idx" class="history-item">
+                <span class="warn-type">{{ warn.type.toUpperCase() }}</span> - 
+                <span class="warn-level">Lvl {{ warn.level }}</span>
+                <p class="warn-reason">{{ warn.reason }}</p>
+                <span class="warn-date">{{ warn.date }}</span>
+              </li>
+            </ul>
+          </div>
+          <div v-else class="empty-hint text-sm mb-4">No prior infractions.</div>
+
+          
+          <div class="modal-form">
+            <div class="form-group">
+              <label>Warning Type</label>
+              <select v-model="forms.moderation.type">
+                <option value="behavior">Behavioral Concern</option>
+                <option value="spam">Spam / Excessive Posting</option>
+                <option value="violations">Terms Violation</option>
+                <option value="fake">Fake Profile</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Escalation Level</label>
+              <input type="number" v-model="forms.moderation.level" min="1" max="5" />
+            </div>
+            <div class="form-group">
+              <label>Reason / Details</label>
+              <textarea v-model="forms.moderation.reason" placeholder="Details for audit logs..."></textarea>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button class="admin-btn" @click="modals.moderation = false">Cancel</button>
+            <button class="admin-btn danger" @click="submitModeration">Issue Warning</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Blog Moderation Modal -->
+    <transition name="fade">
+      <div v-if="modals.blog" class="modal-overlay" @click.self="modals.blog = false">
+        <div class="admin-modal">
+          <h3>Moderate Post: {{ selectedPost?.title }}</h3>
+          <p class="modal-hint">Review and adjust post status or visibility.</p>
+          
+          <div class="modal-form">
+            <div class="form-group">
+              <label>Moderation Status</label>
+              <select v-model="forms.blog.moderation_status">
+                <option value="approved">Approved</option>
+                <option value="pending">Pending Review</option>
+                <option value="rejected">Rejected / Hidden</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Visibility</label>
+              <select v-model="forms.blog.visibility">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Reason for Action</label>
+              <textarea v-model="forms.blog.reason" placeholder="Explain the moderation decision..."></textarea>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button class="admin-btn" @click="modals.blog = false">Cancel</button>
+            <button class="admin-btn success-btn" @click="submitBlogModeration">Apply Changes</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Generic Confirm & Detail Modals can follow similar pattern -->
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted, computed, watch } from 'vue'
 import { useAuthStore } from '../../stores/authStore'
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+import { Pie } from 'vue-chartjs'
+
+ChartJS.register(ArcElement, Tooltip, Legend)
 
 const auth = useAuthStore()
+const loading = ref(true)
+const logSearch = ref('')
 
-const stats = reactive({ users: 1247, jobs: 183, applications: 3421, growth: 14 })
+const stats = reactive({ 
+  users: 0, 
+  jobs: 0, 
+  applications: 0, 
+  growth: 0,
+  roleBreakdown: {} 
+})
 
-const roleBreakdown = [
-  { role: 'applicant', label: 'Applicants', count: 1024, pct: 82 },
-  { role: 'recruiter', label: 'Recruiters', count:  215, pct: 17 },
-  { role: 'admin',     label: 'Admins',     count:    8, pct:  1 },
-]
+const users    = ref([])
+const allJobs  = ref([])
+const blogPosts = ref([])
+const auditLogs = ref([])
 
-const users = ref([
-  { id: 1, name: 'Alice Johnson',  email: 'alice@example.com',     role: 'applicant', joined: '2026-01-15' },
-  { id: 2, name: 'Bob Recruiter',  email: 'bob.hr@techcorp.com',   role: 'recruiter', joined: '2026-02-03' },
-  { id: 3, name: 'Carol Williams', email: 'carol@startupxyz.com',  role: 'recruiter', joined: '2026-02-28' },
-  { id: 4, name: 'Dave Student',   email: 'dave.cs@university.edu',role: 'applicant', joined: '2026-03-01' },
-])
+const modals = reactive({ moderation: false, logs: false, confirm: false, blog: false })
+const selectedUser = ref(null)
+const selectedPost = ref(null)
 
-function removeUser(user) {
-  users.value = users.value.filter(u => u.id !== user.id)
+const forms = reactive({
+  moderation: { type: 'behavior', reason: '', level: 1 },
+  blog: { moderation_status: 'approved', visibility: 'public', reason: '' }
+})
+
+async function loadDashboardData() {
+  loading.value = true
+  try {
+     const [sData, uData, jData, lData, bData] = await Promise.all([
+       auth.apiFetch('/v1/admin/stats'),
+       auth.apiFetch('/v1/admin/users'),
+       auth.apiFetch('/v1/admin/projects'),
+       auth.apiFetch('/v1/admin/logs'),
+       auth.apiFetch('/v1/admin/blog-posts')
+     ])
+     Object.assign(stats, sData)
+     users.value    = uData
+     allJobs.value  = jData
+     auditLogs.value = lData
+     blogPosts.value = bData.data || bData
+  } catch (err) {
+    console.error('Admin Load Error:', err)
+  } finally {
+    loading.value = false
+  }
 }
 
-const allJobs = ref([
-  { id: 1, title: 'Senior Frontend Engineer', recruiter: 'TechCorp',   applicants: 24, status: 'open',   deadline: '2026-04-01' },
-  { id: 2, title: 'Backend Developer',         recruiter: 'FinanceFlo', applicants: 18, status: 'open',   deadline: '2026-03-28' },
-  { id: 3, title: 'DevOps Engineer',           recruiter: 'StartupXYZ', applicants: 42, status: 'closed', deadline: '2026-03-10' },
-  { id: 4, title: 'ML Engineer',               recruiter: 'DataVision', applicants: 31, status: 'open',   deadline: '2026-04-15' },
-])
+const filteredLogs = computed(() => {
+  if (!logSearch.value) return auditLogs.value
+  const q = logSearch.value.toLowerCase()
+  return auditLogs.value.filter(l => 
+    l.admin.toLowerCase().includes(q) || 
+    l.event.toLowerCase().includes(q)
+  )
+})
 
-function removeJob(job) {
-  allJobs.value = allJobs.value.filter(j => j.id !== job.id)
+const chartData = ref({ labels: [], datasets: [] })
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } }
+  }
 }
 
-const activity = [
-  { id: 1, type: 'user',    text: 'New applicant registered: Dave Student',           time: '2 minutes ago'  },
-  { id: 2, type: 'job',     text: 'New job posted by TechCorp: Senior Frontend Eng.', time: '15 minutes ago' },
-  { id: 3, type: 'apply',   text: 'Alice Johnson applied to Backend Developer',        time: '32 minutes ago' },
-  { id: 4, type: 'user',    text: 'New recruiter joined: Carol Williams',              time: '1 hour ago'     },
-  { id: 5, type: 'job',     text: 'DevOps Engineer listing closed',                   time: '3 hours ago'    },
-  { id: 6, type: 'system',  text: 'Database backup completed successfully',            time: '6 hours ago'    },
-]
+onMounted(() => {
+  loadDashboardData()
+})
 
-const settings = reactive([
-  { key: 'registration',   label: 'Open Registration',    desc: 'Allow new users to register on the platform', enabled: true  },
-  { key: 'email_notif',    label: 'Email Notifications',  desc: 'Send email alerts for applications and updates', enabled: true  },
-  { key: 'maintenance',    label: 'Maintenance Mode',     desc: 'Take the platform offline for maintenance',    enabled: false },
-  { key: 'cv_parsing',     label: 'CV Parser',            desc: 'Enable automatic CV parsing on upload',        enabled: true  },
-])
+watch(() => stats.roleBreakdown, (newBreakdown) => {
+  if (Object.keys(newBreakdown).length > 0) {
+    const labels = Object.keys(newBreakdown)
+    const data = Object.values(newBreakdown)
+    chartData.value = {
+      labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+      datasets: [{
+        backgroundColor: ['#0ea5e9', '#22c55e', '#f59e0b'],
+        borderWidth: 0,
+        data: data
+      }]
+    }
+  }
+}, { deep: true })
+
+// User Management Actions
+function openModeration(user) {
+  selectedUser.value = user
+  forms.moderation = { type: 'behavior', reason: '', level: 1 }
+  modals.moderation = true
+}
+
+async function submitModeration() {
+  if (!forms.moderation.reason) return alert('Reason required')
+  try {
+     await auth.apiFetch(`/v1/admin/users/${selectedUser.value.id}/warn`, {
+       method: 'POST',
+       body: JSON.stringify(forms.moderation)
+     })
+     modals.moderation = false
+     loadDashboardData() // Refresh
+  } catch (err) {
+    alert('Failed to apply moderation')
+  }
+}
+
+async function confirmDeleteUser(user) {
+  if (!confirm(`Are you sure you want to permanently delete user ${user.name}? This action is irreversible and will be logged.`)) return
+  try {
+    await auth.apiFetch(`/v1/admin/users/${user.id}`, { method: 'DELETE' })
+    users.value = users.value.filter(u => u.id !== user.id)
+  } catch (err) {
+    alert('Delete failed')
+  }
+}
+
+function viewLogDetails(log) {
+    alert(JSON.stringify(log.metadata, null, 2))
+}
+
+// Blog Moderation Actions
+function openBlogModeration(post) {
+  selectedPost.value = post
+  forms.blog = { 
+    moderation_status: post.moderation_status, 
+    visibility: post.visibility, 
+    reason: '' 
+  }
+  modals.blog = true
+}
+
+async function submitBlogModeration() {
+  try {
+    await auth.apiFetch(`/v1/admin/blog-posts/${selectedPost.value.id}/moderate`, {
+      method: 'PATCH',
+      body: JSON.stringify(forms.blog)
+    })
+    modals.blog = false
+    loadDashboardData()
+  } catch (err) {
+    alert('Failed to moderate blog post')
+  }
+}
+
+async function deleteBlogPost(id) {
+  if (!confirm('Are you sure you want to delete this blog post?')) return
+  try {
+    await auth.apiFetch(`/v1/admin/blog-posts/${id}`, { method: 'DELETE' })
+    blogPosts.value = blogPosts.value.filter(p => p.id !== id)
+  } catch (err) {
+    alert('Failed to delete blog post')
+  }
+}
 </script>
 
 <style scoped>
-.dashboard-page { min-height: 100vh; background: var(--gray-50); font-family: var(--font-base); }
+.dashboard-page { min-height: 100vh; background: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; }
 
-.dash-hero { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 2.5rem 0; }
-.dash-hero-inner {
-  max-width: 1200px; margin: 0 auto; padding: 0 2rem;
-  display: flex; justify-content: space-between; align-items: center;
+/* Hero */
+.dash-hero { background: white; border-bottom: 1px solid #e2e8f0; padding: 2.5rem 0; }
+.dash-hero-inner { max-width: 1300px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }
+.dash-welcome { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+.dash-title { font-size: 2.25rem; font-weight: 900; letter-spacing: -0.04em; margin: 0; }
+.dash-subtitle { color: #94a3b8; font-size: 1rem; }
+.hero-badge { background: #fef3c7; color: #b45309; padding: 0.4rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; }
+
+@media (max-width: 768px) {
+  .dash-hero { padding: 2rem 0; }
+  .dash-hero-inner { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .dash-title { font-size: 1.75rem; }
+  .dash-subtitle { font-size: 0.9rem; }
 }
-.dash-welcome  { font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 0.2rem; }
-.dash-title    { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--gray-900); margin: 0 0 0.4rem; }
-.dash-subtitle { font-size: 0.95rem; color: var(--gray-500); margin: 0; }
 
-.hero-badge { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.4rem 1rem; border-radius: 99px; }
-.hero-badge.admin { background: #fef3c7; color: #b45309; }
+/* Layout */
+.dash-content { max-width: 1300px; margin: 0 auto; padding: 2rem; display: flex; flex-direction: column; gap: 2rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
 
-.dash-content { max-width: 1200px; margin: 0 auto; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .dash-content { padding: 1rem; gap: 1rem; }
+}
 
-.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
-@media(max-width:900px){ .stats-grid { grid-template-columns: repeat(2,1fr); } }
-@media(max-width:480px){ .stats-grid { grid-template-columns: 1fr; } }
+.stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; }
+.stat-icon-box { width: 3.5rem; height: 3.5rem; background: #f1f5f9; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
 
-.stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; }
-.stat-card.positive { border-left: 3px solid #22c55e; }
-.stat-icon   { font-size: 1.75rem; }
-.stat-label  { font-size: 0.8rem; color: var(--gray-500); margin: 0 0 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
-.stat-number { font-size: 1.75rem; font-weight: 700; color: var(--gray-900); margin: 0; line-height: 1; }
+/* Table Overrides */
+.table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 1rem; border: 1px solid #f1f5f9; }
+.admin-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+.admin-table th { text-align: left; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #64748b; padding: 1rem; border-bottom: 2px solid #f1f5f9; }
+.admin-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 
-.dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-@media(max-width:900px){ .dash-two-col { grid-template-columns: 1fr; } }
+@media (max-width: 768px) {
+  .admin-table { min-width: 100%; }
+  .admin-table thead { display: none; }
+  .admin-table tr { display: block; border-bottom: 2px solid #f1f5f9; padding: 1rem 0; }
+  .admin-table td { display: flex; justify-content: space-between; align-items: center; border-bottom: none; padding: 0.5rem 1rem; text-align: right; }
+  .admin-table td::before { content: attr(data-label); font-weight: 800; text-transform: uppercase; font-size: 0.65rem; color: #64748b; text-align: left; }
+  .user-cell { align-items: flex-end; }
+  .action-btns { justify-content: flex-end; }
+}
 
-.dash-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 1.75rem; }
-.dash-card-header { margin-bottom: 1.5rem; }
-.dash-card-title  { font-size: 1.1rem; font-weight: 600; color: var(--gray-900); margin: 0 0 0.3rem; }
-.dash-card-subtitle { font-size: 0.85rem; color: var(--gray-500); margin: 0; }
+.user-cell { display: flex; flex-direction: column; }
+.u-name { font-weight: 700; color: #0f172a; }
+.u-email { font-size: 0.75rem; color: #64748b; }
 
-/* ── Role breakdown ── */
-.role-breakdown { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
-.role-row { display: flex; align-items: center; gap: 1rem; }
-.role-info { display: flex; align-items: center; gap: 0.5rem; min-width: 90px; }
-.role-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.role-dot.applicant { background: #0ea5e9; }
-.role-dot.recruiter  { background: #22c55e; }
-.role-dot.admin      { background: #f59e0b; }
-.role-name { font-size: 0.85rem; color: var(--gray-700); font-weight: 500; }
-.role-bar-wrap { flex: 1; display: flex; align-items: center; gap: 0.75rem; }
-.role-bar { flex: 1; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
-.role-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-.role-bar-fill.applicant { background: #0ea5e9; }
-.role-bar-fill.recruiter  { background: #22c55e; }
-.role-bar-fill.admin      { background: #f59e0b; }
-.role-count { font-size: 0.8rem; color: var(--gray-500); min-width: 35px; text-align: right; }
-
-/* ── Admin table ── */
-.admin-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-.admin-table th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-500); padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--gray-200); }
-.admin-table td { padding: 0.75rem; border-bottom: 1px solid var(--gray-100); color: var(--gray-800); }
-.admin-table tr:last-child td { border-bottom: none; }
-
-.role-chip { font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; }
+.role-chip { padding: 0.25rem 0.6rem; border-radius: 0.5rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
 .role-chip.applicant { background: #e0f2fe; color: #0369a1; }
-.role-chip.recruiter  { background: #dcfce7; color: #15803d; }
-.role-chip.admin      { background: #fef3c7; color: #b45309; }
+.role-chip.recruiter { background: #dcfce7; color: #16a34a; }
+.role-chip.admin { background: #fef3c7; color: #92400e; }
 
-.admin-btn { font-size: 0.78rem; font-weight: 500; background: none; border: 1px solid var(--gray-300); border-radius: 6px; padding: 0.25rem 0.6rem; cursor: pointer; font-family: var(--font-base); color: var(--gray-700); transition: all 0.15s; }
-.admin-btn.danger    { border-color: #fca5a5; color: #b91c1c; }
-.admin-btn.danger:hover { background: #ef4444; color: var(--white); border-color: #ef4444; }
+/* Buttons */
+.action-btns { display: flex; gap: 0.5rem; }
+.admin-btn { padding: 0.5rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; background: white; font-weight: 700; font-size: 0.75rem; transition: 0.2s; cursor: pointer; white-space: nowrap; }
+.admin-btn:hover { background: #f8fafc; }
+.admin-btn.danger { color: #dc2626; border-color: #fecaca; }
+.admin-btn.danger:hover { background: #ef4444; color: white; border-color: #ef4444; }
+.success-btn { background: #16a34a; color: white; border: none; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.75rem; cursor: pointer; transition: 0.2s; }
+.success-btn:hover { background: #15803d; }
 
-.listing-status { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 99px; }
-.listing-status.open   { background: #dcfce7; color: #16a34a; }
-.listing-status.closed { background: #f3f4f6; color: #6b7280; }
+/* Log Viewer */
+.log-viewer { max-height: 500px; overflow-y: auto; }
+.sticky-header thead th { position: sticky; top: 0; background: white; z-index: 10; }
+.severity-warning { background: #fffbeb; }
+.severity-error { background: #fef2f2; }
+.sev-chip { padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; }
+.sev-chip.info { background: #e0f2fe; color: #0369a1; }
+.sev-chip.warning { background: #fef3c7; color: #92400e; }
+.sev-chip.error { background: #fee2e2; color: #991b1b; }
 
-/* ── Activity feed ── */
-.activity-feed { display: flex; flex-direction: column; gap: 1rem; }
-.activity-item { display: flex; gap: 0.75rem; align-items: flex-start; }
-.activity-dot  { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-.activity-dot.user   { background: #0ea5e9; }
-.activity-dot.job    { background: #22c55e; }
-.activity-dot.apply  { background: #a855f7; }
-.activity-dot.system { background: #f59e0b; }
-.activity-text { font-size: 0.875rem; color: var(--gray-800); margin: 0 0 0.15rem; }
-.activity-time { font-size: 0.75rem; color: var(--gray-500); margin: 0; }
+/* Modals */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.admin-modal { background: white; border-radius: 2rem; width: 100%; max-width: 500px; padding: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow-y: auto; max-height: calc(100vh - 2rem); }
 
-/* ── Settings ── */
-.settings-grid { display: flex; flex-direction: column; gap: 0; }
-.setting-row  { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--gray-100); }
-.setting-row:last-child { border-bottom: none; }
-.setting-label { font-size: 0.9rem; font-weight: 600; color: var(--gray-900); margin: 0 0 0.2rem; }
-.setting-desc  { font-size: 0.8rem; color: var(--gray-500); margin: 0; }
-
-.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--gray-300); border-radius: 24px; transition: 0.2s;
+@media (max-width: 480px) {
+  .admin-modal { padding: 1.5rem; border-radius: 1.5rem; }
+  .modal-form { gap: 1rem; margin: 1.5rem 0; }
 }
-.toggle-slider::before {
-  content: ''; position: absolute; height: 18px; width: 18px;
-  left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s;
+
+.modal-form { display: flex; flex-direction: column; gap: 1.5rem; margin: 2rem 0; }
+.form-group label { display: block; font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; }
+.form-group select, .form-group textarea, .form-group input { width: 100%; padding: 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; font-family: inherit; }
+
+/* History */
+.user-history { margin-bottom: 2rem; background: #f8fafc; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; }
+.history-title { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin: 0 0 1rem; }
+.history-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem; max-height: 150px; overflow-y: auto; }
+.history-item { font-size: 0.8rem; }
+.warn-type { font-weight: 800; color: #dc2626; }
+.warn-level { background: #fee2e2; color: #991b1b; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 800; font-size: 0.65rem; }
+.warn-reason { margin: 0.25rem 0 0; color: #475569; }
+.warn-date { display: block; margin-top: 0.25rem; font-size: 0.7rem; color: #94a3b8; }
+
+.status-ok { color: #16a34a; font-weight: 700; font-size: 0.75rem; }
+.warn-badge { background: #fee2e2; color: #dc2626; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 800; }
+
+.dash-card { background: white; border: 1px solid #e2e8f0; border-radius: 1.5rem; padding: 2rem; }
+
+.chart-container { height: 250px; display: flex; justify-content: center; align-items: center; position: relative; }
+@media (max-width: 480px) {
+  .chart-container { height: 200px; }
+  .dash-card { padding: 1.5rem; }
 }
-input:checked + .toggle-slider { background: var(--gray-900); }
-input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+.flex-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1rem; }
+
+@media (max-width: 640px) {
+  .flex-header { flex-direction: column; align-items: flex-start; }
+  .admin-input { width: 100%; }
+}
+
+.admin-input { padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; width: 250px; }
+
+.dash-two-col { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+
+@media (max-width: 1024px) {
+  .dash-two-col { grid-template-columns: 1fr; }
+}
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
