@@ -26,4 +26,7 @@ class Application extends Model
     {
         return $this->belongsTo(User::class , 'student_id');
     }
+    public function application(){
+        return $this->hasOne(Interview::class);
+    }
 }
